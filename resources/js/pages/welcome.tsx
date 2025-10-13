@@ -57,7 +57,9 @@ export default function Welcome() {
                         ) : (
                             <div className="flex gap-5 text-base">
                                 <Link href={login()}>
-                                    <Button className="">Log in</Button>
+                                    <Button variant="outline" className="">
+                                        Log in
+                                    </Button>
                                 </Link>
                                 <Link href={register()}>
                                     <Button variant="highlight">

@@ -31,7 +31,7 @@
     --color-primary-foreground-dark: var(
         --primary-foreground-dark
     ); /* dark variant */
-
+    --color-primary-foreground-light: var(--primary-foreground-light);
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
 
@@ -71,7 +71,7 @@
 
 :root {
     /* === Base Colors === */
-    --background: oklch(0.985 0 0); /* light background */
+    --background: oklch(0.938 0 0); /* light background */
     --foreground: oklch(0.145 0 0); /* main text */
 
     /* === Surfaces === */
@@ -83,20 +83,19 @@
 
     /* === Primary === */
     --primary: oklch(0.205 0 0); /* dark neutral for buttons/accents */
-    --primary-foreground: oklch(0.985 0 0); /* white text */
-    --primary-foreground-dark: oklch(15.91% 0 0); /* inverse of primary */
+    --primary-foreground: oklch(15.91% 0 0); /* white text */
+    --primary-foreground-dark: oklch(15.91% 0 0);
+    --primary-foreground-light: oklch(0.985 0 0); /* inverse of primary */
 
     /* === Secondary & Tertiary === */
-    --secondary: oklch(0.92 0 0); /* subtle gray tone */
+    --secondary: oklch(0.85 0 0); /* subtle gray tone */
     --secondary-foreground: oklch(0.205 0 0); /* readable contrast */
-    --tertiary: oklch(0.88 0 0); /* tertiary background tone */
+    --tertiary: oklch(0.75 0 0); /* tertiary background tone */
 
     /* === Muted & Highlight === */
     --muted: oklch(0.93 0 0); /* soft neutral for dividers or subtle surfaces */
     --muted-foreground: oklch(0.42 0 0); /* muted text */
-    --highlight: oklch(
-        0.82 0.15 98
-    ); /* soft yellow tint to match dark highlight */
+    --highlight: oklch(90.95% 0.182 99.36);
     --highlight-foreground: oklch(
         0.25 0.05 98
     ); /* readable text on highlight */
@@ -145,6 +144,8 @@
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(15.91% 0 0);
     --primary-foreground: oklch(100% 0 0);
+    --primary-foreground-dark: oklch(100% 0 0);
+    --primary-foreground-light: oklch(15.91% 0 0);
     --secondary: oklch(21.78% 0 0);
     --secondary-foreground: oklch(68.3% 0 0);
     --tertiary: oklch(26.86% 0 0);
