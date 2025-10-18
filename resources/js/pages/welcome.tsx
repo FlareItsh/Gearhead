@@ -52,12 +52,25 @@ export default function Welcome() {
                     {/* Desktop Buttons */}
                     <div className="hidden gap-5 text-base md:flex">
                         {auth.user ? (
-                            <Link
-                                href={dashboard()}
-                                className="inline-block rounded-sm border border-border px-5 py-1.5 text-sm leading-normal text-foreground transition-all duration-200 hover:border-muted-foreground"
-                            >
-                                Dashboard
-                            </Link>
+                            <>
+                                {auth.user.role === 'admin' && (
+                                    <Link
+                                        href={dashboard()}
+                                        className="inline-block rounded-sm border border-border px-5 py-1.5 text-sm leading-normal text-foreground transition-all duration-200 hover:border-muted-foreground"
+                                    >
+                                        Dashboard
+                                    </Link>
+                                )}
+
+                                {auth.user.role === 'user' && (
+                                    <Link
+                                        href="#book-now"
+                                        className="inline-block rounded-sm border border-border px-5 py-1.5 text-sm leading-normal text-foreground transition-all duration-200 hover:border-muted-foreground"
+                                    >
+                                        Book Now
+                                    </Link>
+                                )}
+                            </>
                         ) : (
                             <>
                                 <Link href={login()}>
@@ -109,16 +122,32 @@ export default function Welcome() {
                             Contact
                         </a>
 
+                        {/* Mobile View Button */}
                         <div className="mt-4 flex w-10/12 flex-col gap-3">
                             {auth.user ? (
-                                <Link href={dashboard()}>
-                                    <Button
-                                        className="w-full"
-                                        variant="outline"
-                                    >
-                                        Dashboard
-                                    </Button>
-                                </Link>
+                                <>
+                                    {auth.user.role === 'admin' && (
+                                        <Link href={dashboard()}>
+                                            <Button
+                                                className="w-full"
+                                                variant="outline"
+                                            >
+                                                Dashboard
+                                            </Button>
+                                        </Link>
+                                    )}
+
+                                    {auth.user.role === 'user' && (
+                                        <Link href="#book-now">
+                                            <Button
+                                                className="w-full"
+                                                variant="outline"
+                                            >
+                                                Book Now
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </>
                             ) : (
                                 <>
                                     <Link href={login()}>
