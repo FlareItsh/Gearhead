@@ -8,14 +8,16 @@ Route::get('/', function () {
 })->name('home');
 
 
-
+// This group applies 'auth' and 'verified' middleware to all routes within it
 Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
-    })->name('dashboard');
+    })->middleware('role:admin')->name('dashboard');
+
     Route::get('homepage', function () {
         return Inertia::render('homepage/homepage');
-    })->name('homepage');
+    })->name('homepage'); // This is your redirect target for unauthorized users
 });
 
 

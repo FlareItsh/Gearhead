@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
-use Laravel\Fortify\Contracts\LoginResponse;
+use App\Http\Responses\LoginResponse;
 use Laravel\Fortify\Fortify;
 use App\Http\Responses\LoginResponse as CustomLoginResponse;
 
