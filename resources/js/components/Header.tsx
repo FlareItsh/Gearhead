@@ -11,19 +11,25 @@ type NavLink = {
     section?: string;
 };
 
-const navLinks: NavLink[] = [
+const defaultNavLinks: NavLink[] = [
     { href: '/', label: 'Home', section: 'home' },
     { href: '#services', label: 'Services', section: 'services' },
     { href: '#booking', label: 'Booking', section: 'booking' },
     { href: '#contact', label: 'Contact', section: 'contact' },
 ];
 
-export default function Header() {
+interface HeaderProps {
+    navLinks?: NavLink[];
+}
+
+export default function Header({ navLinks }: HeaderProps) {
     const { auth } = usePage<SharedData>().props;
     const [isOpen, setIsOpen] = useState(false);
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const currentPath =
         typeof window !== 'undefined' ? window.location.pathname : '/';
+
+    const linksToUse = navLinks ?? defaultNavLinks;
 
     const isActiveLink = (link: NavLink) => {
         if (link.href === '/') {
@@ -61,7 +67,7 @@ export default function Header() {
 
                 {/* Desktop Nav */}
                 <ul className="hidden items-center gap-5 rounded-md bg-secondary px-1 py-1 font-medium text-secondary-foreground md:flex">
-                    {navLinks.map((link) => (
+                    {linksToUse.map((link) => (
                         <Link
                             key={link.label}
                             href={link.href}
@@ -118,7 +124,7 @@ export default function Header() {
             {/* Mobile Dropdown Menu */}
             {isOpen && (
                 <div className="mt-3 flex flex-col items-center gap-3 bg-secondary py-4 text-secondary-foreground shadow-md md:hidden">
-                    {navLinks.map((link) => (
+                    {linksToUse.map((link) => (
                         <Link
                             key={link.label}
                             href={link.href}
