@@ -11,18 +11,7 @@ export default function Welcome() {
                     rel="stylesheet"
                 />
             </Head>
-            <Header
-                navLinks={[
-                    { href: '/', label: 'Home', section: 'home' },
-                    {
-                        href: '#services',
-                        label: 'Services',
-                        section: 'services',
-                    },
-                    { href: '#booking', label: 'Booking', section: 'booking' },
-                    { href: '#contact', label: 'Contact', section: 'contact' },
-                ]}
-            />
+            <Header />
         </>
     );
 }

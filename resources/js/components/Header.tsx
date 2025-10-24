@@ -12,7 +12,7 @@ type NavLink = {
 };
 
 const defaultNavLinks: NavLink[] = [
-    { href: '/', label: 'Home', section: 'home' },
+    { href: '#hero', label: 'Home', section: 'hero' },
     { href: '#services', label: 'Services', section: 'services' },
     { href: '#booking', label: 'Booking', section: 'booking' },
     { href: '#contact', label: 'Contact', section: 'contact' },
