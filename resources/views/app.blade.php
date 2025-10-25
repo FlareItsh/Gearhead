@@ -22,14 +22,6 @@
 
     {{-- Inline style to set the HTML background color based on our theme in app.css --}}
     <style>
-        html {
-            background-color: oklch(1 0 0);
-        }
-
-        html.dark {
-            background-color: oklch(0.145 0 0);
-        }
-
         * {
             font-family: "DM Sans", sans-serif;
         }
@@ -54,7 +46,7 @@
     @inertiaHead
 </head>
 
-<body class="bg-background font-sans antialiased">
+<body class="bg-background antialiased">
     @inertia
 </body>
 
