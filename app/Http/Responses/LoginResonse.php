@@ -2,8 +2,8 @@
 
 namespace App\Http\Responses;
 
-use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Illuminate\Support\Facades\Session;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
 class LoginResponse implements LoginResponseContract
 {
@@ -20,7 +20,7 @@ class LoginResponse implements LoginResponseContract
         switch ($role) {
             case 'admin':
                 return redirect()->intended('/dashboard');
-            case 'user':
+            case 'customer':
                 return redirect()->intended('/homepage');
             default:
                 return redirect()->intended('/home');

@@ -31,13 +31,19 @@ export interface SharedData {
 }
 
 export interface User {
-    id: number;
-    name: string;
+    user_id: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
     email: string;
     avatar?: string;
     email_verified_at: string | null;
+    phone_number?: string;
+    address?: string;
+    role: string;
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    // Legacy compatibility - will be provided by the name accessor in PHP
+    name?: string;
 }

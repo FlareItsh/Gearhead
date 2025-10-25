@@ -18,12 +18,28 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
-        'name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'email',
+        'phone_number',
+        'address',
         'password',
-        'role'
+        'role',
     ];
+
+    /**
+     * The primary key for the model (migration uses `user_id`).
+     *
+     * @var string
+     */
+    protected $primaryKey = 'user_id';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -38,16 +54,25 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Provide a `name` attribute combining first and last name for
+     * backward compatibility with places that expect `name`.
+     *
+     * @return string
+     */
+    public function getNameAttribute(): string
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        $parts = array_filter([$this->first_name ?? '', $this->last_name ?? '']);
+        return implode(' ', $parts);
     }
 
     /**

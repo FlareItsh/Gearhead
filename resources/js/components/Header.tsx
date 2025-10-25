@@ -91,7 +91,7 @@ export default function Header({ navLinks }: HeaderProps) {
                                 </Link>
                             )}
 
-                            {auth.user.role === 'user' && (
+                            {auth.user.role === 'customer' && (
                                 <Link
                                     href="homepage"
                                     className="inline-block rounded-sm border border-border px-5 py-1.5 text-sm leading-normal text-foreground transition-all duration-200 hover:border-muted-foreground"
@@ -149,7 +149,7 @@ export default function Header({ navLinks }: HeaderProps) {
                                     </Link>
                                 )}
 
-                                {auth.user.role === 'user' && (
+                                {auth.user.role === 'customer' && (
                                     <Link href="homepage">
                                         <Button
                                             className="w-full"
