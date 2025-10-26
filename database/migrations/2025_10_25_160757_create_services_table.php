@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('service_name');
             $table->text('description');
             $table->string('size');
+            $table->string('category');
             $table->integer('estimated_duration')->comment('Duration in minutes');
             $table->decimal('price', 10, 2);
             $table->enum('status', ['active', 'inactive'])->default('active');
