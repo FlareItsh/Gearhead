@@ -24,6 +24,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('bays', 'bay_id')
                 ->onDelete('set null');
+            $table->string('category');
             $table->date('order_date');
             $table->enum('order_type', ['W', 'R'])->comment('W = Walk-in, R = Reservation');
             $table->timestamps();
