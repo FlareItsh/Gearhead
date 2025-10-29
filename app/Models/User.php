@@ -89,10 +89,10 @@ class User extends Authenticatable
         return "{$this->first_name}{$middle} {$this->last_name}";
     }
 
-    public function sessions()
-    {
-        return $this->hasMany(Session::class, 'user_id', 'user_id');
-    }
+    // public function sessions()
+    // {
+    //     return $this->hasMany(Session::class, 'user_id', 'user_id');
+    // }
 
     /**
      * Check if the user has any of the given roles.
