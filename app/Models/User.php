@@ -18,11 +18,6 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'first_name',
         'middle_name',
@@ -64,22 +59,45 @@ class User extends Authenticatable
     ];
 
     /**
-     * Provide a `name` attribute combining first and last name for
-     * backward compatibility with places that expect `name`.
-     *
-     * @return string
+     * Automatically hash passwords when set.
+     * (Ensures consistency even if set manually.)
+     */
+    public function setPasswordAttribute($value): void
+    {
+        if (! empty($value)) {
+            $this->attributes['password'] = bcrypt($value);
+        }
+    }
+
+    /**
+     * Provide a `name` attribute combining first and last name.
      */
     public function getNameAttribute(): string
     {
         $parts = array_filter([$this->first_name ?? '', $this->last_name ?? '']);
+
         return implode(' ', $parts);
+    }
+
+    /**
+     * Provide a `full_name` accessor including middle name if available.
+     */
+    public function getFullNameAttribute(): string
+    {
+        $middle = $this->middle_name ? ' '.$this->middle_name : '';
+
+        return "{$this->first_name}{$middle} {$this->last_name}";
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(Session::class, 'user_id', 'user_id');
     }
 
     /**
      * Check if the user has any of the given roles.
      *
-     * @param array $roles (e.g., ['admin', 'editor'])
-     * @return bool
+     * @param  array  $roles  (e.g., ['admin', 'customer'])
      */
     public function hasAnyRole(array $roles): bool
     {
@@ -90,9 +108,6 @@ class User extends Authenticatable
     /**
      * Check if the user has a specific role.
      * (Optional, but often useful for single checks)
-     *
-     * @param string $role
-     * @return bool
      */
     public function hasRole(string $role): bool
     {
@@ -102,8 +117,6 @@ class User extends Authenticatable
     /**
      * Check if the user is an administrator.
      * (Optional, specific helper)
-     *
-     * @return bool
      */
     public function isAdministrator(): bool
     {
