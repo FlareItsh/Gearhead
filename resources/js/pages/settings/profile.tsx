@@ -28,7 +28,7 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth } = usePage().props as unknown as SharedData;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -51,22 +51,85 @@ export default function Profile({
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
+                                    <div>
+                                        <Label htmlFor="first_name">
+                                            First name
+                                        </Label>
+                                        <Input
+                                            id="first_name"
+                                            className="mt-1 block w-full"
+                                            defaultValue={auth.user.first_name}
+                                            name="first_name"
+                                            required
+                                            autoComplete="given-name"
+                                            placeholder="First name"
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.first_name}
+                                        />
+                                    </div>
 
-                                    <Input
-                                        id="name"
-                                        className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
-                                        name="name"
-                                        required
-                                        autoComplete="name"
-                                        placeholder="Full name"
-                                    />
+                                    <div>
+                                        <Label htmlFor="middle_name">
+                                            Middle name
+                                        </Label>
+                                        <Input
+                                            id="middle_name"
+                                            className="mt-1 block w-full"
+                                            defaultValue={
+                                                auth.user.middle_name ?? ''
+                                            }
+                                            name="middle_name"
+                                            autoComplete="additional-name"
+                                            placeholder="Middle name (optional)"
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.middle_name}
+                                        />
+                                    </div>
+                                </div>
 
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.name}
-                                    />
+                                <div className="grid gap-2">
+                                    <div>
+                                        <Label htmlFor="last_name">
+                                            Last name
+                                        </Label>
+                                        <Input
+                                            id="last_name"
+                                            className="mt-1 block w-full"
+                                            defaultValue={auth.user.last_name}
+                                            name="last_name"
+                                            required
+                                            autoComplete="family-name"
+                                            placeholder="Last name"
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.last_name}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="phone_number">
+                                            Phone number
+                                        </Label>
+                                        <Input
+                                            id="phone_number"
+                                            className="mt-1 block w-full"
+                                            defaultValue={
+                                                auth.user.phone_number ?? ''
+                                            }
+                                            name="phone_number"
+                                            autoComplete="tel"
+                                            placeholder="Phone number (optional)"
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.phone_number}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="grid gap-2">
@@ -120,6 +183,7 @@ export default function Profile({
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        variant="highlight"
                                     >
                                         Save
                                     </Button>

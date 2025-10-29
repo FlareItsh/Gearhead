@@ -39,15 +39,6 @@ export const customerNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
-    {
-        title: 'My Profile',
-        href: '/profile',
-        // no icon provided — optional
-    },
-    {
-        title: 'Services',
-        href: '/services',
-    },
 ];
 
 const footerNavItems: NavItem[] = [

@@ -10,12 +10,13 @@ Route::get('/', fn () => Inertia::render('welcome'))->name('home');
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    // Dashboard is available to any authenticated and verified user
     Route::get('dashboard', fn () => Inertia::render('dashboard'))
-        ->middleware('role:admin')
         ->name('dashboard');
 
-    Route::get('homepage', fn () => Inertia::render('homepage/homepage'))
-        ->name('homepage');
+    // Customer-specific dashboard (separate page for customer users)
+    Route::get('customer-dashboard', fn () => Inertia::render('CustomerPage/customer-dashboard'))
+        ->name('customer.dashboard');
 
     // Optional admin route
     Route::middleware('role:admin')->group(function () {

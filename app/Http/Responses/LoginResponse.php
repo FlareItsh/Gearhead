@@ -16,14 +16,7 @@ class LoginResponse implements LoginResponseContract
         // Store role in session if needed
         $request->session()->put('role', $role);
 
-        // Redirect based on role
-        switch ($role) {
-            case 'admin':
-                return redirect()->intended('/dashboard');
-            case 'customer':
-                return redirect()->intended('/homepage');
-            default:
-                return redirect()->intended('/home');
-        }
+        // Redirect all users to the dashboard regardless of role
+        return redirect()->intended('/dashboard');
     }
 }

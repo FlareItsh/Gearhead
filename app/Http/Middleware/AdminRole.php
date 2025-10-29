@@ -26,7 +26,8 @@ class AdminRole
 
         if (!$user->hasAnyRole($roles)) {
             // If the user does not have any of the specified roles
-            return redirect('homepage')->with('error', 'You do not have permission to access this page.');
+            // Redirect to the dashboard (no role-based homepage)
+            return redirect()->route('dashboard')->with('error', 'You do not have permission to access this page.');
         }
 
         // If authenticated and has the required role(s), proceed with the request

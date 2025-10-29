@@ -23,7 +23,7 @@ interface HeaderProps {
 }
 
 export default function Header({ navLinks }: HeaderProps) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth } = usePage().props as unknown as SharedData;
     const [isOpen, setIsOpen] = useState(false);
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const currentPath =
@@ -81,25 +81,14 @@ export default function Header({ navLinks }: HeaderProps) {
                 {/* Desktop Buttons */}
                 <div className="hidden gap-5 text-base md:flex">
                     {auth.user ? (
-                        <>
-                            {auth.user.role === 'admin' && (
-                                <Link
-                                    href={dashboard()}
-                                    className="inline-block rounded-sm border border-border px-5 py-1.5 text-sm leading-normal text-foreground transition-all duration-200 hover:border-muted-foreground"
-                                >
-                                    Dashboard
-                                </Link>
-                            )}
-
-                            {auth.user.role === 'customer' && (
-                                <Link
-                                    href="homepage"
-                                    className="inline-block rounded-sm border border-border px-5 py-1.5 text-sm leading-normal text-foreground transition-all duration-200 hover:border-muted-foreground"
-                                >
-                                    Book Now
-                                </Link>
-                            )}
-                        </>
+                        // Authenticated users: admin -> dashboard, customer -> customer-dashboard
+                        <Link href={dashboard()}>
+                            <Button className="w-full" variant="highlight">
+                                {auth.user.role === 'customer'
+                                    ? 'Book Now'
+                                    : 'Dashboard'}
+                            </Button>
+                        </Link>
                     ) : (
                         <>
                             <Link href={login()}>
@@ -137,29 +126,14 @@ export default function Header({ navLinks }: HeaderProps) {
                     {/* Mobile View Button */}
                     <div className="mt-4 flex w-10/12 flex-col gap-3">
                         {auth.user ? (
-                            <>
-                                {auth.user.role === 'admin' && (
-                                    <Link href={dashboard()}>
-                                        <Button
-                                            className="w-full"
-                                            variant="outline"
-                                        >
-                                            Dashboard
-                                        </Button>
-                                    </Link>
-                                )}
-
-                                {auth.user.role === 'customer' && (
-                                    <Link href="homepage">
-                                        <Button
-                                            className="w-full"
-                                            variant="outline"
-                                        >
-                                            Book Now
-                                        </Button>
-                                    </Link>
-                                )}
-                            </>
+                            // Authenticated users: admin -> dashboard, customer -> customer-dashboard
+                            <Link href={dashboard()}>
+                                <Button className="w-full" variant="highlight">
+                                    {auth.user.role === 'customer'
+                                        ? 'Book Now'
+                                        : 'Dashboard'}
+                                </Button>
+                            </Link>
                         ) : (
                             <>
                                 <Link href={login()}>
