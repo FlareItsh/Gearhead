@@ -3,7 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\User;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface
 {
@@ -14,4 +14,8 @@ interface UserRepositoryInterface
     public function findByEmail(string $email): ?User;
 
     public function create(array $data): User;
+
+    public function update(User $user, array $data): bool;
+
+    public function delete(User $user): bool;
 }

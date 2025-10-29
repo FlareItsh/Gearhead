@@ -3,24 +3,54 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\UserRepositoryInterface;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
-    public function __construct(
-        protected UserRepositoryInterface $users
-    ) {}
+    private UserRepositoryInterface $users;
+
+    public function __construct(UserRepositoryInterface $users)
+    {
+        $this->users = $users;
+    }
 
     public function index()
     {
-        $allUsers = $this->users->all();
+        $users = $this->users->all();
 
-        return response()->json($allUsers);
+        return Inertia::render('Admin/Users/Index', [
+            'users' => $users,
+        ]);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $user = $this->users->findById($id);
+        abort_if(! $user, 404);
 
-        return response()->json($user);
+        return Inertia::render('Admin/Users/Show', [
+            'user' => $user,
+        ]);
+    }
+
+    public function update(Request $request, int $id)
+    {
+        $user = $this->users->findById($id);
+        abort_if(! $user, 404);
+
+        $this->users->update($user, $request->all());
+
+        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+    }
+
+    public function destroy(int $id)
+    {
+        $user = $this->users->findById($id);
+        abort_if(! $user, 404);
+
+        $this->users->delete($user);
+
+        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 }
