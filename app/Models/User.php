@@ -52,12 +52,6 @@ class User extends Authenticatable
     /**
      * Automatically hash password when set.
      */
-    public function setPasswordAttribute($value): void
-    {
-        if (! empty($value)) {
-            $this->attributes['password'] = bcrypt($value);
-        }
-    }
 
     /**
      * Role check helpers.

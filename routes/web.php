@@ -15,7 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard');
 
     // Customer-specific dashboard (separate page for customer users)
-    Route::get('customer-dashboard', fn () => Inertia::render('CustomerPage/customer-dashboard'))
+    Route::get('customer-dashboard', fn () => Inertia::render('Customer/CustomerDashboard'))
         ->name('customer.dashboard');
 
     // Optional admin route

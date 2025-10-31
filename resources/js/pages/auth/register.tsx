@@ -27,7 +27,7 @@ export default function Register() {
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
-                            <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+                            <div className="flex flex-col sm:gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="first_name">
                                         First name

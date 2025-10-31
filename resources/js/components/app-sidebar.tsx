@@ -13,7 +13,21 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import {
+    Banknote,
+    BanknoteArrowUp,
+    BookOpen,
+    CalendarCog,
+    ChartColumnBig,
+    Computer,
+    Folder,
+    LayoutDashboard,
+    Package,
+    TableCellsMerge,
+    UserCheck,
+    UsersRound,
+    Wrench,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface AppSidebarProps {
@@ -27,7 +41,52 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
-        icon: LayoutGrid,
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Registry',
+        href: dashboard(),
+        icon: Computer,
+    },
+    {
+        title: 'Bookings',
+        href: dashboard(),
+        icon: CalendarCog,
+    },
+    {
+        title: 'Customers',
+        href: dashboard(),
+        icon: UsersRound,
+    },
+    {
+        title: 'Services',
+        href: dashboard(),
+        icon: Wrench,
+    },
+    {
+        title: 'Staff',
+        href: dashboard(),
+        icon: UserCheck,
+    },
+    {
+        title: 'Inventory',
+        href: dashboard(),
+        icon: Package,
+    },
+    {
+        title: 'Transactions',
+        href: dashboard(),
+        icon: BanknoteArrowUp,
+    },
+    {
+        title: 'Reports',
+        href: dashboard(),
+        icon: ChartColumnBig,
+    },
+    {
+        title: 'Bays',
+        href: dashboard(),
+        icon: TableCellsMerge,
     },
 ];
 
@@ -37,7 +96,22 @@ export const customerNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
-        icon: LayoutGrid,
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'My Bookings',
+        href: dashboard(),
+        icon: CalendarCog,
+    },
+    {
+        title: 'Services',
+        href: dashboard(),
+        icon: Wrench,
+    },
+    {
+        title: 'Payment History',
+        href: dashboard(),
+        icon: Banknote,
     },
 ];
 
@@ -80,7 +154,7 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton className="h-fit" asChild>
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
