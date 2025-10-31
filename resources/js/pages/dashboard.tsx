@@ -1,6 +1,6 @@
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import CustomerDashboard from '@/pages/CustomerPage/CustomerDashboard';
+import CustomerDashboard from '@/pages/Customer/CustomerDashboard';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';

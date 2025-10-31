@@ -112,7 +112,7 @@
     --destructive-foreground: oklch(0.145 0 0); /* readable dark text */
 
     /* === Borders & Rings === */
-    --border: oklch(0.88 0 0); /* light gray border */
+    --border: oklch(0.88 0 0);
     --input: oklch(0.88 0 0);
     --ring: oklch(0.75 0 0);
 
@@ -123,46 +123,63 @@
     --chart-4: oklch(0.77 0.21 303.9);
     --chart-5: oklch(0.7 0.19 16.439);
 
-    /* === Sidebar === */
-    --sidebar: oklch(0.97 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.93 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.88 0 0);
-    --sidebar-ring: oklch(0.75 0 0);
+    /* Sidebar */
+    --sidebar: oklch(15.91% 0 0);
+    --sidebar-foreground: oklch(100% 0 0);
+    --sidebar-primary: oklch(100% 0 0);
+    --sidebar-primary-foreground: oklch(100% 0 0);
+    --sidebar-accent: oklch(26.86% 0 0);
+    --sidebar-accent-foreground: oklch(100% 0 0);
+    --sidebar-border: oklch(21.78% 0 0);
+    --sidebar-ring: oklch(0.439 0 0);
 
     /* === Misc === */
     --radius: 0.625rem;
 }
 
 .dark {
-    /* Dark mode overrides */
+    /* === Dark mode overrides === */
+    /* === Base Colors === */
     --background: oklch(0% 0 0);
     --foreground: oklch(0.985 0 0);
+
+    /* === Surfaces === */
     --card: oklch(0.145 0 0);
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.145 0 0);
     --popover-foreground: oklch(0.985 0 0);
+
+    /* === Primary === */
     --primary: oklch(15.91% 0 0);
     --primary-foreground: oklch(100% 0 0);
     --primary-foreground-dark: oklch(100% 0 0);
     --primary-foreground-light: oklch(15.91% 0 0);
+
+    /* === Secondary & Tertiary === */
     --secondary: oklch(21.78% 0 0);
     --secondary-foreground: oklch(68.3% 0 0);
     --tertiary: oklch(26.86% 0 0);
+
+    /* === Muted & Highlight === */
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
     --highlight: oklch(90.95% 0.182 99.36);
     --highlight-foreground: oklch(90.95% 0.182 99.36);
+
+    /* === Accent === */
     --accent: oklch(26.86% 0 0);
     --accent-foreground: oklch(0.985 0 0);
+
+    /* === Destructive === */
     --destructive: oklch(0.396 0.141 25.723);
     --destructive-foreground: oklch(0.637 0.237 25.331);
+
+    /* === Borders & Rings === */
     --border: oklch(0.269 0 0);
     --input: oklch(0.269 0 0);
     --ring: oklch(0.439 0 0);
+
+    /* === Charts === */
     --chart-1: oklch(0.488 0.243 264.376);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.769 0.188 70.08);
