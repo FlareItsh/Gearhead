@@ -100,17 +100,17 @@ export const customerNavItems: NavItem[] = [
     },
     {
         title: 'My Bookings',
-        href: dashboard(),
+        href: '/bookings',
         icon: CalendarCog,
     },
     {
         title: 'Services',
-        href: dashboard(),
+        href: '/services',
         icon: Wrench,
     },
     {
         title: 'Payment History',
-        href: dashboard(),
+        href: 'payment-history',
         icon: Banknote,
     },
 ];
@@ -118,7 +118,7 @@ export const customerNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
+        href: 'https://github.com/FlareItsh/Gearhead',
         icon: Folder,
     },
     {

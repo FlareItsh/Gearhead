@@ -10,8 +10,11 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) =>
+        // Do NOT lowercase the incoming page name — keeping the original
+        // casing allows folders like `pages/Customer/Bookings.tsx` to resolve
+        // correctly. The SSR entry already uses the non-lowercased variant.
         resolvePageComponent(
-            `./pages/${name.toLowerCase()}.tsx`,
+            `./pages/${name}.tsx`,
             import.meta.glob('./pages/**/*.tsx'),
         ),
 
