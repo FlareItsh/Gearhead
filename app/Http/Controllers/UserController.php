@@ -15,25 +15,29 @@ class UserController extends Controller
         $this->users = $users;
     }
 
-    public function index()
-    {
-        $users = $this->users->all();
+    // public function index()
+    // {
+    //     $users = $this->users->all();
 
-        return Inertia::render('Admin/Users/Index', [
-            'users' => $users,
-        ]);
-    }
+    //     return Inertia::render('Admin/Users/Index', [
+    //         'users' => $users,
+    //     ]);
+    // }
 
-    public function show(int $id)
-    {
-        $user = $this->users->findById($id);
-        abort_if(! $user, 404);
+    // public function show(int $id)
+    // {
+    //     $user = $this->users->findById($id);
+    //     abort_if(! $user, 404);
 
-        return Inertia::render('Admin/Users/Show', [
-            'user' => $user,
-        ]);
-    }
+    //     return Inertia::render('Admin/Users/Show', [
+    //         'user' => $user,
+    //     ]);
+    // }
 
+    /**
+     * Render registry page for admin area.
+     * Uses the UserRepository to fetch users and passes them to the Inertia page.
+     */
     public function update(Request $request, int $id)
     {
         $user = $this->users->findById($id);

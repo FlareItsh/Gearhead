@@ -45,47 +45,47 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Registry',
-        href: dashboard(),
+        href: '/registry',
         icon: Computer,
     },
     {
         title: 'Bookings',
-        href: dashboard(),
+        href: '/bookings',
         icon: CalendarCog,
     },
     {
         title: 'Customers',
-        href: dashboard(),
+        href: '/customers',
         icon: UsersRound,
     },
     {
         title: 'Services',
-        href: dashboard(),
+        href: '/services',
         icon: Wrench,
     },
     {
-        title: 'Staff',
-        href: dashboard(),
+        title: 'Staffs',
+        href: '/staffs',
         icon: UserCheck,
     },
     {
         title: 'Inventory',
-        href: dashboard(),
+        href: '/inventory',
         icon: Package,
     },
     {
         title: 'Transactions',
-        href: dashboard(),
+        href: '/transactions',
         icon: BanknoteArrowUp,
     },
     {
         title: 'Reports',
-        href: dashboard(),
+        href: '/reports',
         icon: ChartColumnBig,
     },
     {
         title: 'Bays',
-        href: dashboard(),
+        href: '/bays',
         icon: TableCellsMerge,
     },
 ];

@@ -1,9 +1,7 @@
 <?php
 
-use App\Http\Controllers\Customer\CustomerBookingsController;
-use App\Http\Controllers\Customer\CustomerPaymentController;
-use App\Http\Controllers\Customer\CustomerServicesController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,24 +19,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('customer-dashboard', fn () => Inertia::render('Customer/CustomerDashboard'))
         ->name('customer.dashboard');
 
-    Route::get('/bookings', [CustomerBookingsController::class, 'index'])->name('customer.bookings');
-    Route::get('/services', [CustomerServicesController::class, 'index'])->name('customer.services');
-    Route::get('/payment-history', [CustomerPaymentController::class, 'index'])->name('customer.payment-history');
+    // Customer-specific routes
+    Route::get('/bookings', [CustomerController::class, 'bookings'])
+        ->name('customer.bookings')
+        ->middleware('role:customer');
+    Route::get('/services', [CustomerController::class, 'services'])
+        ->name('customer.services')
+        ->middleware('role:customer');
+    Route::get('/payment-history', [CustomerController::class, 'payments'])
+        ->name('customer.payment-history')
+        ->middleware('role:customer');
 
-    // Optional admin route
-    Route::middleware('role:admin')->group(function () {
-        Route::resource('users', UserController::class);
-    });
+    // Admin Specific routes
+    Route::get('/registry', [AdminController::class, 'registry'])
+        ->name('registry')
+        ->middleware('role:admin');
+    Route::get('/bookings', [AdminController::class, 'bookings'])
+        ->name('bookings')
+        ->middleware('role:admin');
+    Route::get('/customers', [AdminController::class, 'customers'])
+        ->name('customers')
+        ->middleware('role:admin');
+    Route::get('/services', [AdminController::class, 'services'])
+        ->name('services')
+        ->middleware('role:admin');
+    Route::get('/staffs', [AdminController::class, 'staffs'])
+        ->name('staffs')
+        ->middleware('role:admin');
+    Route::get('/inventory', [AdminController::class, 'inventory'])
+        ->name('inventory')
+        ->middleware('role:admin');
+    Route::get('/transactions', [AdminController::class, 'transactions'])
+        ->name('transactions')
+        ->middleware('role:admin');
+    Route::get('/reports', [AdminController::class, 'reports'])
+        ->name('reports')
+        ->middleware('role:admin');
+    Route::get('/bays', [AdminController::class, 'bays'])
+        ->name('bays')
+        ->middleware('role:admin');
 
-    // Example admin-only route (uses controller with role middleware)
-    // Route::get('admin-only', [\App\Http\Controllers\Admin\OnlyAdminController::class, 'index'])
-    //     ->name('admin.only')
-    //     ->middleware('role:admin');
-
-    // Example customer-only route (uses controller with role middleware)
-    // Route::get('customer-only', [\App\Http\Controllers\Customer\OnlyCustomerController::class, 'index'])
-    //     ->name('customer.only')
-    //     ->middleware('role:customer');
 });
 
 // Auth routes (register, login, etc.)

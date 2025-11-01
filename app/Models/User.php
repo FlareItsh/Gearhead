@@ -50,10 +50,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * Automatically hash password when set.
-     */
-
-    /**
      * Role check helpers.
      */
     public function hasAnyRole(array $roles): bool

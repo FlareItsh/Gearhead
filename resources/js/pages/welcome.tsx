@@ -1,5 +1,5 @@
+import Header from '@/components/Header';
 import { Head } from '@inertiajs/react';
-import Header from '../components/Header';
 
 export default function Welcome() {
     return (

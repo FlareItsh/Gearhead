@@ -69,7 +69,8 @@ function SidebarProvider({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen)
+//   const [_open, _setOpen] = React.useState(defaultOpen)
+  const [_open] = React.useState(defaultOpen)
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
@@ -77,11 +78,8 @@ function SidebarProvider({
       if (setOpenProp) {
         setOpenProp(openState)
       } else {
-        _setOpen(openState)
+        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       }
-
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
     },
     [setOpenProp, open]
   )
@@ -133,6 +131,10 @@ function SidebarProvider({
             {
               "--sidebar-width": SIDEBAR_WIDTH,
               "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+              // Ensure Tailwind/UI token variables used for sidebar accent text
+              // pick up the black override defined in your CSS: --sidebar-accent-text.
+              "--sidebar-accent-foreground": "var(--sidebar-accent-text)",
+              "--color-sidebar-accent-foreground": "var(--sidebar-accent-text)",
               ...style,
             } as React.CSSProperties
           }
