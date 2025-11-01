@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -19,44 +20,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('customer-dashboard', fn () => Inertia::render('Customer/CustomerDashboard'))
         ->name('customer.dashboard');
 
+    // Role-aware shared routes (avoid duplicate URIs)
+    // These delegate to the appropriate controller based on the authenticated user's role.
+    Route::get('/bookings', function (Request $request, AdminController $admin, CustomerController $customer) {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            return $admin->bookings($request);
+        }
+
+        return $customer->bookings($request);
+    })->name('bookings');
+
+    Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            return $admin->services($request);
+        }
+
+        return $customer->services($request);
+    })->name('services');
+
     // Customer-specific routes
-    Route::get('/bookings', [CustomerController::class, 'bookings'])
-        ->name('customer.bookings')
-        ->middleware('role:customer');
-    Route::get('/services', [CustomerController::class, 'services'])
-        ->name('customer.services')
-        ->middleware('role:customer');
-    Route::get('/payment-history', [CustomerController::class, 'payments'])
-        ->name('customer.payment-history')
+    Route::get('/payments', [CustomerController::class, 'payments'])
+        ->name('customer.payments')
         ->middleware('role:customer');
 
-    // Admin Specific routes
+    // Admin Specific routes (fixed controller method references and unique names)
     Route::get('/registry', [AdminController::class, 'registry'])
-        ->name('registry')
-        ->middleware('role:admin');
-    Route::get('/bookings', [AdminController::class, 'bookings'])
-        ->name('bookings')
+        ->name('admin.registry')
         ->middleware('role:admin');
     Route::get('/customers', [AdminController::class, 'customers'])
-        ->name('customers')
-        ->middleware('role:admin');
-    Route::get('/services', [AdminController::class, 'services'])
-        ->name('services')
+        ->name('admin.customers')
         ->middleware('role:admin');
     Route::get('/staffs', [AdminController::class, 'staffs'])
-        ->name('staffs')
+        ->name('admin.staffs')
         ->middleware('role:admin');
     Route::get('/inventory', [AdminController::class, 'inventory'])
-        ->name('inventory')
+        ->name('admin.inventory')
         ->middleware('role:admin');
     Route::get('/transactions', [AdminController::class, 'transactions'])
-        ->name('transactions')
+        ->name('admin.transactions')
         ->middleware('role:admin');
     Route::get('/reports', [AdminController::class, 'reports'])
-        ->name('reports')
+        ->name('admin.reports')
         ->middleware('role:admin');
     Route::get('/bays', [AdminController::class, 'bays'])
-        ->name('bays')
+        ->name('admin.bays')
         ->middleware('role:admin');
 
 });

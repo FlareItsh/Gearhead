@@ -110,7 +110,7 @@ export const customerNavItems: NavItem[] = [
     },
     {
         title: 'Payment History',
-        href: 'payment-history',
+        href: '/payments',
         icon: Banknote,
     },
 ];
@@ -154,7 +154,11 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton className="h-fit" asChild>
+                        <SidebarMenuButton
+                            size="lg"
+                            className="h-fit hover:bg-transparent focus-visible:bg-transparent active:bg-transparent data-[active=true]:bg-transparent"
+                            asChild
+                        >
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>

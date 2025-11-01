@@ -1,13 +1,18 @@
 export default function AppLogo() {
     return (
         <>
-            <div className="-w-full flex items-center justify-center">
+            <div className="flex items-center justify-center rounded-md text-sidebar-primary-foreground">
                 <img
                     src="/Gearhead-Logo-DarkMode.png"
                     alt="Gearhead Carwash"
-                    className="h-18"
+                    className="w-full"
                 />
             </div>
+            {/* <div className="ml-1 grid flex-1 text-left text-sm">
+                <span className="mb-0.5 truncate leading-tight font-semibold">
+                    Laravel Starter Kit
+                </span>
+            </div> */}
         </>
     );
 }

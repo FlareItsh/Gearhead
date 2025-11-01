@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/password';
+import { LoaderCircle } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -121,6 +122,9 @@ export default function Password() {
                                         disabled={processing}
                                         data-test="update-password-button"
                                     >
+                                        {processing && (
+                                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                                        )}
                                         Save password
                                     </Button>
 
