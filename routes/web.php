@@ -16,8 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', fn () => Inertia::render('dashboard'))
         ->name('dashboard');
 
-    // Customer-specific dashboard (separate page for customer users)
-    Route::get('customer-dashboard', fn () => Inertia::render('Customer/CustomerDashboard'))
+    Route::get('customer-dashboard', [CustomerController::class, 'dashboard'])
         ->name('customer.dashboard');
 
     // Role-aware shared routes (avoid duplicate URIs)
@@ -44,6 +43,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/payments', [CustomerController::class, 'payments'])
         ->name('customer.payments')
         ->middleware('role:customer');
+
+    // Payments API: return the current user's payments count
+    Route::get('/payments/count', [\App\Http\Controllers\PaymentController::class, 'countForCurrentUser'])
+        ->name('payments.count')
+        ->middleware(['auth', 'role:customer']);
 
     // Admin Specific routes (fixed controller method references and unique names)
     Route::get('/registry', [AdminController::class, 'registry'])

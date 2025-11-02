@@ -52,4 +52,20 @@ class PaymentController extends Controller
         $this->repo->delete($item);
         return response()->json(null, 204);
     }
+
+    /**
+     * Return the total number of payments for the currently authenticated user.
+     */
+    public function countForCurrentUser(Request $request)
+    {
+        $user = $request->user();
+        $userId = $user->user_id ?? $user->id ?? null;
+        $count = 0;
+
+        if ($userId !== null) {
+            $count = $this->repo->countByUserId((int) $userId);
+        }
+
+        return response()->json(['payments_count' => $count]);
+    }
 }

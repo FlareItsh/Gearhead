@@ -16,4 +16,9 @@ interface PaymentRepositoryInterface
     public function update(Payment $payment, array $data): bool;
 
     public function delete(Payment $payment): bool;
+
+    /**
+     * Return the total number of payments for a given user id.
+     */
+    public function countByUserId(int $userId): int;
 }

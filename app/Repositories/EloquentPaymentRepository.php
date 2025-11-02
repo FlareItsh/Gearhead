@@ -31,4 +31,14 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
     {
         return $payment->delete();
     }
+
+    /**
+     * Count payments associated with service orders belonging to the given user id.
+     */
+    public function countByUserId(int $userId): int
+    {
+        return Payment::whereHas('serviceOrder', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        })->count();
+    }
 }
