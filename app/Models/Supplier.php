@@ -22,8 +22,8 @@ class Supplier extends Model
         'email',
     ];
 
-    public function supplyPurchaseDetails()
+    public function supplyPurchases()
     {
-        return $this->hasMany(SupplyPurchaseDetail::class, 'supplier_id', 'supplier_id');
+        return $this->hasMany(SupplyPurchase::class, 'supplier_id', 'supplier_id');
     }
 }

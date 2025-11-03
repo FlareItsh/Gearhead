@@ -14,12 +14,12 @@ class SupplyPurchase extends Model
     protected $primaryKey = 'supply_purchase_id';
 
     protected $fillable = [
-        'supply_id',
+        'supplier_id',
     ];
 
-    public function supply()
+    public function supplier()
     {
-        return $this->belongsTo(Supply::class, 'supply_id', 'supply_id');
+        return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
     }
 
     public function details()

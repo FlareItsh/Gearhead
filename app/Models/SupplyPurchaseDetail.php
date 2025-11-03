@@ -14,8 +14,8 @@ class SupplyPurchaseDetail extends Model
     protected $primaryKey = 'supply_purchase_details_id';
 
     protected $fillable = [
-        'supplier_id',
         'supply_purchase_id',
+        'supply_id',
         'quantity',
         'unit_price',
         'purchase_date',
@@ -27,9 +27,9 @@ class SupplyPurchaseDetail extends Model
         'purchase_date' => 'datetime',
     ];
 
-    public function supplier()
+    public function supply()
     {
-        return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
+        return $this->belongsTo(Supply::class, 'supply_id', 'supply_id');
     }
 
     public function supplyPurchase()

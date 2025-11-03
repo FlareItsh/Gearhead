@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('supply_purchases', function (Blueprint $table) {
             $table->id('supply_purchase_id');
-            $table->foreignId('supply_id')
-                ->constrained('supplies', 'supply_id')
+            $table->foreignId('supplier_id')
+                ->constrained('suppliers', 'supplier_id')
                 ->onDelete('cascade');
+            $table->timestamp('purchase_date');
             $table->timestamps();
         });
     }

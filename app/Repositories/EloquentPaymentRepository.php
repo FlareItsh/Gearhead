@@ -41,4 +41,11 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             $q->where('user_id', $userId);
         })->count();
     }
+
+    public function totalSpent(int $userId): int
+    {
+        return Payment::whereHas('serviceOrder', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        })->count();
+    }
 }

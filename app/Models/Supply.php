@@ -16,6 +16,8 @@ class Supply extends Model
     protected $fillable = [
         'supply_name',
         'unit',
+        'reorder_point',
+        'supply_type',
         'quantity_stock',
     ];
 
@@ -23,9 +25,9 @@ class Supply extends Model
         'quantity_stock' => 'decimal:2',
     ];
 
-    public function supplyPurchases()
+    public function supplyPurchaseDetails()
     {
-        return $this->hasMany(SupplyPurchase::class, 'supply_id', 'supply_id');
+        return $this->hasMany(SupplyPurchaseDetail::class, 'supply_id', 'supply_id');
     }
 
     public function pulloutRequestDetails()

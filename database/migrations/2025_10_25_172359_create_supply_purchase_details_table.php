@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('supply_purchase_details', function (Blueprint $table) {
             $table->id('supply_purchase_details_id');
-            $table->foreignId('supplier_id')
-                ->constrained('suppliers', 'supplier_id')
-                ->onDelete('cascade');
             $table->foreignId('supply_purchase_id')
                 ->constrained('supply_purchases', 'supply_purchase_id')
+                ->onDelete('cascade');
+            $table->foreignId('supply_id')
+                ->constrained('supplies', 'supply_id')
                 ->onDelete('cascade');
             $table->decimal('quantity', 10, 2);
             $table->decimal('unit_price', 10, 2);

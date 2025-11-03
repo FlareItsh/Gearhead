@@ -17,7 +17,6 @@ class ServiceOrder extends Model
         'user_id',
         'employee_id',
         'bay_id',
-        'category',
         'order_date',
         'order_type',
     ];

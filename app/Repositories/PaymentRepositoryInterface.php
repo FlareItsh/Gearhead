@@ -21,4 +21,6 @@ interface PaymentRepositoryInterface
      * Return the total number of payments for a given user id.
      */
     public function countByUserId(int $userId): int;
+
+    public function totalSpent(int $userId): int;
 }

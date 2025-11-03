@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id('supply_id');
             $table->string('supply_name');
             $table->string('unit');
+            $table->decimal('reorder_point');
+            $table->string('supply_type');
             $table->decimal('quantity_stock', 10, 2);
             $table->timestamps();
         });

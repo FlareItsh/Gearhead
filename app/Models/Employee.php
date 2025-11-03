@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Traits\HasFullName;
+use App\Traits\HasFullName;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
