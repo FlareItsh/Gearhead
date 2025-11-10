@@ -12,15 +12,19 @@ Route::get('/', fn () => Inertia::render('welcome'))->name('home');
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Dashboard is available to any authenticated and verified user
-    Route::get('dashboard', fn () => Inertia::render('dashboard'))
-        ->name('dashboard');
+    Route::get('dashboard', function (Request $request, AdminController $admin, CustomerController $customer) {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('customer')) {
+            return $customer->dashboard($request);
+        }
+
+        return Inertia::render('dashboard');
+    })->name('dashboard');
 
     Route::get('customer-dashboard', [CustomerController::class, 'dashboard'])
         ->name('customer.dashboard');
 
-    // Role-aware shared routes (avoid duplicate URIs)
-    // These delegate to the appropriate controller based on the authenticated user's role.
+    // Role-aware shared routes
     Route::get('/bookings', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
@@ -42,7 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Customer-specific routes
     Route::get('/payments', [CustomerController::class, 'payments'])
         ->name('customer.payments')
-        ->middleware('role:customer');
+        ->middleware('auth', 'role:customer');
 
     // Payments API: return the current user's payments count
     Route::get('/payments/count', [\App\Http\Controllers\PaymentController::class, 'countForCurrentUser'])

@@ -53,4 +53,37 @@ class ServiceController extends Controller
         $this->repo->delete($item);
         return response()->json(null, 204);
     }
+
+    /**
+     * Return services filtered by category. Excludes the `status` column.
+     * Example: GET /api/services?category=Wash
+     */
+    public function byCategory(Request $request)
+    {
+        $category = $request->query('category');
+
+        // Build a query using the Service model. We avoid relying on the
+        // repository here because we need to select a subset of columns.
+        $query = \App\Models\Service::query();
+        if ($category) {
+            $query->where('category', $category);
+        }
+
+        // Explicitly select all columns except `status`.
+        $cols = [
+            'service_id',
+            'service_name',
+            'description',
+            'size',
+            'category',
+            'estimated_duration',
+            'price',
+            'created_at',
+            'updated_at',
+        ];
+
+        $items = $query->get($cols);
+
+        return response()->json($items);
+    }
 }

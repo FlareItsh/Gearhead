@@ -1,18 +1,21 @@
 import Heading from '@/components/heading';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import HeadingSmall from '@/components/heading-small';
+import { Button } from '@/components/ui/button';
 import type { SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
-import { HandCoins, Star, Wrench } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { CalendarDays, HandCoins, Star, Wrench } from 'lucide-react';
 import React from 'react';
 
 // Placeholder for customer dashboard
 const CustomerDashboard: React.FC = () => {
     const pageProps = usePage().props as unknown as SharedData & {
         paymentsCount?: number;
+        totalSpent?: number;
     };
     const { auth } = pageProps;
     const firstName = auth?.user?.first_name ?? auth?.user?.name ?? 'there';
     const paymentsCount = pageProps.paymentsCount ?? 0;
+    const totalSpent = pageProps.totalSpent ?? 0;
 
     return (
         <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
@@ -68,9 +71,9 @@ const CustomerDashboard: React.FC = () => {
                     <div className="text-center">
                         <span
                             className="text-5xl font-semibold"
-                            data-test="payments-count"
+                            data-test="total-spent"
                         >
-                            {paymentsCount}
+                            ₱{totalSpent.toLocaleString()}
                         </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -78,9 +81,64 @@ const CustomerDashboard: React.FC = () => {
                     </p>
                 </div>
             </div>
-            <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+
+            <Link href="/services">
+                <Button variant="highlight">
+                    <CalendarDays /> Book Now
+                </Button>
+            </Link>
+
+            {/*Upcoming Booking Section*/}
+            <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                <HeadingSmall
+                    title="Upcoming Bookings"
+                    description="Your scheduled appointments"
+                />
+
+                <div className="mt-4 rounded-lg border p-4">
+                    <div>
+                        <HeadingSmall
+                            title="Body Wash"
+                            description={new Date().toLocaleString()}
+                        />
+                    </div>
+                </div>
+                <div className="mt-4 rounded-lg border p-4">
+                    <div>
+                        <HeadingSmall
+                            title="Body Wash"
+                            description={new Date().toLocaleString()}
+                        />
+                    </div>
+                </div>
             </div>
+
+            {/*Recent Bookings Section*/}
+            <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                <HeadingSmall
+                    title="Recent Bookings"
+                    description="Your completed appointments"
+                />
+
+                <div className="mt-4 rounded-lg border p-4">
+                    <div>
+                        <HeadingSmall
+                            title="Body Wash"
+                            description={new Date().toLocaleString()}
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-4 rounded-lg border p-4">
+                    <div>
+                        <HeadingSmall
+                            title="Body Wash"
+                            description={new Date().toLocaleString()}
+                        />
+                    </div>
+                </div>
+            </div>
+            <div>{/*TODO: List of comlpeted bookings*/}</div>
         </div>
     );
 };

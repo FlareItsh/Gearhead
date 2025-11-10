@@ -16,6 +16,18 @@ class PaymentsSeeder extends Seeder
             ['payment_id' => 2, 'service_order_id' => 2, 'amount' => 500, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
             ['payment_id' => 3, 'service_order_id' => 3, 'amount' => 500, 'payment_method' => 'gcash', 'is_point_redeemed' => false, 'gcash_reference' => '3658946164618'],
             ['payment_id' => 4, 'service_order_id' => 4, 'amount' => 350, 'payment_method' => 'cash', 'is_point_redeemed' => false, 'gcash_reference' => null],
+            ['payment_id' => 5, 'service_order_id' => 5, 'amount' => 200, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 6, 'service_order_id' => 6, 'amount' => 350, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 7, 'service_order_id' => 7, 'amount' => 390, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 8, 'service_order_id' => 8, 'amount' => 300, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 9, 'service_order_id' => 9, 'amount' => 200, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 10, 'service_order_id' => 10, 'amount' => 1350, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 11, 'service_order_id' => 11, 'amount' => 930, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 12, 'service_order_id' => 12, 'amount' => 350, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 13, 'service_order_id' => 13, 'amount' => 390, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 14, 'service_order_id' => 14, 'amount' => 300, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 15, 'service_order_id' => 15, 'amount' => 60, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
+            ['payment_id' => 16, 'service_order_id' => 16, 'amount' => 90, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
         ];
 
         foreach ($payments as $p) {

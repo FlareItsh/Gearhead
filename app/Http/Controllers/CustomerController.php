@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
 use App\Repositories\PaymentRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
@@ -23,8 +24,39 @@ class CustomerController extends Controller
     {
         $users = $this->users->all();
 
+        // Pull distinct categories from the services table and pass them
+        // to the Inertia page so the frontend can render the unique list.
+        $categories = Service::query()->distinct()->orderBy('category')->pluck('category');
+
+        // If a category query param is provided, fetch services in that
+        // category (selecting all columns except `status`). This uses
+        // Eloquent on the server-side so the frontend does not have to
+        // call a separate API endpoint.
+        $selectedCategory = $request->query('category');
+        $services = [];
+
+        if ($selectedCategory) {
+            $services = Service::query()
+                ->where('category', $selectedCategory)
+                ->select([
+                    'service_id',
+                    'service_name',
+                    'description',
+                    'size',
+                    'category',
+                    'estimated_duration',
+                    'price',
+                    'created_at',
+                    'updated_at',
+                ])
+                ->get();
+        }
+
         return Inertia::render('Customer/Services', [
             'users' => $users,
+            'categories' => $categories,
+            'services' => $services,
+            'selectedCategory' => $selectedCategory,
         ]);
     }
 
@@ -54,13 +86,16 @@ class CustomerController extends Controller
         $user = $request->user();
         $userId = $user->user_id ?? $user->id ?? null;
         $count = 0;
+        $total = 0;
 
         if ($userId !== null) {
             $count = $this->payments->countByUserId((int) $userId);
+            $total = $this->payments->totalSpent((int) $userId);
         }
 
-        return Inertia::render('Customer/CustomerDashboard', [
+        return Inertia::render('dashboard', [
             'paymentsCount' => $count,
+            'totalSpent' => $total,
         ]);
     }
 }

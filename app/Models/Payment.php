@@ -28,6 +28,6 @@ class Payment extends Model
 
     public function serviceOrder()
     {
-        return $this->belongsTo(ServiceOrder::class, 'service_order_id', 'service_order_id');
+        return $this->belongsTo(\App\Models\ServiceOrder::class, 'service_order_id', 'service_order_id');
     }
 }

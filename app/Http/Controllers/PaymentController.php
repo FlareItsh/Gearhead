@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Repositories\PaymentRepositoryInterface;
+use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
@@ -22,12 +22,14 @@ class PaymentController extends Controller
     public function show(int $id)
     {
         $item = $this->repo->findById($id);
+
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
 
     public function store(Request $request)
     {
         $created = $this->repo->create($request->all());
+
         return response()->json($created, 201);
     }
 
@@ -39,6 +41,7 @@ class PaymentController extends Controller
         }
 
         $this->repo->update($item, $request->all());
+
         return response()->json($item);
     }
 
@@ -50,6 +53,7 @@ class PaymentController extends Controller
         }
 
         $this->repo->delete($item);
+
         return response()->json(null, 204);
     }
 
@@ -67,5 +71,31 @@ class PaymentController extends Controller
         }
 
         return response()->json(['payments_count' => $count]);
+    }
+
+    public function summary(Request $request)
+    {
+        $user = $request->user();
+        $userId = $user->user_id ?? $user->id ?? null;
+
+        if ($userId === null) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+
+        // ✅ Fetch summary with relationship to service_order
+        $summary = \App\Models\Payment::with('serviceOrder:id,service_order_id,service_name')
+            ->whereHas('serviceOrder', fn ($q) => $q->where('user_id', $userId))
+            ->get([
+                'payment_id',
+                'service_order_id',
+                'amount',
+                'payment_method',
+                'is_point_redeemed',
+                'gcash_reference',
+                'created_at',
+                'updated_at',
+            ]);
+
+        return response()->json(['summary' => $summary]);
     }
 }

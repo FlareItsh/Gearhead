@@ -34,18 +34,23 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
 
     /**
      * Count payments associated with service orders belonging to the given user id.
+     *
+     * This implementation performs a join between payments and service_orders so
+     * we explicitly match payments.service_order_id -> service_orders.service_order_id
+     * and then filter by service_orders.user_id.
      */
     public function countByUserId(int $userId): int
     {
-        return Payment::whereHas('serviceOrder', function ($q) use ($userId) {
-            $q->where('user_id', $userId);
-        })->count();
+        return Payment::join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
+            ->where('service_orders.user_id', $userId)
+            ->count('payments.payment_id');
     }
 
     public function totalSpent(int $userId): int
     {
-        return Payment::whereHas('serviceOrder', function ($q) use ($userId) {
-            $q->where('user_id', $userId);
-        })->count();
+        // Sum the amount of payments for the user's service orders.
+        return (int) Payment::join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
+            ->where('service_orders.user_id', $userId)
+            ->sum('payments.amount');
     }
 }
