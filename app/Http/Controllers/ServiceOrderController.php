@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Repositories\ServiceOrderRepositoryInterface;
+use Illuminate\Http\Request;
 
 class ServiceOrderController extends Controller
 {
@@ -22,12 +22,14 @@ class ServiceOrderController extends Controller
     public function show(int $id)
     {
         $item = $this->repo->findById($id);
+
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
 
     public function store(Request $request)
     {
         $created = $this->repo->create($request->all());
+
         return response()->json($created, 201);
     }
 
@@ -39,6 +41,7 @@ class ServiceOrderController extends Controller
         }
 
         $this->repo->update($item, $request->all());
+
         return response()->json($item);
     }
 
@@ -50,6 +53,18 @@ class ServiceOrderController extends Controller
         }
 
         $this->repo->delete($item);
+
         return response()->json(null, 204);
+    }
+
+    public function upcoming(Request $request)
+    {
+        $userId = $request->user()->user_id; // current logged-in user
+
+        $bookings = $this->repo->upcomingBookings($userId);
+
+        // Example 1: return as JSON (API)
+        return response()->json($bookings);
+
     }
 }

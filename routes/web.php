@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ServiceOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -34,6 +35,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return $customer->bookings($request);
     })->name('bookings');
 
+    Route::get('/bookings/upcoming', [ServiceOrderController::class, 'upcoming'])
+        ->name('bookings.upcoming');
+
+    // Role specific services route
     Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {

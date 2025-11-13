@@ -24,6 +24,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('bays', 'bay_id')
                 ->onDelete('set null');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->timestamp('order_date');
             $table->enum('order_type', ['W', 'R'])->comment('W = Walk-in, R = Reservation');
             $table->timestamps();

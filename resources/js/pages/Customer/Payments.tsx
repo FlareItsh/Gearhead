@@ -14,11 +14,12 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { route } from 'ziggy-js';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Payment History',
-        href: '/payments/user',
+        href: 'payments.user',
     },
 ];
 
@@ -27,7 +28,7 @@ export default function Payments() {
 
     useEffect(() => {
         axios
-            .get('/payments/user')
+            .get(route('payments.user'))
             .then((res) => setPayments(res.data))
             .catch((err) => console.error(err));
     }, []);

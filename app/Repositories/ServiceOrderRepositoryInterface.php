@@ -16,4 +16,6 @@ interface ServiceOrderRepositoryInterface
     public function update(ServiceOrder $order, array $data): bool;
 
     public function delete(ServiceOrder $order): bool;
+
+    public function upcomingBookings(int $userId);
 }
