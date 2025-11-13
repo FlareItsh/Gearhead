@@ -26,8 +26,6 @@ class PaymentsSeeder extends Seeder
             ['payment_id' => 12, 'service_order_id' => 12, 'amount' => 350, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
             ['payment_id' => 13, 'service_order_id' => 13, 'amount' => 390, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
             ['payment_id' => 14, 'service_order_id' => 14, 'amount' => 300, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
-            ['payment_id' => 15, 'service_order_id' => 15, 'amount' => 60, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
-            ['payment_id' => 16, 'service_order_id' => 16, 'amount' => 90, 'payment_method' => 'cash', 'is_point_redeemed' => true, 'gcash_reference' => null],
         ];
 
         foreach ($payments as $p) {
