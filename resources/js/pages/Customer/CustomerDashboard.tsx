@@ -122,7 +122,7 @@ const CustomerDashboard: React.FC = () => {
             </Link>
 
             {/*Upcoming Booking Section*/}
-            <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+            <div className="relative flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
                 <HeadingSmall
                     title="Upcoming Bookings"
                     description="Your scheduled appointments"
@@ -187,14 +187,14 @@ const CustomerDashboard: React.FC = () => {
             </div>
 
             {/*Recent Bookings Section*/}
-            <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+            <div className="relative flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
                 <div className="flex items-center justify-between">
                     <HeadingSmall
                         title="Recent Bookings"
                         description="Your completed appointments"
                     />
                     <div>
-                        <Link href={route('customer.payments')}>
+                        <Link href={route('bookings')}>
                             <Button variant="highlight">View All</Button>
                         </Link>
                     </div>

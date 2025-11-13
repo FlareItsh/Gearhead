@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Service;
+use App\Repositories\BookingRepository;
 use App\Repositories\PaymentRepositoryInterface;
+use App\Repositories\ServiceRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CustomerController extends Controller
@@ -14,58 +16,25 @@ class CustomerController extends Controller
 
     private PaymentRepositoryInterface $payments;
 
-    public function __construct(UserRepositoryInterface $users, PaymentRepositoryInterface $payments)
+    private ServiceRepositoryInterface $services;
+
+    public function __construct(UserRepositoryInterface $users, PaymentRepositoryInterface $payments, ServiceRepositoryInterface $services)
     {
         $this->users = $users;
         $this->payments = $payments;
+        $this->services = $services;
     }
 
-    public function services(Request $request)
+    public function bookings(Request $request, BookingRepository $bookings)
     {
-        $users = $this->users->all();
+        $user = $request->user();
+        $status = $request->query('status', 'all'); // optional filter
 
-        // Pull distinct categories from the services table and pass them
-        // to the Inertia page so the frontend can render the unique list.
-        $categories = Service::query()->distinct()->orderBy('category')->pluck('category');
-
-        // If a category query param is provided, fetch services in that
-        // category (selecting all columns except `status`). This uses
-        // Eloquent on the server-side so the frontend does not have to
-        // call a separate API endpoint.
-        $selectedCategory = $request->query('category');
-        $services = [];
-
-        if ($selectedCategory) {
-            $services = Service::query()
-                ->where('category', $selectedCategory)
-                ->select([
-                    'service_id',
-                    'service_name',
-                    'description',
-                    'size',
-                    'category',
-                    'estimated_duration',
-                    'price',
-                    'created_at',
-                    'updated_at',
-                ])
-                ->get();
-        }
-
-        return Inertia::render('Customer/Services', [
-            'users' => $users,
-            'categories' => $categories,
-            'services' => $services,
-            'selectedCategory' => $selectedCategory,
-        ]);
-    }
-
-    public function bookings(Request $request)
-    {
-        $users = $this->users->all();
+        $allBookings = $bookings->getBookingsByUser((int) $user->user_id, $status);
 
         return Inertia::render('Customer/Bookings', [
-            'users' => $users,
+            'bookings' => $allBookings,
+            'selectedStatus' => $status,
         ]);
     }
 
@@ -97,5 +66,52 @@ class CustomerController extends Controller
             'paymentsCount' => $count,
             'totalSpent' => $total,
         ]);
+    }
+
+    /**
+     * Show all services or filtered by category.
+     */
+    public function services(Request $request)
+    {
+        $selectedCategory = $request->query('category', 'All');
+
+        // Get services filtered by category
+        $services = $this->services->getAllByCategory($selectedCategory);
+
+        // Get all unique categories (for category buttons)
+        $categories = $this->services->all()->pluck('category')->unique()->values();
+
+        return Inertia::render('Customer/Services', [
+            'services' => $services,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
+        ]);
+    }
+
+    public function cancelBooking(int $id)
+    {
+        $user = auth()->user();
+
+        // Find the booking
+        $booking = DB::table('service_orders')
+            ->where('service_order_id', $id)
+            ->where('user_id', $user->user_id) // ensure user owns this booking
+            ->first();
+
+        if (! $booking) {
+            return back()->with('error', 'Booking not found.');
+        }
+
+        // Check if it can be cancelled
+        if (in_array($booking->status, ['completed', 'confirmed'])) {
+            return back()->with('error', 'This booking cannot be cancelled.');
+        }
+
+        // Update status to cancelled
+        DB::table('service_orders')
+            ->where('service_order_id', $id)
+            ->update(['status' => 'cancelled', 'updated_at' => now()]);
+
+        return back()->with('success', 'Booking cancelled successfully.');
     }
 }
