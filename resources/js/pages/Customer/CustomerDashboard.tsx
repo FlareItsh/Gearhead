@@ -57,15 +57,20 @@ const CustomerDashboard: React.FC = () => {
                 description="Manage your carwash bookings and loyalty rewards"
             />
             <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                <div className="relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                    <div className="flex justify-between">
-                        <h4>Loyalty Points</h4>
-                        <Star />
+                {/* Loyalty Points Card */}
+                <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-foreground">
+                            Loyalty Points
+                        </h4>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400">
+                            <Star className="h-4 w-4" />
+                        </div>
                     </div>
 
                     <div className="text-center">
                         <span
-                            className="text-5xl font-semibold"
+                            className="mx-auto inline-block w-fit rounded-full bg-yellow-100 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-yellow-200 dark:bg-yellow-900/20"
                             data-test="payments-count"
                         >
                             {paymentsCount % 9}
@@ -76,15 +81,20 @@ const CustomerDashboard: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                    <div className="flex justify-between">
-                        <h4>Total Bookings</h4>
-                        <Wrench />
+                {/* Total Bookings Card */}
+                <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-foreground">
+                            Total Bookings
+                        </h4>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400">
+                            <Wrench className="h-4 w-4" />
+                        </div>
                     </div>
 
                     <div className="text-center">
                         <span
-                            className="text-5xl font-semibold"
+                            className="mx-auto inline-block w-fit rounded-full bg-blue-100 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-blue-200 dark:bg-blue-900/20"
                             data-test="payments-count"
                         >
                             {paymentsCount}
@@ -95,15 +105,20 @@ const CustomerDashboard: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                    <div className="flex justify-between">
-                        <h4>Total Spent</h4>
-                        <HandCoins />
+                {/* Total Spent Card */}
+                <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-foreground">
+                            Total Spent
+                        </h4>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 group-hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400">
+                            <HandCoins className="h-4 w-4" />
+                        </div>
                     </div>
 
                     <div className="text-center">
                         <span
-                            className="text-5xl font-semibold"
+                            className="mx-auto inline-block w-fit rounded-full bg-green-100 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-green-200 dark:bg-green-900/20"
                             data-test="total-spent"
                         >
                             ₱{totalSpent.toLocaleString()}
@@ -173,7 +188,9 @@ const CustomerDashboard: React.FC = () => {
                                     >
                                         {booking.status
                                             .replace('_', ' ')
-                                            .toUpperCase()}
+                                            .replace(/^\w/, (c) =>
+                                                c.toUpperCase(),
+                                            )}
                                     </Badge>
                                 </div>
                             </div>
@@ -194,7 +211,7 @@ const CustomerDashboard: React.FC = () => {
                         description="Your completed appointments"
                     />
                     <div>
-                        <Link href={route('bookings')}>
+                        <Link href={'/bookings?status=completed'}>
                             <Button variant="highlight">View All</Button>
                         </Link>
                     </div>
@@ -219,7 +236,7 @@ const CustomerDashboard: React.FC = () => {
                                     <span className="text-lg font-bold">
                                         Amount: ₱{payment.amount}
                                     </span>
-                                    <Badge variant="success">COMPLETED</Badge>
+                                    <Badge variant="success">Completed</Badge>
                                 </div>
                             </div>
                         ))

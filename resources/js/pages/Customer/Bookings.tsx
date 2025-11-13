@@ -46,12 +46,14 @@ export default function Bookings() {
 
     // View Details modal state
     const [modalOpen, setModalOpen] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(
         null,
     );
 
     // Cancel modal state
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
+    const [isCancelClosing, setIsCancelClosing] = useState(false);
     const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(
         null,
     );
@@ -59,21 +61,31 @@ export default function Bookings() {
     const openModal = (booking: Booking) => {
         setSelectedBooking(booking);
         setModalOpen(true);
+        setIsClosing(false);
     };
 
     const closeModal = () => {
-        setSelectedBooking(null);
-        setModalOpen(false);
+        setIsClosing(true);
+        setTimeout(() => {
+            setSelectedBooking(null);
+            setModalOpen(false);
+            setIsClosing(false);
+        }, 500);
     };
 
     const openCancelModal = (booking: Booking) => {
         setBookingToCancel(booking);
         setCancelModalOpen(true);
+        setIsCancelClosing(false);
     };
 
     const closeCancelModal = () => {
-        setBookingToCancel(null);
-        setCancelModalOpen(false);
+        setIsCancelClosing(true);
+        setTimeout(() => {
+            setBookingToCancel(null);
+            setCancelModalOpen(false);
+            setIsCancelClosing(false);
+        }, 500);
     };
 
     const confirmCancel = () => {
@@ -229,10 +241,14 @@ export default function Bookings() {
                     )}
                 </div>
 
-                {/* View Details Modal (unchanged content; opens with openModal) */}
+                {/* View Details Modal */}
                 {modalOpen && selectedBooking && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-highlight/2 backdrop-blur-sm transition-opacity duration-300">
-                        <div className="relative mx-4 w-full max-w-md transform rounded-xl border border-border bg-background p-6 shadow-2xl duration-200 ease-out animate-in fade-in zoom-in">
+                    <div
+                        className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${isClosing ? 'animate-out fade-out' : 'bg-highlight/2 backdrop-blur-sm'}`}
+                    >
+                        <div
+                            className={`relative mx-4 w-full max-w-md transform rounded-xl border border-border bg-background p-6 shadow-2xl duration-500 ease-out ${isClosing ? 'animate-out fade-out zoom-out' : 'animate-in fade-in zoom-in'}`}
+                        >
                             {/* Close Button */}
                             <button
                                 className="absolute top-4 right-4 rounded-full p-2 transition-colors duration-200 hover:bg-muted/50 dark:hover:bg-muted"
@@ -390,8 +406,12 @@ export default function Bookings() {
 
                 {/* Cancel Confirmation Modal */}
                 {cancelModalOpen && bookingToCancel && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-highlight/2 backdrop-blur-sm transition-opacity duration-300">
-                        <div className="relative mx-4 w-full max-w-md transform rounded-xl border border-border bg-background p-6 shadow-2xl duration-200 ease-out animate-in fade-in zoom-in">
+                    <div
+                        className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${isCancelClosing ? 'animate-out fade-out' : 'bg-highlight/2 backdrop-blur-sm'}`}
+                    >
+                        <div
+                            className={`relative mx-4 w-full max-w-md transform rounded-xl border border-border bg-background p-6 shadow-2xl duration-500 ease-out ${isCancelClosing ? 'animate-out fade-out zoom-out' : 'animate-in fade-in zoom-in'}`}
+                        >
                             {/* Close Button */}
                             <button
                                 className="absolute top-4 right-4 rounded-full p-2 transition-colors duration-200 hover:bg-muted/50 dark:hover:bg-muted"
