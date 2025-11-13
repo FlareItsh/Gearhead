@@ -78,9 +78,7 @@ export default function Payments() {
                                     className={`border-t ${index % 2 === 0 ? 'bg-highlight/10' : ''}`}
                                 >
                                     <TableCell className="text-base">
-                                        {new Date(
-                                            payment.date,
-                                        ).toLocaleString()}
+                                        {payment.created_at}
                                     </TableCell>
                                     <TableCell className="text-base">
                                         {payment.services ? (

@@ -40,7 +40,7 @@ const CustomerDashboard: React.FC = () => {
 
     useEffect(() => {
         axios
-            .get(route('payments.user'))
+            .get('/payments/user')
             .then((res) => setPayments(res.data))
             .catch((err) => console.error(err));
     }, []);
