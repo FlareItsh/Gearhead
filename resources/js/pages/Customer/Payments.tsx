@@ -12,15 +12,26 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Payment History',
-        href: '/payments',
+        href: '/payments/user',
     },
 ];
 
 export default function Payments() {
+    const [payments, setPayments] = useState<any[]>([]);
+
+    useEffect(() => {
+        axios
+            .get('/payments/user')
+            .then((res) => setPayments(res.data))
+            .catch((err) => console.error(err));
+    }, []);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payment History" />
@@ -42,23 +53,70 @@ export default function Payments() {
                         </TableCaption>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Service</TableHead>
-                                <TableHead>Amount</TableHead>
-                                <TableHead>Payment Method</TableHead>
-                                <TableHead>GCash Ref</TableHead>
+                                <TableHead className="text-base">
+                                    Date
+                                </TableHead>
+                                <TableHead className="text-base">
+                                    Services
+                                </TableHead>
+                                <TableHead className="text-right text-base">
+                                    Amount
+                                </TableHead>
+                                <TableHead className="text-base">
+                                    Payment Method
+                                </TableHead>
+                                <TableHead className="text-right text-base">
+                                    GCash Ref
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow>
-                                <TableCell>
-                                    {new Date().toLocaleString()}
-                                </TableCell>
-                                <TableCell>Body Wash</TableCell>
-                                <TableCell>₱500.00</TableCell>
-                                <TableCell>Cash</TableCell>
-                                <TableCell>Null</TableCell>
-                            </TableRow>
+                            {payments.map((payment, index) => (
+                                <TableRow
+                                    key={index}
+                                    className={`border-t ${index % 2 === 0 ? 'bg-highlight/10' : ''}`}
+                                >
+                                    <TableCell className="text-base">
+                                        {new Date(
+                                            payment.date,
+                                        ).toLocaleString()}
+                                    </TableCell>
+                                    <TableCell className="text-base">
+                                        {payment.services ? (
+                                            <ul className="list-inside list-disc space-y-1">
+                                                {payment.services
+                                                    .split(',')
+                                                    .map(
+                                                        (
+                                                            service: string,
+                                                            idx: number,
+                                                        ) => (
+                                                            <li
+                                                                key={idx}
+                                                                className="text-base"
+                                                            >
+                                                                {service.trim()}
+                                                            </li>
+                                                        ),
+                                                    )}
+                                            </ul>
+                                        ) : (
+                                            <span className="text-base">
+                                                N/A
+                                            </span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-right text-base font-medium">
+                                        ₱{parseFloat(payment.amount).toFixed(2)}
+                                    </TableCell>
+                                    <TableCell className="text-base">
+                                        {payment.payment_method}
+                                    </TableCell>
+                                    <TableCell className="text-right text-base">
+                                        {payment.gcash_reference || 'N/A'}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </div>

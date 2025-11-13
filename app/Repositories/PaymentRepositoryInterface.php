@@ -22,5 +22,15 @@ interface PaymentRepositoryInterface
      */
     public function countByUserId(int $userId): int;
 
+    /**
+     * Return the total amount spent by a given user id.
+     */
     public function totalSpent(int $userId): int;
+
+    /**
+     * Return all payments for a given user id, including joined service names.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getPaymentsForUser(int $userId);
 }

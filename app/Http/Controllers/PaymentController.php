@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\PaymentRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -73,29 +74,12 @@ class PaymentController extends Controller
         return response()->json(['payments_count' => $count]);
     }
 
-    public function summary(Request $request)
+    // New method to get payments for current logged-in user
+    public function indexForCurrentUser()
     {
-        $user = $request->user();
-        $userId = $user->user_id ?? $user->id ?? null;
+        $userId = Auth::id();
+        $payments = $this->repo->getPaymentsForUser($userId);
 
-        if ($userId === null) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
-
-        // ✅ Fetch summary with relationship to service_order
-        $summary = \App\Models\Payment::with('serviceOrder:id,service_order_id,service_name')
-            ->whereHas('serviceOrder', fn ($q) => $q->where('user_id', $userId))
-            ->get([
-                'payment_id',
-                'service_order_id',
-                'amount',
-                'payment_method',
-                'is_point_redeemed',
-                'gcash_reference',
-                'created_at',
-                'updated_at',
-            ]);
-
-        return response()->json(['summary' => $summary]);
+        return response()->json($payments);
     }
 }

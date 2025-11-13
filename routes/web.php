@@ -53,6 +53,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('payments.count')
         ->middleware(['auth', 'role:customer']);
 
+    Route::get('/payments/user', [\App\Http\Controllers\PaymentController::class, 'indexForCurrentUser'])
+        ->name('payments.user')
+        ->middleware(['auth', 'role:customer']);
+
     // Admin Specific routes (fixed controller method references and unique names)
     Route::get('/registry', [AdminController::class, 'registry'])
         ->name('admin.registry')

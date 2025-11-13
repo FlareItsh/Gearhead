@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Payment;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EloquentPaymentRepository implements PaymentRepositoryInterface
 {
@@ -32,13 +33,6 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
         return $payment->delete();
     }
 
-    /**
-     * Count payments associated with service orders belonging to the given user id.
-     *
-     * This implementation performs a join between payments and service_orders so
-     * we explicitly match payments.service_order_id -> service_orders.service_order_id
-     * and then filter by service_orders.user_id.
-     */
     public function countByUserId(int $userId): int
     {
         return Payment::join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
@@ -48,9 +42,36 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
 
     public function totalSpent(int $userId): int
     {
-        // Sum the amount of payments for the user's service orders.
         return (int) Payment::join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
             ->where('service_orders.user_id', $userId)
             ->sum('payments.amount');
+    }
+
+    /**
+     * Get all payments for a specific user, including services.
+     */
+    public function getPaymentsForUser(int $userId)
+    {
+        return DB::table('payments')
+            ->join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
+            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
+            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
+            ->where('service_orders.user_id', $userId)
+            ->select(
+                'payments.payment_id',
+                'service_orders.order_date as date',
+                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'), // <- updated here
+                'payments.amount',
+                'payments.payment_method',
+                'payments.gcash_reference'
+            )
+            ->groupBy(
+                'payments.payment_id',
+                'service_orders.order_date',
+                'payments.amount',
+                'payments.payment_method',
+                'payments.gcash_reference'
+            )
+            ->get();
     }
 }
