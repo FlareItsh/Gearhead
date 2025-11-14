@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -26,31 +27,12 @@ interface Supply {
     supply_type: 'consumables' | 'supply';
 }
 
-const mockSupplies: Supply[] = [
-    { supply_name: 'Car shampoo', unit: 'Bottle', quantity_stock: 50, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Degreasers', unit: 'Bottle', quantity_stock: 65, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Wheel cleaner', unit: 'Bottle', quantity_stock: 18, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Glass cleaner', unit: 'Bottle', quantity_stock: 20, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Interior cleaner', unit: 'Bottle', quantity_stock: 65, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Upholstery shampoo', unit: 'gal', quantity_stock: 100, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Tire shine', unit: 'Bottle', quantity_stock: 70, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Wax', unit: 'gal', quantity_stock: 26, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Disinfectant spray', unit: 'Bottle', quantity_stock: 5, reorder_point: 5, supply_type: 'consumables' },
-    { supply_name: 'Pressure washer', unit: 'pc', quantity_stock: 5, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Water hose', unit: 'pc', quantity_stock: 5, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Buckets', unit: 'pc', quantity_stock: 6, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Vacuum cleaner', unit: 'pc', quantity_stock: 45, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Buffer machine', unit: 'pc', quantity_stock: 8, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Microfiber towel', unit: 'pc', quantity_stock: 15, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Wash mitts or sponges', unit: 'pc', quantity_stock: 9, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Drying towel', unit: 'pc', quantity_stock: 13, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Brushes', unit: 'pc', quantity_stock: 9, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Detailing brushes', unit: 'pc', quantity_stock: 4, reorder_point: 5, supply_type: 'supply' },
-    { supply_name: 'Applicator pads', unit: 'pc', quantity_stock: 12, reorder_point: 5, supply_type: 'supply' },
-];
+interface InventoryProps {
+    supplies: Supply[];
+}
 
-export default function InventoryPage() {
-    const [supplies] = useState<Supply[]>(mockSupplies);
+export default function InventoryPage({ supplies }: InventoryProps) {
+    const [allSupplies, setAllSupplies] = useState<Supply[]>(supplies);
     const [searchValue, setSearchValue] = useState('');
     const [filter, setFilter] = useState<'All' | 'Item' | 'Unit' | 'Status'>('All');
 
@@ -58,12 +40,57 @@ export default function InventoryPage() {
     const [showAddPurchase, setShowAddPurchase] = useState(false);
     const [showExportReport, setShowExportReport] = useState(false);
 
-    const filteredSupplies = useMemo(() => {
-        return supplies.filter((s) => {
-            const term = searchValue.toLowerCase();
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState('');
+    const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => {});
 
-            let status = 'In Stock';
-            if (s.quantity_stock <= s.reorder_point) status = 'Low Stock';
+    const [newItem, setNewItem] = useState({
+        supply_name: '',
+        unit: '',
+        reorder_point: 0,
+        quantity_stock: 0,
+        supply_type: 'supply' as 'consumables' | 'supply',
+    });
+
+    const handleAddItem = () => {
+        if (!newItem.supply_name || !newItem.unit) return;
+
+        setConfirmMessage(`Are you sure you want to add "${newItem.supply_name}" to inventory?`);
+        setOnConfirmAction(() => async () => {
+            try {
+                const response = await axios.post('/supply', newItem);
+                const createdItem = response.data;
+                setAllSupplies(prev => [...prev, createdItem]);
+                setNewItem({ supply_name: '', unit: '', reorder_point: 0, quantity_stock: 0, supply_type: 'supply' });
+                setShowAddItem(false);
+            } catch (error) {
+                console.error('Error adding supply:', error);
+            }
+        });
+        setConfirmOpen(true);
+    };
+
+    const handleCancelAddItem = () => {
+        if (!newItem.supply_name && !newItem.unit && newItem.reorder_point === 0) {
+
+            setShowAddItem(false);
+        } else {
+
+            setConfirmMessage("Are you sure you want to cancel? Your input will be lost.");
+            setOnConfirmAction(() => () => setShowAddItem(false));
+            setConfirmOpen(true);
+        }
+    };
+
+    const handleConfirm = async () => {
+        await onConfirmAction();
+        setConfirmOpen(false);
+    };
+
+    const filteredSupplies = useMemo(() => {
+        return allSupplies.filter((s) => {
+            const term = searchValue.toLowerCase();
+            let status = s.quantity_stock <= s.reorder_point ? 'Low Stock' : 'In Stock';
 
             if (filter === 'All') {
                 return s.supply_name.toLowerCase().includes(term) ||
@@ -76,7 +103,7 @@ export default function InventoryPage() {
 
             return true;
         });
-    }, [supplies, searchValue, filter]);
+    }, [allSupplies, searchValue, filter]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -85,7 +112,6 @@ export default function InventoryPage() {
                 <div className="flex items-center justify-between">
                     <Heading title="Inventory" description="Track supplies and materials" />
                     <div className="flex space-x-2">
-                        {/* Add Item Dialog */}
                         <Dialog open={showAddItem} onOpenChange={setShowAddItem}>
                             <DialogTrigger asChild>
                                 <Button variant="highlight">+ Add Item</Button>
@@ -95,23 +121,40 @@ export default function InventoryPage() {
                                     <DialogTitle>Add <span className="text-highlight font-bold">Item</span></DialogTitle>
                                     <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Record a new inventory item.</p>
                                 </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div>
-                                        <p className="mb-1">Item Name</p>
-                                        <Input placeholder="Item Name" />
-                                    </div>
-                                    <div>
-                                        <p className="mb-1">Unit</p>
-                                        <Input placeholder="Unit" />
-                                    </div>
-                                    <div>
-                                        <p className="mb-1">Reorder Level</p>
-                                        <Input placeholder="Reorder Level" />
-                                    </div>
-                                </div>
+
+                                <Input
+                                    placeholder="Item Name"
+                                    value={newItem.supply_name}
+                                    onChange={(e) => setNewItem({ ...newItem, supply_name: e.target.value })}
+                                />
+                                <Input
+                                    placeholder="Unit"
+                                    value={newItem.unit}
+                                    onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                                />
+                                <Input
+                                    type="number"
+                                    placeholder="Reorder Level"
+                                    value={newItem.reorder_point}
+                                    onChange={(e) => setNewItem({ ...newItem, reorder_point: parseInt(e.target.value) || 0 })}
+                                />
+
                                 <DialogFooter>
-                                    <Button variant="secondary" onClick={()=> setShowAddItem(false)}>Cancel</Button>
-                                    <Button variant="highlight" onClick={() => setShowAddItem(false)}>Save</Button>
+                                    <Button variant="secondary" onClick={handleCancelAddItem}>Cancel</Button>
+                                    <Button variant="highlight" onClick={handleAddItem}>Save</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+
+                        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                            <DialogContent className="sm:max-w-sm w-full rounded-xl p-6 shadow-lg">
+                                <DialogHeader>
+                                    <DialogTitle>Confirm Action</DialogTitle>
+                                </DialogHeader>
+                                <p className="text-center text-gray-600 my-4">{confirmMessage}</p>
+                                <DialogFooter className="flex justify-end gap-3">
+                                    <Button variant="secondary" onClick={() => setConfirmOpen(false)}>No</Button>
+                                    <Button variant="highlight" onClick={handleConfirm}>Yes</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -215,7 +258,7 @@ export default function InventoryPage() {
                                                         ? 'bg-white dark:bg-neutral-900'
                                                         : 'bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700',
                                                     'text-neutral-900 dark:text-white'
-                                                    )}>
+                                                )}>
                                                     <TableCell>{supply.supply_name}</TableCell>
                                                     <TableCell>{supply.quantity_stock}</TableCell>
                                                     <TableCell>{supply.unit}</TableCell>

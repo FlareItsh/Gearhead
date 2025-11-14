@@ -22,7 +22,8 @@ class Supply extends Model
     ];
 
     protected $casts = [
-        'quantity_stock' => 'decimal:2',
+        'quantity_stock' => 'integer',
+        'reorder_point' => 'integer',
     ];
 
     public function supplyPurchaseDetails()

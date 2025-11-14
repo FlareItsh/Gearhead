@@ -6,6 +6,7 @@ use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Bay;
+use App\Models\Supply;
 
 class AdminController extends Controller
 {
@@ -63,10 +64,10 @@ class AdminController extends Controller
 
     public function inventory(Request $request)
     {
-        $users = $this->users->all();
+        $supplies = Supply::all();
 
         return Inertia::render('Admin/Inventory', [
-            'users' => $users,
+            'supplies' => $supplies, 
         ]);
     }
 
