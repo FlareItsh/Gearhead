@@ -44,10 +44,6 @@ export default function Bays() {
                         <Card key={bay.id} className="p-6">
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Bay #{bay.number}</CardTitle>
-                                {/* <span className={`text-sm px-3 py-1 rounded-full ${
-                                    bay.status === "Available" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-                                    }`}> {bay.status}
-                                </span> */}
                                 <Badge variant={bay.status === "Available" ? "success" : "destructive"}>
                                     {bay.status}
                                 </Badge>
