@@ -16,4 +16,6 @@ interface ServiceRepositoryInterface
     public function update(Service $service, array $data): bool;
 
     public function delete(Service $service): bool;
+
+    public function getAllByCategory(?string $category);
 }

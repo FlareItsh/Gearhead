@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Repositories\ServiceRepositoryInterface;
+use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
@@ -22,6 +22,7 @@ class ServiceController extends Controller
     public function show(int $id)
     {
         $item = $this->repo->findById($id);
+
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
 
@@ -29,6 +30,7 @@ class ServiceController extends Controller
     {
         $data = $request->all();
         $created = $this->repo->create($data);
+
         return response()->json($created, 201);
     }
 
@@ -40,6 +42,7 @@ class ServiceController extends Controller
         }
 
         $this->repo->update($item, $request->all());
+
         return response()->json($item);
     }
 
@@ -51,39 +54,7 @@ class ServiceController extends Controller
         }
 
         $this->repo->delete($item);
+
         return response()->json(null, 204);
-    }
-
-    /**
-     * Return services filtered by category. Excludes the `status` column.
-     * Example: GET /api/services?category=Wash
-     */
-    public function byCategory(Request $request)
-    {
-        $category = $request->query('category');
-
-        // Build a query using the Service model. We avoid relying on the
-        // repository here because we need to select a subset of columns.
-        $query = \App\Models\Service::query();
-        if ($category) {
-            $query->where('category', $category);
-        }
-
-        // Explicitly select all columns except `status`.
-        $cols = [
-            'service_id',
-            'service_name',
-            'description',
-            'size',
-            'category',
-            'estimated_duration',
-            'price',
-            'created_at',
-            'updated_at',
-        ];
-
-        $items = $query->get($cols);
-
-        return response()->json($items);
     }
 }

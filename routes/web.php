@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,15 +30,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Role-aware shared routes
     Route::get('/bookings', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
+
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
             return $admin->bookings($request);
         }
 
-        return $customer->bookings($request);
+        $bookingRepo = app(BookingRepository::class); // manually resolve
+
+        return $customer->bookings($request, $bookingRepo);
     })->name('bookings');
 
     Route::get('/bookings/upcoming', [ServiceOrderController::class, 'upcoming'])
         ->name('bookings.upcoming');
+
+    Route::post('/bookings/cancel/{id}', [CustomerController::class, 'cancelBooking'])
+        ->name('bookings.cancel')
+        ->middleware('auth', 'role:customer');
 
     // Role specific services route
     Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {

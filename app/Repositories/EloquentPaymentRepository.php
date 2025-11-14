@@ -60,18 +60,23 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->select(
                 'payments.payment_id',
                 'service_orders.order_date as date',
-                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'), // <- updated here
+                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'),
                 'payments.amount',
                 'payments.payment_method',
-                'payments.gcash_reference'
+                'payments.gcash_reference',
+                'payments.created_at',
+                'payments.updated_at'
             )
             ->groupBy(
                 'payments.payment_id',
                 'service_orders.order_date',
                 'payments.amount',
                 'payments.payment_method',
-                'payments.gcash_reference'
+                'payments.gcash_reference',
+                'payments.created_at',
+                'payments.updated_at'
             )
+            ->orderBy('payments.created_at', 'desc') // optional: newest first
             ->get();
     }
 }

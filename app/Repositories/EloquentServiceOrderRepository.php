@@ -59,7 +59,44 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             FIELD(service_orders.status, 'in_progress', 'pending') ASC,
             service_orders.order_date DESC
         ")
-            ->limit(4)
             ->get();
+    }
+
+    /**
+     * Get service orders with optional status filter.
+     *
+     * @param  string|null  $status  'pending', 'in_progress', 'completed', 'cancelled' or null for all
+     * @return \Illuminate\Support\Collection
+     */
+    public function getOrdersWithStatus(?string $status = null)
+    {
+        $query = DB::table('service_orders as so')
+            ->select(
+                'so.service_order_id',
+                'so.status',
+                'so.order_date',
+                'so.order_type',
+                'so.user_id',
+                'p.amount as payment_amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                DB::raw('GROUP_CONCAT(s.name SEPARATOR ", ") as services')
+            )
+            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
+            ->groupBy('so.service_order_id', 'so.status', 'so.order_date', 'so.order_type', 'so.user_id', 'p.amount', 'p.payment_method', 'p.gcash_reference')
+            ->orderBy('so.order_date', 'desc');
+
+        if ($status && $status !== 'all') {
+            if ($status === 'upcoming') {
+                // upcoming = pending or in_progress
+                $query->whereIn('so.status', ['pending', 'in_progress']);
+            } else {
+                $query->where('so.status', $status);
+            }
+        }
+
+        return $query->get();
     }
 }

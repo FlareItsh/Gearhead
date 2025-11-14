@@ -512,12 +512,14 @@ function SidebarMenuButton({
   variant = "default",
   size = "default",
   tooltip,
+  tooltipClassName = "text-highlight", // New prop: Default to your theme's highlight color
   className,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean
   isActive?: boolean
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
+  tooltipClassName?: string // For customizing tooltip text color in collapsed hover
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button"
   const { isMobile, state } = useSidebar()
@@ -550,6 +552,7 @@ function SidebarMenuButton({
         side="right"
         align="center"
         hidden={state !== "collapsed" || isMobile}
+        className={cn("text-xs", tooltipClassName)} // Apply custom class for text color
         {...tooltip}
       />
     </Tooltip>

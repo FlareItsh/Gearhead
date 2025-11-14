@@ -59,11 +59,10 @@ class ServiceOrderController extends Controller
 
     public function upcoming(Request $request)
     {
-        $userId = $request->user()->user_id; // current logged-in user
+        $userId = $request->user()->user_id;
 
         $bookings = $this->repo->upcomingBookings($userId);
 
-        // Example 1: return as JSON (API)
         return response()->json($bookings);
 
     }

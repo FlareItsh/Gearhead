@@ -22,7 +22,7 @@ export default function ServiceCardList({ services }: ServiceCardListProps) {
             {services.map((s, i) => (
                 <div
                     key={i}
-                    className="flex w-md flex-col justify-between gap-5 rounded-sm border p-4"
+                    className="flex w-sm flex-col justify-between gap-5 rounded-sm border p-4"
                 >
                     <HeadingSmall
                         title={`${s.service_name} - ${s.size.charAt(0).toUpperCase()}`}

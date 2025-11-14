@@ -18,4 +18,6 @@ interface ServiceOrderRepositoryInterface
     public function delete(ServiceOrder $order): bool;
 
     public function upcomingBookings(int $userId);
+
+    public function getOrdersWithStatus(?string $status = null);
 }

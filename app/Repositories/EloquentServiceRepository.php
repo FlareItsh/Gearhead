@@ -9,7 +9,19 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
 {
     public function all(): Collection
     {
-        return Service::all();
+        // Return only active services
+        return Service::where('status', 'active')->get();
+    }
+
+    public function getAllByCategory(?string $category): Collection
+    {
+        $query = Service::where('status', 'active');
+
+        if ($category && $category !== 'All') {
+            $query->where('category', $category);
+        }
+
+        return $query->get();
     }
 
     public function findById(int $id): ?Service
