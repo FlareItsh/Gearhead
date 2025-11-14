@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServiceOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -69,9 +70,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customers', [AdminController::class, 'customers'])
         ->name('admin.customers')
         ->middleware('role:admin');
-    Route::get('/staffs', [AdminController::class, 'staffs'])
-        ->name('admin.staffs')
-        ->middleware('role:admin');
+
+    Route::get('/staffs', [EmployeeController::class, 'index'])->name('admin.staffs')->middleware('role:admin');
+    Route::post('/staffs', [EmployeeController::class, 'store'])->name('admin.staffs.store')->middleware('role:admin');
+    Route::put('/staffs/{id}', [EmployeeController::class, 'update'])->name('admin.staffs.update')->middleware('role:admin');
+    Route::delete('/staffs/{id}', [EmployeeController::class, 'destroy'])->name('admin.staffs.delete')->middleware('role:admin');
+
     Route::get('/inventory', [AdminController::class, 'inventory'])
         ->name('admin.inventory')
         ->middleware('role:admin');

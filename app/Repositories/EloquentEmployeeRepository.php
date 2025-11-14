@@ -9,12 +9,12 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
 {
     public function all(): Collection
     {
-        return Employee::all();
+        return Employee::orderBy('first_name')->get();
     }
 
-    public function findById(int $id): ?Employee
+    public function find(int $id): Employee
     {
-        return Employee::find($id);
+        return Employee::findOrFail($id);
     }
 
     public function create(array $data): Employee
@@ -22,8 +22,18 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
         return Employee::create($data);
     }
 
-    public function updateStatus(int $id, string $status): bool
+    public function update(int $id, array $data): Employee
     {
-        return Employee::where('employee_id', $id)->update(['status' => $status]);
+        $employee = Employee::findOrFail($id);
+        $employee->update($data);
+
+        return $employee;
+    }
+
+    public function delete(int $id): bool
+    {
+        $employee = Employee::findOrFail($id);
+
+        return $employee->delete();
     }
 }
