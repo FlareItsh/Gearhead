@@ -1,19 +1,23 @@
-import React, { useState, useMemo } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import Heading from '@/components/heading';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Search } from 'lucide-react';
-import { cn } from '@/lib/utils'; //Kani sya sa table row
+import React, { useState, useMemo } from "react";
+import axios from "axios";
+import { Head } from "@inertiajs/react";
+import AppLayout from "@/layouts/app-layout";
+import { type BreadcrumbItem } from "@/types";
+import Heading from "@/components/heading";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { ChevronDownIcon, Edit2 } from "lucide-react";
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Customers', href: '/customers' },
+    { title: "Customers", href: "/customers" },
 ];
 
 interface Customer {
+    user_id: number;
     first_name: string;
     middle_name: string | null;
     last_name: string;
@@ -22,31 +26,24 @@ interface Customer {
     address: string | null;
 }
 
-const mockCustomers: Customer[] = [
-    { first_name: 'Customer', middle_name: null, last_name: 'One', email: 'customer@example.com', phone_number: '0908818444', address: null },
-    { first_name: 'Flare', middle_name: 'A.', last_name: 'Itoshi', email: 'flare@gmail.com', phone_number: '09123456789', address: 'Davao City' },
-    { first_name: 'Mariz', middle_name: 'S.', last_name: 'Adlaw', email: 'mariz.adlaw@example.com', phone_number: '09987654321', address: 'Tagum City' },
-    { first_name: 'Carlo', middle_name: 'L.', last_name: 'Bilbacua', email: 'carlo@example.com', phone_number: '09088184444', address: 'Panabo City' },
-];
-
-export default function Customers() {
-    const [customers] = useState<Customer[]>(mockCustomers);
-    const [searchValue, setSearchValue] = useState('');
-    const [filter, setFilter] = useState<'All' | 'Name' | 'Email' | 'Phone' | 'Address'>('All');
+export default function Customers({ users }: { users: Customer[] }) {
+    const [customers, setCustomers] = useState<Customer[]>(users);
+    const [searchValue, setSearchValue] = useState("");
+    const [filter, setFilter] = useState<"All" | "Name" | "Email" | "Phone" | "Address">("All");
 
     const filteredCustomers = useMemo(() => {
         return customers.filter((c) => {
-            const fullName = `${c.first_name} ${c.middle_name ?? ''} ${c.last_name}`.toLowerCase();
+            const fullName = `${c.first_name} ${c.middle_name ?? ""} ${c.last_name}`.toLowerCase();
             const email = c.email.toLowerCase();
             const phone = c.phone_number.toLowerCase();
-            const address = (c.address ?? '').toLowerCase();
+            const address = (c.address ?? "").toLowerCase();
             const term = searchValue.toLowerCase();
 
-            if (filter === 'All') return fullName.includes(term) || email.includes(term) || phone.includes(term) || address.includes(term);
-            if (filter === 'Name') return fullName.includes(term);
-            if (filter === 'Email') return email.includes(term);
-            if (filter === 'Phone') return phone.includes(term);
-            if (filter === 'Address') return address.includes(term);
+            if (filter === "All") return fullName.includes(term) || email.includes(term) || phone.includes(term) || address.includes(term);
+            if (filter === "Name") return fullName.includes(term);
+            if (filter === "Email") return email.includes(term);
+            if (filter === "Phone") return phone.includes(term);
+            if (filter === "Address") return address.includes(term);
 
             return true;
         });
@@ -57,21 +54,24 @@ export default function Customers() {
             <Head title="Customers" />
             <div className="flex flex-col gap-6 p-6">
                 <Heading title="Customers" description="Manage customer records and loyalty points" />
+
                 <Card className="border border-sidebar-border/70 bg-white dark:bg-neutral-900">
                     <CardContent className="flex flex-col gap-4 p-4">
                         <div className="flex items-center justify-between gap-4">
                             <h2 className="text-lg font-semibold text-neutral-800 dark:text-white">Search Customers</h2>
-                            <select
-                                className="rounded-md border border-neutral-300 bg-white p-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value as typeof filter)}
-                            >
-                                <option value="All">All</option>
-                                <option value="Name">Name</option>
-                                <option value="Email">Email</option>
-                                <option value="Phone">Phone</option>
-                                <option value="Address">Address</option>
-                            </select>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                                    {filter} <ChevronDownIcon className="ml-2 h-4 w-4 text-neutral-500" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-40">
+                                    {['All', 'Name', 'Email', 'Phone', 'Address'].map((f) => (
+                                        <DropdownMenuItem key={f} onClick={() => setFilter(f as typeof filter)}>
+                                            {f}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
                         <div className="relative w-full">
@@ -85,6 +85,7 @@ export default function Customers() {
                         </div>
                     </CardContent>
                 </Card>
+
 
                 <Card className="border border-sidebar-border/70 bg-white dark:bg-neutral-900">
                     <CardContent className="p-4">
@@ -110,17 +111,19 @@ export default function Customers() {
                                     </TableHeader>
                                     <TableBody>
                                         {filteredCustomers.map((customer, index) => (
-                                            <TableRow key={index} className={cn(
+                                            <TableRow
+                                                key={customer.user_id}
+                                                className={cn(
                                                     index % 2 === 0
-                                                        ? 'bg-white dark:bg-neutral-900'
-                                                        : 'bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700',
-                                                        'text-neutral-900 dark:text-white' // para visible
+                                                        ? "bg-white dark:bg-neutral-900"
+                                                        : "bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700",
+                                                    "text-neutral-900 dark:text-white"
                                                 )}
                                             >
-                                                <TableCell>{`${customer.first_name} ${customer.middle_name ?? ''} ${customer.last_name}`}</TableCell>
+                                                <TableCell>{`${customer.first_name} ${customer.middle_name ?? ""} ${customer.last_name}`}</TableCell>
                                                 <TableCell>{customer.email}</TableCell>
                                                 <TableCell>{customer.phone_number}</TableCell>
-                                                <TableCell>{customer.address ?? '-'}</TableCell>
+                                                <TableCell>{customer.address ?? "-"}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

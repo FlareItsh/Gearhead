@@ -36,7 +36,7 @@ class AdminController extends Controller
 
     public function customers(Request $request)
     {
-        $users = $this->users->all();
+        $users = \App\Models\User::where('role', 'customer')->get();
 
         return Inertia::render('Admin/Customers', [
             'users' => $users,
