@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Bay;
 
 class AdminController extends Controller
 {
@@ -88,11 +89,11 @@ class AdminController extends Controller
     }
 
     public function bays(Request $request)
-    {
-        $users = $this->users->all();
+{
+    $bays = Bay::all();
 
-        return Inertia::render('Admin/Bays', [
-            'users' => $users,
-        ]);
-    }
+    return Inertia::render('Admin/Bays', [
+        'bays' => $bays,
+    ]);
+}
 }

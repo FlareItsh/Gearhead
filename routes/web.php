@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\BayController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -83,6 +84,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:admin');
     Route::get('/bays', [AdminController::class, 'bays'])
         ->name('admin.bays')
+        ->middleware('role:admin');
+    Route::post('/bays', [BayController::class, 'store'])
+        ->name('admin.bays.store')
         ->middleware('role:admin');
 
 });

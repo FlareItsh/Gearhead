@@ -20,6 +20,12 @@ class BayController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'bay_number' => 'required|integer',
+            'bay_type' => 'required|string',
+            'status' => 'required|string',
+        ]);
+        
         $bay = Bay::create($request->all());
         return response()->json($bay, 201);
     }

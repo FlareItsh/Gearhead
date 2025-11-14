@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { type BreadcrumbItem } from "@/types";
@@ -13,32 +14,49 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: "Bays", href: "/bays" },
 ];
 
-export default function Bays() {
+export default function Bays({ bays }: { bays: any[] }) {
     const [open, setOpen] = useState(false);
     const [bayType, setBayType] = useState("");
+    const [bayList, setBayList] = useState(bays);
+    const [loading, setLoading] = useState(false);
 
-    const [bays, setBays] = useState<any[]>([
-        { id: 1, number: 1, status: "available", type: "Normal" },
-        { id: 2, number: 2, status: "available", type: "Normal" },
-        { id: 3, number: 3, status: "available", type: "Normal" },
-        { id: 4, number: 4, status: "available", type: "Normal" },
-        { id: 5, number: 5, status: "available", type: "Normal" },
-        { id: 6, number: 6, status: "available", type: "Underwash" },
-    ]);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => {});
 
     const handleAddBay = () => {
         if (!bayType) return;
 
-        const newBay = {
-            id: bays.length + 1,
-            number: bays.length + 1,
-            type: bayType,
-            status: "available",
-        };
+        setConfirmMessage(`Are you sure you want to add Bay #${bayList.length + 1} as ${bayType}?`);
+        setOnConfirmAction(() => async () => {
+            setLoading(true);
+            try {
+                const response = await axios.post("/bays", {
+                    bay_number: bayList.length + 1,
+                    bay_type: bayType,
+                    status: "available",
+                });
+                setBayList([...bayList, response.data]);
+                setOpen(false);
+                setBayType("");
+            } catch (error) {
+                console.error("Error adding bay:", error);
+            } finally {
+                setLoading(false);
+            }
+        });
+        setConfirmOpen(true);
+    };
 
-        setBays([...bays, newBay]);
-        setOpen(false);
-        setBayType("");
+    const handleCancelDialog = () => {
+        setConfirmMessage("Are you sure you want to cancel?");
+        setOnConfirmAction(() => () => setOpen(false));
+        setConfirmOpen(true);
+    };
+
+    const handleConfirm = async () => {
+        await onConfirmAction();
+        setConfirmOpen(false);
     };
 
     return (
@@ -50,20 +68,21 @@ export default function Bays() {
                     <Button variant="highlight" onClick={() => setOpen(true)}>+ Add Bay</Button>
                 </div>
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    {bays.map((bay) => (
-                        <Card key={bay.id} className="p-6">
+                    {bayList.map((bay) => (
+                        <Card key={bay.bay_id} className="p-6">
                             <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Bay #{bay.number}</CardTitle>
+                                <CardTitle>Bay #{bay.bay_number}</CardTitle>
                                 <Badge variant={bay.status === "available" ? "success" : "destructive"} className="capitalize">
                                     {bay.status}
                                 </Badge>
                             </CardHeader>
                             <CardDescription className="text-center text-gray-500 mt-4">
-                                Ready for next service ({bay.type})
+                                Ready for next service ({bay.bay_type})
                             </CardDescription>
                         </Card>
                     ))}
                 </div>
+
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogContent className="sm:max-w-md w-full rounded-xl p-6 shadow-lg">
                         <DialogHeader className="mb-4">
@@ -82,12 +101,23 @@ export default function Bays() {
                             </Select>
                         </div>
                         <DialogFooter className="flex justify-end gap-3">
-                            <Button variant="secondary" onClick={() => setOpen(false)}>
-                                Cancel
+                            <Button variant="secondary" onClick={handleCancelDialog}>Cancel</Button>
+                            <Button variant="highlight" onClick={handleAddBay} disabled={loading}>
+                                {loading ? "Adding..." : "Confirm"}
                             </Button>
-                            <Button variant="highlight" onClick={handleAddBay}>
-                                Confirm
-                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                    <DialogContent className="sm:max-w-sm w-full rounded-xl p-6 shadow-lg">
+                        <DialogHeader>
+                            <DialogTitle>Confirm Action</DialogTitle>
+                        </DialogHeader>
+                        <p className="text-center text-gray-600 my-4">{confirmMessage}</p>
+                        <DialogFooter className="flex justify-end gap-3">
+                            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>No</Button>
+                            <Button variant="highlight" onClick={handleConfirm}>Yes</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
