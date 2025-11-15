@@ -128,4 +128,16 @@ class EmployeeController extends Controller
             'message' => 'Employee deleted successfully',
         ]);
     }
+
+    /**
+     * Get the number of active employees.
+     */
+    public function activeCount()
+    {
+        $count = $this->employees->countActiveEmployees();
+
+        return response()->json([
+            'active_employees' => $count,
+        ]);
+    }
 }

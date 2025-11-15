@@ -79,4 +79,19 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->orderBy('payments.created_at', 'desc') // optional: newest first
             ->get();
     }
+
+    /**
+     * Dashboard Stats with optional date range
+     */
+    public function getSummaryByDateRange(string $startDate, string $endDate): array
+    {
+        $summary = Payment::whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('SUM(amount) as total_amount, COUNT(payment_id) as total_payments')
+            ->first();
+
+        return [
+            'total_amount' => $summary->total_amount ?? 0,
+            'total_payments' => $summary->total_payments ?? 0,
+        ];
+    }
 }

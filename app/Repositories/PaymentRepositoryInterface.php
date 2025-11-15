@@ -33,4 +33,9 @@ interface PaymentRepositoryInterface
      * @return \Illuminate\Support\Collection
      */
     public function getPaymentsForUser(int $userId);
+
+    /**
+     * Get total amount and count of payments within a date range.
+     */
+    public function getSummaryByDateRange(string $startDate, string $endDate): array;
 }

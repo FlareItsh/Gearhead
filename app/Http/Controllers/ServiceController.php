@@ -57,4 +57,33 @@ class ServiceController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Get top N best-selling services.
+     */
+    /**
+     * Get top 4 services for Donut chart
+     */
+    public function topServices(Request $request)
+    {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $services = $this->repo->getTopServices(4, $startDate, $endDate);
+
+        return response()->json($services);
+    }
+
+    /**
+     * Get most popular service for the Popular Service card
+     */
+    public function popularService(Request $request)
+    {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $service = $this->repo->getMostPopularService($startDate, $endDate);
+
+        return response()->json($service);
+    }
 }

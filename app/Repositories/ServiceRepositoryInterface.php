@@ -18,4 +18,18 @@ interface ServiceRepositoryInterface
     public function delete(Service $service): bool;
 
     public function getAllByCategory(?string $category);
+
+    /**
+     * Get top N most booked services
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getTopServices(int $limit = 4, ?string $startDate = null, ?string $endDate = null);
+
+    /**
+     * Get the single most popular service
+     *
+     * @return object|null
+     */
+    public function getMostPopularService(?string $startDate = null, ?string $endDate = null);
 }

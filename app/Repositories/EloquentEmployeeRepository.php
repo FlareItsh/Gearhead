@@ -36,4 +36,9 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
 
         return $employee->delete();
     }
+
+    public function countActiveEmployees(): int
+    {
+        return Employee::where('status', 'active')->count();
+    }
 }
