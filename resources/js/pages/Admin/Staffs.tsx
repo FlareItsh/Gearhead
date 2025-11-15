@@ -255,7 +255,7 @@ export default function Staffs() {
 
                 {/*search n add*/}
                 <Card className="border border-border/70 bg-background">
-                    <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-end md:justify-between">
+                    <CardContent className="flex flex-col gap-4 p-4 text-foreground md:flex-row md:items-end md:justify-between">
                         {/*search*/}
                         <div
                             ref={searchRef}
@@ -435,7 +435,7 @@ export default function Staffs() {
 
                 {/*staff_tbl*/}
                 <Card className="border border-sidebar-border/70 bg-background">
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 text-foreground">
                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <HeadingSmall
                                 title="Staff List"

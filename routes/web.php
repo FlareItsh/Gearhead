@@ -9,10 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Public Routes
+// * Public Routes
 Route::get('/', fn () => Inertia::render('welcome'))->name('home');
 
-// Authenticated Routes
+// * Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard', function (Request $request, AdminController $admin, CustomerController $customer) {
@@ -27,7 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('customer-dashboard', [CustomerController::class, 'dashboard'])
         ->name('customer.dashboard');
 
-    // Role-aware shared routes
+    // * Role-aware shared routes
     Route::get('/bookings', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
 
@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('bookings.cancel')
         ->middleware('auth', 'role:customer');
 
-    // Role specific services route
+    // * Role specific services route
     Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
@@ -57,12 +57,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return $customer->services($request);
     })->name('services');
 
-    // Customer-specific routes
+    // * Customer-specific routes
     Route::get('/payments', [CustomerController::class, 'payments'])
         ->name('customer.payments')
         ->middleware('auth', 'role:customer');
 
-    // Payments API: return the current user's payments count
+    // * Payments API: return the current user's payments count
     Route::get('/payments/count', [\App\Http\Controllers\PaymentController::class, 'countForCurrentUser'])
         ->name('payments.count')
         ->middleware(['auth', 'role:customer']);
@@ -71,7 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('payments.user')
         ->middleware(['auth', 'role:customer']);
 
-    // Admin Specific routes (fixed controller method references and unique names)
+    // * Admin Specific routes (fixed controller method references and unique names)
     Route::get('/registry', [AdminController::class, 'registry'])
         ->name('admin.registry')
         ->middleware('role:admin');
@@ -79,6 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.customers')
         ->middleware('role:admin');
 
+    // * Staff route for Rendering and Managing Staffs
     Route::get('/staffs', [EmployeeController::class, 'index'])->name('admin.staffs')->middleware('role:admin');
     Route::post('/staffs', [EmployeeController::class, 'store'])->name('admin.staffs.store')->middleware('role:admin');
     Route::put('/staffs/{id}', [EmployeeController::class, 'update'])->name('admin.staffs.update')->middleware('role:admin');
@@ -99,6 +100,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-// Auth routes (register, login, etc.)
+// * Auth routes (register, login, etc.)
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
