@@ -33,4 +33,9 @@ interface EmployeeRepositoryInterface
      * Delete an employee by ID.
      */
     public function delete(int $id): bool;
+
+    /**
+     * Count employees with 'active' status.
+     */
+    public function countActiveEmployees(): int;
 }

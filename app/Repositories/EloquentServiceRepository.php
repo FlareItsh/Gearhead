@@ -4,6 +4,9 @@ namespace App\Repositories;
 
 use App\Models\Service;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+
+// Added for debugging
 
 class EloquentServiceRepository implements ServiceRepositoryInterface
 {
@@ -42,5 +45,37 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
     public function delete(Service $service): bool
     {
         return $service->delete();
+    }
+
+    public function getTopServices(int $limit = 4, ?string $startDate = null, ?string $endDate = null)
+    {
+        $query = DB::table('payments')
+            ->join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
+            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
+            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
+            ->select('services.service_name', DB::raw('SUM(service_order_details.quantity) as total_bookings'))
+            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('payments.created_at', [$startDate, $endDate]);
+            })
+            ->groupBy('services.service_id', 'services.service_name') // Group by ID to avoid duplicates if names repeat
+            ->orderByDesc('total_bookings')
+            ->limit($limit);
+
+        return $query->get();
+    }
+
+    public function getMostPopularService(?string $startDate = null, ?string $endDate = null)
+    {
+        return DB::table('payments')
+            ->join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
+            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
+            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
+            ->select('services.service_name', DB::raw('SUM(service_order_details.quantity) as total_bookings'))
+            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('payments.created_at', [$startDate, $endDate]);
+            })
+            ->groupBy('services.service_name')
+            ->orderByDesc('total_bookings')
+            ->first();
     }
 }

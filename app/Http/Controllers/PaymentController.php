@@ -82,4 +82,25 @@ class PaymentController extends Controller
 
         return response()->json($payments);
     }
+
+    /**
+     * Display sum and count of payments within a date range.
+     */
+    public function summary(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $summary = $this->repo->getSummaryByDateRange(
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json(array_merge($summary, [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+        ]));
+    }
 }

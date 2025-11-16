@@ -3,7 +3,10 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\SupplyPurchaseController;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -57,19 +60,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return $customer->services($request);
     })->name('services');
 
+    // * Admin-specific top selling services route
+    Route::get('/services/top', [ServiceController::class, 'topServices'])->name('admin.services.top-selling')->middleware('role:admin');
+    Route::get('/services/popular', [ServiceController::class, 'popularService'])->name('admin.services.popular')->middleware('role:admin');
+
     // * Customer-specific routes
     Route::get('/payments', [CustomerController::class, 'payments'])
         ->name('customer.payments')
         ->middleware('auth', 'role:customer');
 
     // * Payments API: return the current user's payments count
-    Route::get('/payments/count', [\App\Http\Controllers\PaymentController::class, 'countForCurrentUser'])
+    Route::get('/payments/count', [PaymentController::class, 'countForCurrentUser'])
         ->name('payments.count')
         ->middleware(['auth', 'role:customer']);
 
-    Route::get('/payments/user', [\App\Http\Controllers\PaymentController::class, 'indexForCurrentUser'])
+    Route::get('/payments/user', [PaymentController::class, 'indexForCurrentUser'])
         ->name('payments.user')
         ->middleware(['auth', 'role:customer']);
+
+    Route::get('/payments/summary', [PaymentController::class, 'summary'])
+        ->name('payments.summary')
+        ->middleware(['auth', 'role:admin']);
 
     // * Admin Specific routes (fixed controller method references and unique names)
     Route::get('/registry', [AdminController::class, 'registry'])
@@ -80,10 +91,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:admin');
 
     // * Staff route for Rendering and Managing Staffs
-    Route::get('/staffs', [EmployeeController::class, 'index'])->name('admin.staffs')->middleware('role:admin');
-    Route::post('/staffs', [EmployeeController::class, 'store'])->name('admin.staffs.store')->middleware('role:admin');
-    Route::put('/staffs/{id}', [EmployeeController::class, 'update'])->name('admin.staffs.update')->middleware('role:admin');
-    Route::delete('/staffs/{id}', [EmployeeController::class, 'destroy'])->name('admin.staffs.delete')->middleware('role:admin');
+    Route::get('/staffs', [EmployeeController::class, 'index'])
+        ->name('admin.staffs')->middleware('role:admin');
+    Route::post('/staffs', [EmployeeController::class, 'store'])
+        ->name('admin.staffs.store')->middleware('role:admin');
+    Route::put('/staffs/{id}', [EmployeeController::class, 'update'])
+        ->name('admin.staffs.update')->middleware('role:admin');
+    Route::delete('/staffs/{id}', [EmployeeController::class, 'destroy'])
+        ->name('admin.staffs.delete')->middleware('role:admin');
+    Route::get('/staffs/active-count', [EmployeeController::class, 'activeCount'])
+        ->name('admin.staffs.active-count')->middleware('role:admin');
+
+    Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])->name('admin.supply-purchases.financial-summary')->middleware('role:admin');
 
     Route::get('/inventory', [AdminController::class, 'inventory'])
         ->name('admin.inventory')
