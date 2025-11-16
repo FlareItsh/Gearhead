@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -12,7 +11,7 @@ import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { ChevronDownIcon, Edit2 } from "lucide-react";
+import { ChevronDownIcon, Edit2 } from 'lucide-react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,12 +26,31 @@ interface Supply {
     supply_type: 'consumables' | 'supply';
 }
 
-interface InventoryProps {
-    supplies: Supply[];
-}
+const mockSupplies: Supply[] = [
+    { supply_name: 'Car shampoo', unit: 'Bottle', quantity_stock: 50, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Degreasers', unit: 'Bottle', quantity_stock: 65, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Wheel cleaner', unit: 'Bottle', quantity_stock: 18, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Glass cleaner', unit: 'Bottle', quantity_stock: 20, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Interior cleaner', unit: 'Bottle', quantity_stock: 65, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Upholstery shampoo', unit: 'gal', quantity_stock: 100, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Tire shine', unit: 'Bottle', quantity_stock: 70, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Wax', unit: 'gal', quantity_stock: 26, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Disinfectant spray', unit: 'Bottle', quantity_stock: 5, reorder_point: 5, supply_type: 'consumables' },
+    { supply_name: 'Pressure washer', unit: 'pc', quantity_stock: 5, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Water hose', unit: 'pc', quantity_stock: 5, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Buckets', unit: 'pc', quantity_stock: 6, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Vacuum cleaner', unit: 'pc', quantity_stock: 45, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Buffer machine', unit: 'pc', quantity_stock: 8, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Microfiber towel', unit: 'pc', quantity_stock: 15, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Wash mitts or sponges', unit: 'pc', quantity_stock: 9, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Drying towel', unit: 'pc', quantity_stock: 13, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Brushes', unit: 'pc', quantity_stock: 9, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Detailing brushes', unit: 'pc', quantity_stock: 4, reorder_point: 5, supply_type: 'supply' },
+    { supply_name: 'Applicator pads', unit: 'pc', quantity_stock: 12, reorder_point: 5, supply_type: 'supply' },
+];
 
-export default function InventoryPage({ supplies }: InventoryProps) {
-    const [allSupplies, setAllSupplies] = useState<Supply[]>(supplies);
+export default function InventoryPage() {
+    const [allSupplies, setAllSupplies] = useState<Supply[]>(mockSupplies);
     const [searchValue, setSearchValue] = useState('');
     const [filter, setFilter] = useState<'All' | 'Item' | 'Unit' | 'Status'>('All');
 
@@ -52,30 +70,25 @@ export default function InventoryPage({ supplies }: InventoryProps) {
         supply_type: 'supply' as 'consumables' | 'supply',
     });
 
+    const [editItem, setEditItem] = useState<Supply | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+
     const handleAddItem = () => {
         if (!newItem.supply_name || !newItem.unit) return;
 
         setConfirmMessage(`Are you sure you want to add "${newItem.supply_name}" to inventory?`);
-        setOnConfirmAction(() => async () => {
-            try {
-                const response = await axios.post('/supply', newItem);
-                const createdItem = response.data;
-                setAllSupplies(prev => [...prev, createdItem]);
-                setNewItem({ supply_name: '', unit: '', reorder_point: 0, quantity_stock: 0, supply_type: 'supply' });
-                setShowAddItem(false);
-            } catch (error) {
-                console.error('Error adding supply:', error);
-            }
+        setOnConfirmAction(() => () => {
+            setAllSupplies(prev => [...prev, { ...newItem }]);
+            setNewItem({ supply_name: '', unit: '', reorder_point: 0, quantity_stock: 0, supply_type: 'supply' });
+            setShowAddItem(false);
         });
         setConfirmOpen(true);
     };
 
     const handleCancelAddItem = () => {
         if (!newItem.supply_name && !newItem.unit && newItem.reorder_point === 0) {
-
             setShowAddItem(false);
         } else {
-
             setConfirmMessage("Are you sure you want to cancel? Your input will be lost.");
             setOnConfirmAction(() => () => setShowAddItem(false));
             setConfirmOpen(true);
@@ -85,6 +98,15 @@ export default function InventoryPage({ supplies }: InventoryProps) {
     const handleConfirm = async () => {
         await onConfirmAction();
         setConfirmOpen(false);
+    };
+
+    const handleSaveEdit = () => {
+        if (!editItem) return;
+        setAllSupplies(prev => prev.map(s =>
+            s.supply_name === editItem.supply_name ? editItem : s
+        ));
+        setEditItem(null);
+        setShowEditModal(false);
     };
 
     const filteredSupplies = useMemo(() => {
@@ -122,22 +144,35 @@ export default function InventoryPage({ supplies }: InventoryProps) {
                                     <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Record a new inventory item.</p>
                                 </DialogHeader>
 
-                                <Input
-                                    placeholder="Item Name"
-                                    value={newItem.supply_name}
-                                    onChange={(e) => setNewItem({ ...newItem, supply_name: e.target.value })}
-                                />
-                                <Input
-                                    placeholder="Unit"
-                                    value={newItem.unit}
-                                    onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-                                />
-                                <Input
-                                    type="number"
-                                    placeholder="Reorder Level"
-                                    value={newItem.reorder_point}
-                                    onChange={(e) => setNewItem({ ...newItem, reorder_point: parseInt(e.target.value) || 0 })}
-                                />
+                                <div className="flex flex-col gap-3">
+                                    <div>
+                                        <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Item Name</label>
+                                        <Input
+                                            placeholder="Item Name"
+                                            value={newItem.supply_name}
+                                            onChange={(e) => setNewItem({ ...newItem, supply_name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Unit</label>
+                                        <Input
+                                            placeholder="Unit"
+                                            value={newItem.unit}
+                                            onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reorder Level</label>
+                                        <Input
+                                            type="number"
+                                            placeholder="Reorder Level"
+                                            value={newItem.reorder_point}
+                                            onChange={(e) => setNewItem({ ...newItem, reorder_point: parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
+                                </div>
 
                                 <DialogFooter>
                                     <Button variant="secondary" onClick={handleCancelAddItem}>Cancel</Button>
@@ -186,7 +221,7 @@ export default function InventoryPage({ supplies }: InventoryProps) {
                                     <DialogTitle>Export <span className="text-highlight font-bold">Report</span></DialogTitle>
                                 </DialogHeader>
                                 <DialogFooter>
-                                    <Button onClick={() => setShowExportReport(false)}>Cancel</Button>
+                                    <Button variant="secondary" onClick={() => setShowExportReport(false)}>Cancel</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -208,7 +243,6 @@ export default function InventoryPage({ supplies }: InventoryProps) {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
-
                         <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                             <Input placeholder="Search..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)}
@@ -244,13 +278,8 @@ export default function InventoryPage({ supplies }: InventoryProps) {
                                     </TableHeader>
                                     <TableBody>
                                         {filteredSupplies.map((supply, index) => {
-                                            let status = 'In Stock';
-                                            let variant: 'success' | 'warning' = 'success';
-
-                                            if (supply.quantity_stock <= supply.reorder_point) {
-                                                status = 'Low Stock';
-                                                variant = 'warning';
-                                            }
+                                            let status = supply.quantity_stock <= supply.reorder_point ? 'Low Stock' : 'In Stock';
+                                            let variant: 'success' | 'warning' = status === 'Low Stock' ? 'warning' : 'success';
 
                                             return (
                                                 <TableRow key={index} className={cn(
@@ -267,7 +296,14 @@ export default function InventoryPage({ supplies }: InventoryProps) {
                                                         <Badge variant={variant}>{status}</Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Button variant="ghost" size="icon" onClick={() => console.log('Edit', supply.supply_name)}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                setEditItem({ ...supply });
+                                                                setShowEditModal(true);
+                                                            }}
+                                                        >
                                                             <Edit2 className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
                                                         </Button>
                                                     </TableCell>
@@ -280,6 +316,62 @@ export default function InventoryPage({ supplies }: InventoryProps) {
                         )}
                     </CardContent>
                 </Card>
+
+                <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Edit <span className="text-highlight font-bold">Item</span></DialogTitle>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                Edit inventory item details. Status is auto-calculated.
+                            </p>
+                        </DialogHeader>
+
+                        <div className="flex flex-col gap-3">
+                            <div>
+                                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Item Name</label>
+                                <Input
+                                    placeholder="Item Name"
+                                    value={editItem?.supply_name || ''}
+                                    onChange={(e) => setEditItem(prev => prev ? { ...prev, supply_name: e.target.value } : prev)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Unit</label>
+                                <Input
+                                    placeholder="Unit"
+                                    value={editItem?.unit || ''}
+                                    onChange={(e) => setEditItem(prev => prev ? { ...prev, unit: e.target.value } : prev)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Quantity Stock</label>
+                                <Input
+                                    type="number"
+                                    placeholder="Quantity Stock"
+                                    value={editItem?.quantity_stock || 0}
+                                    onChange={(e) => setEditItem(prev => prev ? { ...prev, quantity_stock: parseInt(e.target.value) || 0 } : prev)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reorder Level</label>
+                                <Input
+                                    type="number"
+                                    placeholder="Reorder Level"
+                                    value={editItem?.reorder_point || 0}
+                                    onChange={(e) => setEditItem(prev => prev ? { ...prev, reorder_point: parseInt(e.target.value) || 0 } : prev)}
+                                />
+                            </div>
+                        </div>
+
+                        <DialogFooter>
+                            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+                            <Button variant="highlight" onClick={handleSaveEdit}>Save</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );
