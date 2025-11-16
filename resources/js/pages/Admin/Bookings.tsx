@@ -25,10 +25,16 @@ interface Booking {
 }
 
 const mockBookings: Booking[] = [
-    { id: 1, customer: "John Dela Cruz", service: "Full Wash", datetime: "2025-02-14 10:30 AM", price: 350, status: "Pending" },
-    { id: 2, customer: "Maria Santos", service: "Interior Detailing", datetime: "2025-02-14 11:00 AM", price: 700, status: "Confirmed" },
-    { id: 3, customer: "Carlos Tan", service: "Wax + Polish", datetime: "2025-02-14 1:00 PM", price: 1200, status: "Completed" },
-    { id: 4, customer: "Ava Cruz", service: "Engine Wash", datetime: "2025-02-14 2:15 PM", price: 500, status: "Cancelled" },
+  { id: 1, customer: "Flare A. Itoshi", service: "Enginewash, Hand Wax", datetime: "2025-02-14 10:30 AM", price: 480, status: "Completed" },
+  { id: 2, customer: "Mariz S. Adlaw", service: "Basic Wash", datetime: "2025-02-14 11:00 AM", price: 500, status: "Completed" },
+  { id: 3, customer: "Carlo L. Bilbacua", service: "Underwash, Armor All", datetime: "2025-02-14 1:00 PM", price: 500, status: "Completed" },
+  { id: 4, customer: "Flare A. Itoshi", service: "High Gloss", datetime: "2025-02-14 2:15 PM", price: 350, status: "Completed" },
+  { id: 5, customer: "Mariz S. Adlaw", service: "Hand Wax", datetime: "2025-02-15 9:00 AM", price: 200, status: "Pending" },
+  { id: 6, customer: "Flare A. Itoshi", service: "Complete Package", datetime: "2025-02-15 10:00 AM", price: 350, status: "Pending" },
+  { id: 7, customer: "Carlo L. Bilbacua", service: "Buff Wax", datetime: "2025-02-15 11:00 AM", price: 390, status: "Pending" },
+  { id: 8, customer: "Flare A. Itoshi", service: "Waterproof", datetime: "2025-02-15 12:00 PM", price: 300, status: "Pending" },
+  { id: 9, customer: "Mariz S. Adlaw", service: "Enginewash", datetime: "2025-02-15 1:00 PM", price: 200, status: "Completed" },
+  { id: 10, customer: "Flare A. Itoshi", service: "Hard Shell", datetime: "2025-02-15 2:00 PM", price: 1350, status: "Completed" },
 ];
 
 export default function AdminBookings() {
