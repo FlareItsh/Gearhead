@@ -16,4 +16,11 @@ interface SupplyPurchaseDetailRepositoryInterface
     public function update(SupplyPurchaseDetail $detail, array $data): bool;
 
     public function delete(SupplyPurchaseDetail $detail): bool;
+
+    /**
+     * Get financial summary: expenses, revenue, profit for a date range.
+     *
+     * @return array{total_expenses: float, total_revenue: float, total_profit: float}
+     */
+    public function getFinancialSummary(?string $startDate = null, ?string $endDate = null);
 }

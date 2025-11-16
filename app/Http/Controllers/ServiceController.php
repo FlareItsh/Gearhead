@@ -62,7 +62,7 @@ class ServiceController extends Controller
      * Get top N best-selling services.
      */
     /**
-     * Get top 4 services for Donut chart
+     * Get top 4 services for Bar chart
      */
     public function topServices(Request $request)
     {

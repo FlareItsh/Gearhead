@@ -5,7 +5,8 @@ namespace App\Repositories;
 use App\Models\Service;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log; // Added for debugging
+
+// Added for debugging
 
 class EloquentServiceRepository implements ServiceRepositoryInterface
 {
@@ -56,25 +57,11 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
             ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('payments.created_at', [$startDate, $endDate]);
             })
-            ->groupBy('services.service_name')
+            ->groupBy('services.service_id', 'services.service_name') // Group by ID to avoid duplicates if names repeat
             ->orderByDesc('total_bookings')
             ->limit($limit);
 
-        // Added: Log the query for debugging
-        Log::info('Top Services Query Executed', [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings(),
-            'result_count' => $query->count(), // Quick count before get()
-        ]);
-
-        $result = $query->get();
-
-        // Log the actual results
-        Log::info('Top Services Query Result', ['data' => $result->toArray()]);
-
-        return $result;
+        return $query->get();
     }
 
     public function getMostPopularService(?string $startDate = null, ?string $endDate = null)

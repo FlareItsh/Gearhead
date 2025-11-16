@@ -6,6 +6,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\SupplyPurchaseController;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -100,6 +101,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.staffs.delete')->middleware('role:admin');
     Route::get('/staffs/active-count', [EmployeeController::class, 'activeCount'])
         ->name('admin.staffs.active-count')->middleware('role:admin');
+
+    Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])->name('admin.supply-purchases.financial-summary')->middleware('role:admin');
 
     Route::get('/inventory', [AdminController::class, 'inventory'])
         ->name('admin.inventory')

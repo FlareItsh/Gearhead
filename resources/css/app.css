@@ -115,12 +115,12 @@
     --input: oklch(0.269 0 0);
     --ring: oklch(0.439 0 0);
 
-    /* === Charts (light equivalents of dark mode) === */
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(90.943% 0.18188 99.393 / 0.806);
-    --chart-3: oklch(0.73 0.19 70.08);
-    --chart-4: oklch(0.77 0.21 303.9);
-    --chart-5: oklch(0.7 0.19 16.439);
+    /* === Charts (Updated: No yellow, better contrast) === */
+    --chart-1: oklch(60% 0.2 240);
+    --chart-2: oklch(60% 0.2 180);
+    --chart-3: oklch(60% 0.2 120);
+    --chart-4: oklch(60% 0.2 300);
+    --chart-5: oklch(60% 0.2 0);
 
     /* Sidebar */
     --sidebar: oklch(15.91% 0 0);
@@ -179,12 +179,12 @@
     --input: oklch(0.269 0 0);
     --ring: oklch(0.439 0 0);
 
-    /* === Charts === */
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(90.943% 0.18188 99.393 / 0.806);
-    --chart-3: oklch(0.73 0.19 70.08);
-    --chart-4: oklch(0.77 0.21 303.9);
-    --chart-5: oklch(0.7 0.19 16.439);
+    /* === Charts (Updated: No yellow, better contrast) === */
+    --chart-1: oklch(60% 0.2 240);
+    --chart-2: oklch(60% 0.2 180);
+    --chart-3: oklch(60% 0.2 120);
+    --chart-4: oklch(60% 0.2 300);
+    --chart-5: oklch(60% 0.2 0);
 
     /* Sidebar */
     --sidebar: oklch(15.91% 0 0);

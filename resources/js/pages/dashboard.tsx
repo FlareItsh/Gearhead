@@ -27,11 +27,10 @@ import { useEffect, useState } from 'react';
 import {
     Area,
     AreaChart,
+    Bar,
+    BarChart,
     Cell,
     Legend,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -41,22 +40,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
 ];
 
-// Sample Area Chart data
-const areaChartData = [
-    { date: '2025-08-01', revenue: 12000, profit: 8000 },
-    { date: '2025-08-13', revenue: 15000, profit: 9500 },
-    { date: '2025-08-25', revenue: 18000, profit: 11000 },
-    { date: '2025-09-06', revenue: 14000, profit: 8500 },
-    { date: '2025-09-18', revenue: 22000, profit: 14000 },
-    { date: '2025-09-30', revenue: 19000, profit: 12000 },
-    { date: '2025-10-12', revenue: 16000, profit: 10000 },
-    { date: '2025-10-24', revenue: 25000, profit: 16000 },
-];
-
-// Area chart config
+// Area chart config (Updated: Added expenses)
 const areaChartConfig: ChartConfig = {
     revenue: { label: 'Revenue', color: 'var(--chart-1)' },
+    expenses: { label: 'Expenses', color: 'var(--chart-3)' },
     profit: { label: 'Profit', color: 'var(--chart-2)' },
+} satisfies ChartConfig;
+
+// Bar chart config for services
+const barChartConfig: ChartConfig = {
+    bookings: { label: 'Bookings', color: 'hsl(var(--chart-1))' },
 } satisfies ChartConfig;
 
 export default function Dashboard() {
@@ -73,13 +66,18 @@ export default function Dashboard() {
     // Popular service
     const [popularService, setPopularService] = useState('N/A');
 
-    // Top-selling services for donut chart
+    // Top-selling services for bar chart
     const [topServices, setTopServices] = useState<
         { service: string; value: number }[]
     >([]);
 
     // Active staff count
     const [activeStaffCount, setActiveStaffCount] = useState(0);
+
+    // Area chart data (Now from API: { date, revenue, expenses, profit }[])
+    const [areaChartData, setAreaChartData] = useState<
+        { date: string; revenue: number; expenses: number; profit: number }[]
+    >([]);
 
     // Global date ranges (Single set for all dashboard data)
     const [startDate, setStartDate] = useState('2025-11-01'); // Recent default
@@ -127,7 +125,7 @@ export default function Dashboard() {
         }
     }, [role, startDate, endDate]);
 
-    // Fetch top-selling services (Uses global dates)
+    // Fetch top-selling services from API (Replaces sample data)
     useEffect(() => {
         if (role !== 'customer') {
             axios
@@ -138,7 +136,6 @@ export default function Dashboard() {
                     },
                 })
                 .then((res) => {
-                    console.log('API Response for Top Services:', res.data); // Debug
                     // Map backend response to expected shape
                     const mappedData = res.data.map(
                         (item: {
@@ -149,7 +146,6 @@ export default function Dashboard() {
                             value: item.total_bookings || 0, // Guard against null/undefined
                         }),
                     );
-                    console.log('Mapped Data for Chart:', mappedData); // Debug
                     setTopServices(mappedData);
                 })
                 .catch((err) => {
@@ -158,23 +154,41 @@ export default function Dashboard() {
         }
     }, [role, startDate, endDate]);
 
-    // Filtered area data (Uses global dates)
-    const filteredAreaData = areaChartData.filter(
-        (d) =>
-            new Date(d.date) >= new Date(startDate) &&
-            new Date(d.date) <= new Date(endDate),
-    );
+    // Fetch area chart data (Financial time-series: revenue, expenses, profit by date)
+    useEffect(() => {
+        if (role !== 'customer') {
+            axios
+                .get(route('admin.supply-purchases.financial-summary'), {
+                    params: {
+                        start_date: startDate,
+                        end_date: endDate,
+                    },
+                })
+                .then((res) => {
+                    console.log('Financial summary response:', res.data);
+                    setAreaChartData(res.data);
+                })
+                .catch((err) => {
+                    console.error(
+                        'Error fetching financial data:',
+                        err.response ? err.response.data : err.message,
+                    );
+                    setAreaChartData([]);
+                });
+        }
+    }, [role, startDate, endDate]);
 
-    // Donut chart data
-    const totalServices = topServices.length || 1; // Guard against /0 in color calc
-    const filteredDonutData = topServices.map((s, index) => ({
+    // Bar chart data (Adapted for horizontal bars)
+    const totalServicesLength = topServices.length || 1; // Guard against /0
+    const barChartData = topServices.map((s, index) => ({
         service: s.service,
-        value: s.value, // Raw count (bookings) - Recharts handles proportions
-        fill: `hsl(${(index * 360) / totalServices}deg, 70%, 50%)`, // Consistent colors
+        value: s.value,
+        fill: `var(--chart-${(index % 5) + 1})`, // Cycle through Tailwind chart colors
     }));
 
-    const CustomLegend = (props: any) => (
-        <div className="mt-2 flex flex-wrap justify-center gap-4 text-sm text-foreground">
+    // Custom Legend for Area Chart
+    const AreaLegend = (props: any) => (
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
             {props.payload?.map((entry: any, i: number) => (
                 <div key={i} className="flex items-center gap-2">
                     <div
@@ -297,176 +311,207 @@ export default function Dashboard() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                        {/* Revenue Area Chart (No local dates; uses global) */}
+                        {/* Revenue Area Chart (Updated: Revenue, Expenses, Profit lines) */}
                         <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                             <HeadingSmall
-                                title="Revenue Trend"
-                                description="Business performance tracking"
+                                title="Financial Trend"
+                                description="Revenue, expenses, and profit over time"
                             />
                             <ChartContainer
                                 config={areaChartConfig}
                                 className="h-[300px] w-full"
                             >
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={filteredAreaData}>
-                                        <defs>
-                                            <linearGradient
-                                                id="revenue"
-                                                x1="0"
-                                                x2="0"
-                                                y1="0"
-                                                y2="1"
-                                            >
-                                                <stop
-                                                    offset="0%"
-                                                    stopColor={
-                                                        areaChartConfig.revenue
-                                                            .color
-                                                    }
-                                                    stopOpacity={0.3}
-                                                />
-                                                <stop
-                                                    offset="100%"
-                                                    stopColor={
-                                                        areaChartConfig.revenue
-                                                            .color
-                                                    }
-                                                    stopOpacity={0}
-                                                />
-                                            </linearGradient>
-                                            <linearGradient
-                                                id="profit"
-                                                x1="0"
-                                                x2="0"
-                                                y1="0"
-                                                y2="1"
-                                            >
-                                                <stop
-                                                    offset="0%"
-                                                    stopColor={
-                                                        areaChartConfig.profit
-                                                            .color
-                                                    }
-                                                    stopOpacity={0.3}
-                                                />
-                                                <stop
-                                                    offset="100%"
-                                                    stopColor={
-                                                        areaChartConfig.profit
-                                                            .color
-                                                    }
-                                                    stopOpacity={0}
-                                                />
-                                            </linearGradient>
-                                        </defs>
-                                        <XAxis
-                                            dataKey="date"
-                                            tickFormatter={(value) =>
-                                                new Date(
-                                                    value,
-                                                ).toLocaleDateString('en', {
+                                <AreaChart
+                                    data={areaChartData}
+                                    width="100%"
+                                    height="100%"
+                                >
+                                    <defs>
+                                        <linearGradient
+                                            id="revenue"
+                                            x1="0"
+                                            x2="0"
+                                            y1="0"
+                                            y2="1"
+                                        >
+                                            <stop
+                                                offset="0%"
+                                                stopColor={
+                                                    areaChartConfig.revenue
+                                                        .color
+                                                }
+                                                stopOpacity={0.3}
+                                            />
+                                            <stop
+                                                offset="100%"
+                                                stopColor={
+                                                    areaChartConfig.revenue
+                                                        .color
+                                                }
+                                                stopOpacity={0}
+                                            />
+                                        </linearGradient>
+                                        <linearGradient
+                                            id="expenses"
+                                            x1="0"
+                                            x2="0"
+                                            y1="0"
+                                            y2="1"
+                                        >
+                                            <stop
+                                                offset="0%"
+                                                stopColor={
+                                                    areaChartConfig.expenses
+                                                        .color
+                                                }
+                                                stopOpacity={0.3}
+                                            />
+                                            <stop
+                                                offset="100%"
+                                                stopColor={
+                                                    areaChartConfig.expenses
+                                                        .color
+                                                }
+                                                stopOpacity={0}
+                                            />
+                                        </linearGradient>
+                                        <linearGradient
+                                            id="profit"
+                                            x1="0"
+                                            x2="0"
+                                            y1="0"
+                                            y2="1"
+                                        >
+                                            <stop
+                                                offset="0%"
+                                                stopColor={
+                                                    areaChartConfig.profit.color
+                                                }
+                                                stopOpacity={0.3}
+                                            />
+                                            <stop
+                                                offset="100%"
+                                                stopColor={
+                                                    areaChartConfig.profit.color
+                                                }
+                                                stopOpacity={0}
+                                            />
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis
+                                        dataKey="date"
+                                        tickFormatter={(value) =>
+                                            new Date(value).toLocaleDateString(
+                                                'en',
+                                                {
                                                     month: 'short',
                                                     day: 'numeric',
-                                                })
-                                            }
-                                            tick={{ fontSize: 12 }}
-                                            axisLine={false}
-                                            tickLine={false}
-                                        />
-                                        <YAxis
-                                            tickFormatter={(value) =>
-                                                `₱${(value / 1000).toFixed(0)}k`
-                                            }
-                                            tick={{ fontSize: 12 }}
-                                            axisLine={false}
-                                            tickLine={false}
-                                        />
-                                        <Area
-                                            dataKey="revenue"
-                                            type="monotone"
-                                            stroke={
-                                                areaChartConfig.revenue.color
-                                            }
-                                            fill="url(#revenue)"
-                                            strokeWidth={2}
-                                        />
-                                        <Area
-                                            dataKey="profit"
-                                            type="monotone"
-                                            stroke={
-                                                areaChartConfig.profit.color
-                                            }
-                                            fill="url(#profit)"
-                                            strokeWidth={2}
-                                        />
-                                        <ChartTooltip
-                                            content={<ChartTooltipContent />}
-                                            formatter={(value) => [
-                                                `₱${value.toLocaleString()}`,
-                                                '',
-                                            ]}
-                                        />
-                                        <Legend content={CustomLegend} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                                                },
+                                            )
+                                        }
+                                        tick={{ fontSize: 12 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis
+                                        tickFormatter={(value) =>
+                                            `₱${(value / 1000).toFixed(0)}k`
+                                        }
+                                        tick={{ fontSize: 12 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <Area
+                                        dataKey="revenue"
+                                        type="monotone"
+                                        stroke={areaChartConfig.revenue.color}
+                                        fill="url(#revenue)"
+                                        strokeWidth={2}
+                                    />
+                                    <Area
+                                        dataKey="expenses"
+                                        type="monotone"
+                                        stroke={areaChartConfig.expenses.color}
+                                        fill="url(#expenses)"
+                                        strokeWidth={2}
+                                    />
+                                    <Area
+                                        dataKey="profit"
+                                        type="monotone"
+                                        stroke={areaChartConfig.profit.color}
+                                        fill="url(#profit)"
+                                        strokeWidth={2}
+                                    />
+                                    <ChartTooltip
+                                        content={<ChartTooltipContent />}
+                                        formatter={(value) => [
+                                            `₱${value.toLocaleString()}`,
+                                            '',
+                                        ]}
+                                    />
+                                    <Legend content={AreaLegend} />
+                                </AreaChart>
                             </ChartContainer>
+                            {/* Fallback if no data */}
+                            {areaChartData.length === 0 && (
+                                <p className="mt-4 text-center text-sm text-muted-foreground">
+                                    No financial data for this period
+                                </p>
+                            )}
                         </div>
 
-                        {/* Top-Selling Donut Chart (No local dates; uses global) */}
+                        {/* Top-Selling Bar Chart (Replaced Donut with Horizontal Bar, uses API data) */}
                         <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                             <HeadingSmall
                                 title="Service Distribution"
-                                description="Popular services breakdown"
+                                description="Top 4 services by bookings"
                             />
                             <ChartContainer
-                                config={{}} // optional, not strictly required
+                                config={barChartConfig}
                                 className="h-[300px] w-full"
                             >
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={filteredDonutData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={60}
-                                            outerRadius={100}
-                                            dataKey="value" // Uses raw count for proportions
-                                            nameKey="service"
-                                            label={false}
-                                        >
-                                            {filteredDonutData.map(
-                                                (entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={entry.fill}
-                                                    />
-                                                ),
-                                            )}
-                                        </Pie>
-                                        {/* Fallback text if no data */}
-                                        {filteredDonutData.length === 0 && (
-                                            <text
-                                                x="50%"
-                                                y="50%"
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                                className="fill-muted-foreground text-sm"
-                                                style={{ fontSize: 14 }}
-                                            >
-                                                No data for this period
-                                            </text>
-                                        )}
-                                        <ChartTooltip
-                                            content={<ChartTooltipContent />}
-                                            formatter={(value) => [
-                                                `${value} bookings`, // Shows raw count on hover
-                                                'Total Bookings',
-                                            ]}
-                                        />
-                                        <Legend content={CustomLegend} />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                <BarChart
+                                    layout="vertical" // Horizontal bars
+                                    data={barChartData}
+                                    width="100%"
+                                    height="100%"
+                                    margin={{
+                                        top: 20,
+                                        right: 30,
+                                        left: 20,
+                                        bottom: 5,
+                                    }}
+                                >
+                                    <XAxis type="number" hide />
+                                    <YAxis
+                                        dataKey="service"
+                                        type="category"
+                                        width={150}
+                                        tick={{ fontSize: 12 }}
+                                    />
+                                    <ChartTooltip
+                                        content={<ChartTooltipContent />}
+                                        formatter={(value) => [
+                                            `${value} `, // Shows raw count on hover
+                                            ' - Total Bookings',
+                                        ]}
+                                    />
+                                    <Bar dataKey="value" radius={[4, 4, 4, 4]}>
+                                        {barChartData.map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={entry.fill}
+                                            />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
                             </ChartContainer>
+                            {/* Fallback if no data */}
+                            {barChartData.length === 0 && (
+                                <p className="mt-4 text-center text-sm text-muted-foreground">
+                                    No data for this period
+                                </p>
+                            )}
                         </div>
                     </div>
 
