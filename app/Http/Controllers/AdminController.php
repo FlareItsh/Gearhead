@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
+use App\Repositories\ServiceRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -9,10 +11,14 @@ use Inertia\Inertia;
 class AdminController extends Controller
 {
     private UserRepositoryInterface $users;
+    private ServiceRepositoryInterface $services;
 
-    public function __construct(UserRepositoryInterface $users)
-    {
+    public function __construct(
+        UserRepositoryInterface $users,
+        ServiceRepositoryInterface $services
+    ) {
         $this->users = $users;
+        $this->services = $services;
     }
 
     public function registry(Request $request)
@@ -44,10 +50,22 @@ class AdminController extends Controller
 
     public function services(Request $request)
     {
-        $users = $this->users->all();
+        // Get all active services using repository
+        $services = $this->services->all();
+
+        // Get distinct categories from services
+        $categories = Service::distinct()
+            ->where('status', 'active')
+            ->pluck('category')
+            ->toArray();
+
+        // Get selected category from query parameter
+        $selectedCategory = $request->query('category', 'All');
 
         return Inertia::render('Admin/Services', [
-            'users' => $users,
+            'services' => $services,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
         ]);
     }
 

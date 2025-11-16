@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
@@ -71,29 +72,57 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('payments.user')
         ->middleware(['auth', 'role:customer']);
 
-    // * Admin Specific routes (fixed controller method references and unique names)
+    // * Admin Specific routes
     Route::get('/registry', [AdminController::class, 'registry'])
         ->name('admin.registry')
         ->middleware('role:admin');
+    
     Route::get('/customers', [AdminController::class, 'customers'])
         ->name('admin.customers')
         ->middleware('role:admin');
 
-    // * Staff route for Rendering and Managing Staffs
-    Route::get('/staffs', [EmployeeController::class, 'index'])->name('admin.staffs')->middleware('role:admin');
-    Route::post('/staffs', [EmployeeController::class, 'store'])->name('admin.staffs.store')->middleware('role:admin');
-    Route::put('/staffs/{id}', [EmployeeController::class, 'update'])->name('admin.staffs.update')->middleware('role:admin');
-    Route::delete('/staffs/{id}', [EmployeeController::class, 'destroy'])->name('admin.staffs.delete')->middleware('role:admin');
+    // Staff route for Rendering and Managing Staffs
+    Route::get('/staffs', [EmployeeController::class, 'index'])
+        ->name('admin.staffs')
+        ->middleware('role:admin');
+    
+    Route::post('/staffs', [EmployeeController::class, 'store'])
+        ->name('admin.staffs.store')
+        ->middleware('role:admin');
+    
+    Route::put('/staffs/{id}', [EmployeeController::class, 'update'])
+        ->name('admin.staffs.update')
+        ->middleware('role:admin');
+    
+    Route::delete('/staffs/{id}', [EmployeeController::class, 'destroy'])
+        ->name('admin.staffs.delete')
+        ->middleware('role:admin');
+
+    // Services Management Routes (Admin Only)
+    Route::post('/services', [ServiceController::class, 'store'])
+        ->name('services.store')
+        ->middleware('role:admin');
+    
+    Route::put('/services/{id}', [ServiceController::class, 'update'])
+        ->name('services.update')
+        ->middleware('role:admin');
+    
+    Route::delete('/services/{id}', [ServiceController::class, 'destroy'])
+        ->name('services.destroy')
+        ->middleware('role:admin');
 
     Route::get('/inventory', [AdminController::class, 'inventory'])
         ->name('admin.inventory')
         ->middleware('role:admin');
+    
     Route::get('/transactions', [AdminController::class, 'transactions'])
         ->name('admin.transactions')
         ->middleware('role:admin');
+    
     Route::get('/reports', [AdminController::class, 'reports'])
         ->name('admin.reports')
         ->middleware('role:admin');
+    
     Route::get('/bays', [AdminController::class, 'bays'])
         ->name('admin.bays')
         ->middleware('role:admin');
