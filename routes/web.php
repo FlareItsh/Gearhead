@@ -62,7 +62,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // * Admin-specific top selling services route
     Route::get('/services/top', [ServiceController::class, 'topServices'])->name('admin.services.top-selling')->middleware('role:admin');
-    Route::get('/services/popular', [ServiceController::class, 'popularService'])->name('admin.services.popular')->middleware('role:admin');
 
     // * Customer-specific routes
     Route::get('/payments', [CustomerController::class, 'payments'])

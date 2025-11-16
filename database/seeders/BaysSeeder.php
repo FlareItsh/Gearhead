@@ -18,7 +18,6 @@ class BaysSeeder extends Seeder
             ['bay_id' => 5, 'bay_number' => '5', 'status' => 'available', 'bay_type' => 'Normal'],
             ['bay_id' => 6, 'bay_number' => '6', 'status' => 'available', 'bay_type' => 'Underwash'],
         ];
-
         foreach ($bays as $b) {
             if (! DB::table('bays')->where('bay_id', $b['bay_id'])->exists()) {
                 $b['created_at'] = $now;

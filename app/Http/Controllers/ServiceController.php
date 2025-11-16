@@ -77,13 +77,4 @@ class ServiceController extends Controller
     /**
      * Get most popular service for the Popular Service card
      */
-    public function popularService(Request $request)
-    {
-        $startDate = $request->query('start_date');
-        $endDate = $request->query('end_date');
-
-        $service = $this->repo->getMostPopularService($startDate, $endDate);
-
-        return response()->json($service);
-    }
 }

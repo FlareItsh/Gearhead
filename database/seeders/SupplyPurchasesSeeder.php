@@ -9,19 +9,35 @@ class SupplyPurchasesSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = now();
-
-        $purchases = [
-            ['supply_purchase_id'=>1,'supplier_id'=>1,'purchase_date'=>null],
-            ['supply_purchase_id'=>2,'supplier_id'=>2,'purchase_date'=>null],
-        ];
-
-        foreach ($purchases as $p) {
-            if (! DB::table('supply_purchases')->where('supply_purchase_id', $p['supply_purchase_id'])->exists()) {
-                $p['created_at'] = $now;
-                $p['updated_at'] = $now;
-                DB::table('supply_purchases')->insert($p);
+        $monthTimeline = [];
+        for ($month = 1; $month <= 12; $month++) {
+            for ($day = 1; $day <= 28; $day++) {
+                $hour = rand(8, 18);
+                $min = rand(0, 59);
+                $dateStr = sprintf('2025-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
+                $monthTimeline[] = $dateStr;
             }
+        }
+        shuffle($monthTimeline);
+        $purchases = [];
+        for ($i = 1; $i <= 100; $i++) { // Tons, say 100
+            $purchaseDate = $monthTimeline[$i % count($monthTimeline)];
+            $created = date('Y-m-d H:i:s', strtotime($purchaseDate.' -'.rand(1, 24).' hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created.' +'.rand(1, 12).' hours'));
+            $supplierId = rand(1, 10);
+            $purchases[] = [
+                'supply_purchase_id' => $i,
+                'supplier_id' => $supplierId,
+                'purchase_date' => $purchaseDate,
+                'created_at' => $created,
+                'updated_at' => $updated,
+            ];
+        }
+        foreach ($purchases as $p) {
+            DB::table('supply_purchases')->updateOrInsert(
+                ['supply_purchase_id' => $p['supply_purchase_id']],
+                $p
+            );
         }
     }
 }

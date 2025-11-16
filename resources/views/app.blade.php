@@ -47,7 +47,7 @@
     @inertiaHead
 </head>
 
-<body class="bg-background antialiased">
+<body class="bg-background custom-scrollbar antialiased">
     @inertia
 </body>
 

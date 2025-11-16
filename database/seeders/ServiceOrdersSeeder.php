@@ -9,33 +9,48 @@ class ServiceOrdersSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = now();
-
-        $orders = [
-            ['service_order_id' => 1, 'user_id' => 2, 'employee_id' => 1, 'bay_id' => 6, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 2, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 3, 'user_id' => 4, 'employee_id' => 3, 'bay_id' => 2, 'status' => 'completed', 'order_date' => null, 'order_type' => 'r'],
-            ['service_order_id' => 4, 'user_id' => 4, 'employee_id' => 1, 'bay_id' => 3, 'status' => 'completed', 'order_date' => null, 'order_type' => 'r'],
-            ['service_order_id' => 5, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'pending', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 6, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'pending', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 7, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'in_progress', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 8, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'pending', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 9, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 10, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 11, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 12, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 13, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 14, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 15, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-            ['service_order_id' => 16, 'user_id' => 3, 'employee_id' => 2, 'bay_id' => 1, 'status' => 'completed', 'order_date' => null, 'order_type' => 'w'],
-        ];
-
-        foreach ($orders as $o) {
-            if (! DB::table('service_orders')->where('service_order_id', $o['service_order_id'])->exists()) {
-                $o['created_at'] = $now;
-                $o['updated_at'] = $now;
-                DB::table('service_orders')->insert($o);
+        $monthTimeline = [];
+        for ($month = 1; $month <= 12; $month++) {
+            for ($day = 1; $day <= 28; $day++) { // Safe for Feb
+                $hour = rand(8, 18);
+                $min = rand(0, 59);
+                $dateStr = sprintf('2025-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
+                $monthTimeline[] = $dateStr;
             }
+        }
+        shuffle($monthTimeline); // Randomize for variety
+        $orders = [];
+        for ($i = 1; $i <= 200; $i++) {
+            $orderDate = $monthTimeline[$i % count($monthTimeline)];
+            $created = date('Y-m-d H:i:s', strtotime($orderDate.' -'.rand(1, 48).' hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created.' +'.rand(1, 24).' hours'));
+            $userId = rand(2, 51); // Customers from 2 to 51
+            $employeeId = rand(1, 10);
+            $bayId = rand(1, 6);
+            $status = ['pending', 'in_progress', 'completed', 'cancelled'][rand(0, 3)];
+            $orderType = rand(0, 1) ? 'W' : 'R';
+            // Check if any detail has underwash (service_id 6-9), adjust bay to 6
+            // But since details seeded after, assume some logic: if rand, set bay 6 for some
+            if (rand(1, 10) <= 2) { // 20% chance for underwash order
+                $bayId = 6;
+            }
+            $orders[] = [
+                'service_order_id' => $i,
+                'user_id' => $userId,
+                'employee_id' => $employeeId,
+                'bay_id' => $bayId,
+                'status' => $status,
+                'order_date' => $orderDate,
+                'order_type' => $orderType,
+                'created_at' => $created,
+                'updated_at' => $updated,
+            ];
+        }
+        foreach ($orders as $o) {
+            DB::table('service_orders')->updateOrInsert(
+                ['service_order_id' => $o['service_order_id']],
+                $o
+            );
         }
     }
 }

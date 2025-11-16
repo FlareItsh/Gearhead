@@ -13,20 +13,29 @@ return new class extends Migration
     {
         Schema::create('service_orders', function (Blueprint $table) {
             $table->id('service_order_id');
+
             $table->foreignId('user_id')
                 ->constrained('users', 'user_id')
                 ->onDelete('cascade');
+
             $table->foreignId('employee_id')
                 ->nullable()
                 ->constrained('employees', 'employee_id')
                 ->onDelete('set null');
+
             $table->foreignId('bay_id')
                 ->nullable()
                 ->constrained('bays', 'bay_id')
                 ->onDelete('set null');
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
-            $table->timestamp('order_date');
+
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])
+                ->default('pending');
+
+            // changed from timestamp() → dateTime()
+            $table->dateTime('order_date');
+
             $table->enum('order_type', ['W', 'R'])->comment('W = Walk-in, R = Reservation');
+
             $table->timestamps();
         });
     }

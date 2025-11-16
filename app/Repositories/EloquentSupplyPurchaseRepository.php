@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\SupplyPurchase;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterface
 {
@@ -36,36 +35,41 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
 
     public function getFinancialSummary(?string $startDate = null, ?string $endDate = null)
     {
-        // Daily revenue: GROUP BY DATE(created_at) from payments
-        $revenueQuery = DB::table('payments')
-            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(amount), 0) as revenue')
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
-            })
+        // Default to last 30 days
+        $startDate = $startDate ?? now()->subDays(30)->format('Y-m-d');
+        $endDate = $endDate ?? now()->format('Y-m-d');
+
+        // Generate a continuous date range in PHP
+        $period = new \DatePeriod(
+            new \DateTime($startDate),
+            new \DateInterval('P1D'),
+            (new \DateTime($endDate))->modify('+1 day')
+        );
+
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
+
+        // Get revenue per day
+        $revenueData = DB::table('payments')
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as revenue')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->groupByRaw('DATE(created_at)')
-            ->orderBy('date');
+            ->pluck('revenue', 'date'); // ['2025-11-01' => 1000, ...]
 
-        $revenueData = $revenueQuery->get();
+        // Get expenses per day
+        $expensesData = DB::table('supply_purchase_details')
+            ->selectRaw('DATE(purchase_date) as date, SUM(quantity * unit_price) as expenses')
+            ->whereBetween('purchase_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->groupByRaw('DATE(purchase_date)')
+            ->pluck('expenses', 'date');
 
-        // Daily expenses: GROUP BY DATE(created_at) from supply_purchases, SUM from supply_purchase_details
-        $expensesQuery = DB::table('supply_purchase_details')
-            ->join('supply_purchases', 'supply_purchase_details.supply_purchase_id', '=', 'supply_purchases.supply_purchase_id')
-            ->selectRaw('DATE(supply_purchases.created_at) as date, COALESCE(SUM(supply_purchase_details.quantity * supply_purchase_details.unit_price), 0) as expenses')
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('supply_purchases.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
-            })
-            ->groupByRaw('DATE(supply_purchases.created_at)')
-            ->orderBy('date');
-
-        $expensesData = $expensesQuery->get();
-
-        // Combine into single array with profit (revenue - expenses per day)
+        // Merge into final dataset
         $financialData = [];
-        $allDates = $revenueData->pluck('date')->merge($expensesData->pluck('date'))->unique()->sort()->values();
-
-        foreach ($allDates as $date) {
-            $rev = $revenueData->firstWhere('date', $date)->revenue ?? 0;
-            $exp = $expensesData->firstWhere('date', $date)->expenses ?? 0;
+        foreach ($dates as $date) {
+            $rev = $revenueData[$date] ?? 0;
+            $exp = $expensesData[$date] ?? 0;
             $financialData[] = [
                 'date' => $date,
                 'revenue' => (float) $rev,
@@ -74,14 +78,6 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
             ];
         }
 
-        // Added: Log for debugging
-        Log::info('Financial Summary Data', [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'data_count' => count($financialData),
-            'sample_data' => array_slice($financialData, 0, 3), // First 3 days
-        ]);
-
-        return $financialData; // Array of daily points for time-series chart
+        return $financialData;
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('supplier_id')
                 ->constrained('suppliers', 'supplier_id')
                 ->onDelete('cascade');
-            $table->timestamp('purchase_date');
+            $table->datetime('purchase_date');
             $table->timestamps();
         });
     }

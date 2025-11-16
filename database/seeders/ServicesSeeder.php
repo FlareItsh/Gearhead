@@ -10,11 +10,8 @@ class ServicesSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-
         $services = [
-
         ];
-
         $rows = [
             [1, 'Basic', 'body wash,vacuum, tire black, blow dry', 'Small', 'Basic', 50, 130, 'active'],
             [2, 'Basic', 'body wash,vacuum, tire black, blow dry', 'Medium', 'Basic', 50, 150, 'active'],
@@ -36,7 +33,6 @@ class ServicesSeeder extends Seeder
             [18, 'Hand Wax', 'body wash,vacuum,tire black,blow dry,liquid hand wax', 'X-Large', 'Hand Wax', 50, 350, 'active'],
             [19, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Small', 'Additonal Services', 40, 60, 'active'],
         ];
-
         $rows = array_merge($rows, [
             [20, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Medium', 'Additonal Services', 40, 60, 'active'],
             [21, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Large', 'Additonal Services', 40, 70, 'active'],
@@ -70,7 +66,6 @@ class ServicesSeeder extends Seeder
             [49, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all', 'Large', 'Complete Package', 120, 1130, 'active'],
             [50, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all', 'X-Large', 'Complete Package', 120, 1350, 'active'],
         ]);
-
         foreach ($rows as $r) {
             [$id,$name,$desc,$size,$cat,$duration,$price,$status] = $r;
             if (! DB::table('services')->where('service_id', $id)->exists()) {

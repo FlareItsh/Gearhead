@@ -63,19 +63,4 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
 
         return $query->get();
     }
-
-    public function getMostPopularService(?string $startDate = null, ?string $endDate = null)
-    {
-        return DB::table('payments')
-            ->join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
-            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
-            ->select('services.service_name', DB::raw('SUM(service_order_details.quantity) as total_bookings'))
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('payments.created_at', [$startDate, $endDate]);
-            })
-            ->groupBy('services.service_name')
-            ->orderByDesc('total_bookings')
-            ->first();
-    }
 }

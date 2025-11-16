@@ -31,5 +31,4 @@ interface ServiceRepositoryInterface
      *
      * @return object|null
      */
-    public function getMostPopularService(?string $startDate = null, ?string $endDate = null);
 }

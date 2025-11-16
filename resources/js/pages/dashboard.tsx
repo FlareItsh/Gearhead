@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import {
     ChartConfig,
     ChartContainer,
-    ChartTooltip,
     ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
@@ -31,6 +30,7 @@ import {
     BarChart,
     Cell,
     Legend,
+    Tooltip,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -40,14 +40,14 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
 ];
 
-// Area chart config (Updated: Added expenses)
+// Area chart config
 const areaChartConfig: ChartConfig = {
     revenue: { label: 'Revenue', color: 'var(--chart-1)' },
     expenses: { label: 'Expenses', color: 'var(--chart-3)' },
     profit: { label: 'Profit', color: 'var(--chart-2)' },
 } satisfies ChartConfig;
 
-// Bar chart config for services
+// Bar chart config
 const barChartConfig: ChartConfig = {
     bookings: { label: 'Bookings', color: 'hsl(var(--chart-1))' },
 } satisfies ChartConfig;
@@ -57,48 +57,35 @@ export default function Dashboard() {
     const role = (page.props as { auth?: { user?: { role?: string } } })?.auth
         ?.user?.role;
 
-    // Payments summary
     const [paymentsSummary, setPaymentsSummary] = useState({
         total_amount: 0,
         total_payments: 0,
     });
-
-    // Popular service
     const [popularService, setPopularService] = useState('N/A');
-
-    // Top-selling services for bar chart
     const [topServices, setTopServices] = useState<
         { service: string; value: number }[]
     >([]);
-
-    // Active staff count
     const [activeStaffCount, setActiveStaffCount] = useState(0);
-
-    // Area chart data (Now from API: { date, revenue, expenses, profit }[])
     const [areaChartData, setAreaChartData] = useState<
         { date: string; revenue: number; expenses: number; profit: number }[]
     >([]);
 
-    // Global date ranges (Single set for all dashboard data)
-    const [startDate, setStartDate] = useState('2025-11-01'); // Recent default
-    const [endDate, setEndDate] = useState('2025-11-16'); // Today
+    const [startDate, setStartDate] = useState('2025-11-01');
+    const [endDate, setEndDate] = useState('2025-11-16');
 
-    // Fetch payments summary (Uses global dates)
+    // Fetch payments summary
     useEffect(() => {
         if (role !== 'customer') {
             axios
                 .get('/payments/summary', {
-                    params: {
-                        start_date: startDate,
-                        end_date: endDate,
-                    },
+                    params: { start_date: startDate, end_date: endDate },
                 })
                 .then((res) => setPaymentsSummary(res.data))
                 .catch((err) => console.error(err));
         }
     }, [startDate, endDate, role]);
 
-    // Fetch active staff (No dates needed)
+    // Fetch active staff
     useEffect(() => {
         if (role !== 'customer') {
             axios
@@ -108,66 +95,41 @@ export default function Dashboard() {
         }
     }, [role]);
 
-    // Fetch popular service (Updated: Uses global dates)
-    useEffect(() => {
-        if (role !== 'customer') {
-            axios
-                .get(route('admin.services.popular'), {
-                    params: {
-                        start_date: startDate,
-                        end_date: endDate,
-                    },
-                })
-                .then((res) =>
-                    setPopularService(res.data.service_name || 'N/A'),
-                )
-                .catch((err) => console.error(err));
-        }
-    }, [role, startDate, endDate]);
-
-    // Fetch top-selling services from API (Replaces sample data)
+    // Fetch top-selling services
     useEffect(() => {
         if (role !== 'customer') {
             axios
                 .get(route('admin.services.top-selling'), {
-                    params: {
-                        start_date: startDate,
-                        end_date: endDate,
-                    },
+                    params: { start_date: startDate, end_date: endDate },
                 })
                 .then((res) => {
-                    // Map backend response to expected shape
                     const mappedData = res.data.map(
                         (item: {
                             service_name: string;
                             total_bookings: number;
                         }) => ({
                             service: item.service_name,
-                            value: item.total_bookings || 0, // Guard against null/undefined
+                            value: item.total_bookings || 0,
                         }),
                     );
                     setTopServices(mappedData);
+                    // Update popular service to match top of array
+                    setPopularService(mappedData[0]?.service || 'N/A');
                 })
-                .catch((err) => {
-                    console.error('Error fetching top services:', err); // Better error logging
-                });
+                .catch((err) =>
+                    console.error('Error fetching top services:', err),
+                );
         }
     }, [role, startDate, endDate]);
 
-    // Fetch area chart data (Financial time-series: revenue, expenses, profit by date)
+    // Fetch financial summary
     useEffect(() => {
         if (role !== 'customer') {
             axios
                 .get(route('admin.supply-purchases.financial-summary'), {
-                    params: {
-                        start_date: startDate,
-                        end_date: endDate,
-                    },
+                    params: { start_date: startDate, end_date: endDate },
                 })
-                .then((res) => {
-                    console.log('Financial summary response:', res.data);
-                    setAreaChartData(res.data);
-                })
+                .then((res) => setAreaChartData(res.data))
                 .catch((err) => {
                     console.error(
                         'Error fetching financial data:',
@@ -178,15 +140,12 @@ export default function Dashboard() {
         }
     }, [role, startDate, endDate]);
 
-    // Bar chart data (Adapted for horizontal bars)
-    const totalServicesLength = topServices.length || 1; // Guard against /0
     const barChartData = topServices.map((s, index) => ({
         service: s.service,
         value: s.value,
-        fill: `var(--chart-${(index % 5) + 1})`, // Cycle through Tailwind chart colors
+        fill: `var(--chart-${(index % 5) + 1})`,
     }));
 
-    // Custom Legend for Area Chart
     const AreaLegend = (props: any) => (
         <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
             {props.payload?.map((entry: any, i: number) => (
@@ -213,7 +172,6 @@ export default function Dashboard() {
                             title="Dashboard"
                             description="Welcome Back! Here's your business overview."
                         />
-                        {/* Global Date Range Inputs */}
                         <div className="flex items-center gap-2">
                             <Input
                                 type="date"
@@ -233,8 +191,9 @@ export default function Dashboard() {
                         </div>
                     </div>
 
+                    {/* Cards */}
                     <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-                        {/* Month Revenue Card */}
+                        {/* Revenue Card */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
@@ -255,7 +214,7 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        {/* Total Bookings Card */}
+                        {/* Total Bookings */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
@@ -273,7 +232,7 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        {/* Active Staff Card */}
+                        {/* Active Staff */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
@@ -291,7 +250,7 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        {/* Popular Service Card */}
+                        {/* Popular Service */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
@@ -310,8 +269,9 @@ export default function Dashboard() {
                         </div>
                     </div>
 
+                    {/* Charts */}
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                        {/* Revenue Area Chart (Updated: Revenue, Expenses, Profit lines) */}
+                        {/* Area Chart */}
                         <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                             <HeadingSmall
                                 title="Financial Trend"
@@ -321,82 +281,37 @@ export default function Dashboard() {
                                 config={areaChartConfig}
                                 className="h-[300px] w-full"
                             >
-                                <AreaChart
-                                    data={areaChartData}
-                                    width="100%"
-                                    height="100%"
-                                >
+                                <AreaChart data={areaChartData}>
                                     <defs>
-                                        <linearGradient
-                                            id="revenue"
-                                            x1="0"
-                                            x2="0"
-                                            y1="0"
-                                            y2="1"
-                                        >
-                                            <stop
-                                                offset="0%"
-                                                stopColor={
-                                                    areaChartConfig.revenue
-                                                        .color
-                                                }
-                                                stopOpacity={0.3}
-                                            />
-                                            <stop
-                                                offset="100%"
-                                                stopColor={
-                                                    areaChartConfig.revenue
-                                                        .color
-                                                }
-                                                stopOpacity={0}
-                                            />
-                                        </linearGradient>
-                                        <linearGradient
-                                            id="expenses"
-                                            x1="0"
-                                            x2="0"
-                                            y1="0"
-                                            y2="1"
-                                        >
-                                            <stop
-                                                offset="0%"
-                                                stopColor={
-                                                    areaChartConfig.expenses
-                                                        .color
-                                                }
-                                                stopOpacity={0.3}
-                                            />
-                                            <stop
-                                                offset="100%"
-                                                stopColor={
-                                                    areaChartConfig.expenses
-                                                        .color
-                                                }
-                                                stopOpacity={0}
-                                            />
-                                        </linearGradient>
-                                        <linearGradient
-                                            id="profit"
-                                            x1="0"
-                                            x2="0"
-                                            y1="0"
-                                            y2="1"
-                                        >
-                                            <stop
-                                                offset="0%"
-                                                stopColor={
-                                                    areaChartConfig.profit.color
-                                                }
-                                                stopOpacity={0.3}
-                                            />
-                                            <stop
-                                                offset="100%"
-                                                stopColor={
-                                                    areaChartConfig.profit.color
-                                                }
-                                                stopOpacity={0}
-                                            />
-                                        </linearGradient>
+                                        {['revenue', 'expenses', 'profit'].map(
+                                            (key) => (
+                                                <linearGradient
+                                                    key={key}
+                                                    id={key}
+                                                    x1="0"
+                                                    y1="0"
+                                                    x2="0"
+                                                    y2="1"
+                                                >
+                                                    <stop
+                                                        offset="0%"
+                                                        stopColor={
+                                                            areaChartConfig[key]
+                                                                .color
+                                                        }
+                                                        stopOpacity={0.3}
+                                                    />
+                                                    <stop
+                                                        offset="100%"
+                                                        stopColor={
+                                                            areaChartConfig[key]
+                                                                .color
+                                                        }
+                                                        stopOpacity={0}
+                                                    />
+                                                </linearGradient>
+                                            ),
+                                        )}
                                     </defs>
                                     <XAxis
                                         dataKey="date"
@@ -442,17 +357,12 @@ export default function Dashboard() {
                                         fill="url(#profit)"
                                         strokeWidth={2}
                                     />
-                                    <ChartTooltip
+                                    <Tooltip
                                         content={<ChartTooltipContent />}
-                                        formatter={(value) => [
-                                            `₱${value.toLocaleString()}`,
-                                            '',
-                                        ]}
                                     />
                                     <Legend content={AreaLegend} />
                                 </AreaChart>
                             </ChartContainer>
-                            {/* Fallback if no data */}
                             {areaChartData.length === 0 && (
                                 <p className="mt-4 text-center text-sm text-muted-foreground">
                                     No financial data for this period
@@ -460,7 +370,7 @@ export default function Dashboard() {
                             )}
                         </div>
 
-                        {/* Top-Selling Bar Chart (Replaced Donut with Horizontal Bar, uses API data) */}
+                        {/* Bar Chart */}
                         <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                             <HeadingSmall
                                 title="Service Distribution"
@@ -471,10 +381,8 @@ export default function Dashboard() {
                                 className="h-[300px] w-full"
                             >
                                 <BarChart
-                                    layout="vertical" // Horizontal bars
+                                    layout="vertical"
                                     data={barChartData}
-                                    width="100%"
-                                    height="100%"
                                     margin={{
                                         top: 20,
                                         right: 30,
@@ -489,10 +397,10 @@ export default function Dashboard() {
                                         width={150}
                                         tick={{ fontSize: 12 }}
                                     />
-                                    <ChartTooltip
+                                    <Tooltip
                                         content={<ChartTooltipContent />}
                                         formatter={(value) => [
-                                            `${value} `, // Shows raw count on hover
+                                            `${value}`,
                                             ' - Total Bookings',
                                         ]}
                                     />
@@ -506,7 +414,6 @@ export default function Dashboard() {
                                     </Bar>
                                 </BarChart>
                             </ChartContainer>
-                            {/* Fallback if no data */}
                             {barChartData.length === 0 && (
                                 <p className="mt-4 text-center text-sm text-muted-foreground">
                                     No data for this period
@@ -515,7 +422,7 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Upcoming Appointments Table */}
+                    {/* Appointments Table */}
                     <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                         <Heading
                             title="Upcoming Appointments"
