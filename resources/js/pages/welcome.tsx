@@ -18,19 +18,19 @@ export default function Welcome() {
             </Head>
             <Header />
             <section>
-                <Hero></Hero>
+                <Hero />
             </section>
             <section>
-                <About></About>
+                <About />
             </section>
             <section>
-                <LP_Services></LP_Services>
+                <LP_Services />
             </section>
             <section>
-                <Review></Review>
+                <Review />
             </section>
             <section>
-                <Footer></Footer>
+                <Footer />
             </section>
         </>
     );
