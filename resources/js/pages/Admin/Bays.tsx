@@ -5,7 +5,6 @@ import AppLayout from "@/layouts/app-layout";
 import { type BreadcrumbItem } from "@/types";
 import Heading from "@/components/heading";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -67,19 +66,30 @@ export default function Bays({ bays }: { bays: any[] }) {
                     <Heading title="Bay" description="Manage and Add Bays for new Carwash slots"/>
                     <Button variant="highlight" onClick={() => setOpen(true)}>+ Add Bay</Button>
                 </div>
+
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     {bayList.map((bay) => (
-                        <Card key={bay.bay_id} className="p-6">
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Bay #{bay.bay_number}</CardTitle>
-                                <Badge variant={bay.status === "available" ? "success" : "destructive"} className="capitalize">
+                        <div
+                            key={bay.bay_id}
+                            className="w-full h-48 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-900 shadow-sm p-4 relative"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold">Bay #{bay.bay_number}</h3>
+
+                                <Badge
+                                    variant={bay.status === "available" ? "success" : "destructive"}
+                                    className="capitalize"
+                                >
                                     {bay.status}
                                 </Badge>
-                            </CardHeader>
-                            <CardDescription className="text-center text-gray-500 mt-4">
-                                Ready for next service ({bay.bay_type})
-                            </CardDescription>
-                        </Card>
+                            </div>
+                            
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <p className="text-gray-500 text-sm text-center">
+                                    Ready for next service ({bay.bay_type})
+                                </p>
+                            </div>
+                        </div>
                     ))}
                 </div>
 
