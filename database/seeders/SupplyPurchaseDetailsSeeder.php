@@ -25,8 +25,8 @@ class SupplyPurchaseDetailsSeeder extends Seeder
                 $supplyId = rand(1, 20);
 
                 // Scale down quantity and unit price to reduce expenses
-                $quantity = rand(5, 200);       // Previously 5-300
-                $unitPrice = rand(5, 80);      // Previously 10-800
+                $quantity = rand(5, 40);       // Previously 5-300
+                $unitPrice = rand(5, 40);      // Previously 10-800
 
                 // Random purchase_date in 2025
                 $purchase_date = date('Y-m-d H:i:s', rand($start, $end));

@@ -28,7 +28,7 @@ class PaymentsSeeder extends Seeder
                 ->select(DB::raw('SUM(s.price * sod.quantity) as total'))
                 ->first();
 
-            $amount = $details->total ?? rand(100, 2000);
+            $amount = $details->total ?? rand(300, 2000);
             $payment_method = rand(0, 1) ? 'cash' : 'gcash';
             $is_point_redeemed = (bool) rand(0, 1);
             $gcash_reference = $payment_method === 'gcash' ? (string) rand(1000000000000, 9999999999999) : null;
