@@ -66,4 +66,11 @@ class ServiceOrderController extends Controller
         return response()->json($bookings);
 
     }
+
+    public function pending()
+    {
+        $data = $this->repo->getPendingOrders();
+
+        return response()->json($data);
+    }
 }

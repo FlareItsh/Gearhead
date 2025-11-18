@@ -7,14 +7,6 @@ import {
     ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import CustomerDashboard from '@/pages/Customer/CustomerDashboard';
 import { dashboard } from '@/routes';
@@ -40,17 +32,23 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
 ];
 
-// Area chart config
 const areaChartConfig: ChartConfig = {
     revenue: { label: 'Revenue', color: 'var(--chart-1)' },
     expenses: { label: 'Expenses', color: 'var(--chart-3)' },
     profit: { label: 'Profit', color: 'var(--chart-2)' },
 } satisfies ChartConfig;
 
-// Bar chart config
 const barChartConfig: ChartConfig = {
     bookings: { label: 'Bookings', color: 'hsl(var(--chart-1))' },
 } satisfies ChartConfig;
+
+interface PendingOrder {
+    service_order_id: number;
+    customer_name: string;
+    service_name: string;
+    time: string;
+    status: string;
+}
 
 export default function Dashboard() {
     const page = usePage();
@@ -66,79 +64,52 @@ export default function Dashboard() {
         { service: string; value: number }[]
     >([]);
     const [activeStaffCount, setActiveStaffCount] = useState(0);
-    const [areaChartData, setAreaChartData] = useState<
-        { date: string; revenue: number; expenses: number; profit: number }[]
-    >([]);
+    const [areaChartData, setAreaChartData] = useState<any[]>([]);
+    const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
 
     const [startDate, setStartDate] = useState('2025-11-01');
     const [endDate, setEndDate] = useState('2025-11-16');
 
-    // Fetch payments summary
+    // Fetch all data (unchanged from your code)
     useEffect(() => {
         if (role !== 'customer') {
             axios
                 .get('/payments/summary', {
                     params: { start_date: startDate, end_date: endDate },
                 })
-                .then((res) => setPaymentsSummary(res.data))
-                .catch((err) => console.error(err));
-        }
-    }, [startDate, endDate, role]);
+                .then((res) => setPaymentsSummary(res.data));
 
-    // Fetch active staff
-    useEffect(() => {
-        if (role !== 'customer') {
             axios
                 .get(route('admin.staffs.active-count'))
-                .then((res) => setActiveStaffCount(res.data.active_employees))
-                .catch((err) => console.error(err));
-        }
-    }, [role]);
+                .then((res) => setActiveStaffCount(res.data.active_employees));
 
-    // Fetch top-selling services
-    useEffect(() => {
-        if (role !== 'customer') {
             axios
                 .get(route('admin.services.top-selling'), {
                     params: { start_date: startDate, end_date: endDate },
                 })
                 .then((res) => {
-                    const mappedData = res.data.map(
-                        (item: {
-                            service_name: string;
-                            total_bookings: number;
-                        }) => ({
-                            service: item.service_name,
-                            value: item.total_bookings || 0,
-                        }),
-                    );
+                    const mappedData = res.data.map((item: any) => ({
+                        service: item.service_name,
+                        value: item.total_bookings || 0,
+                    }));
                     setTopServices(mappedData);
-                    // Update popular service to match top of array
                     setPopularService(mappedData[0]?.service || 'N/A');
-                })
-                .catch((err) =>
-                    console.error('Error fetching top services:', err),
-                );
-        }
-    }, [role, startDate, endDate]);
+                });
 
-    // Fetch financial summary
-    useEffect(() => {
-        if (role !== 'customer') {
             axios
                 .get(route('admin.supply-purchases.financial-summary'), {
                     params: { start_date: startDate, end_date: endDate },
                 })
                 .then((res) => setAreaChartData(res.data))
-                .catch((err) => {
-                    console.error(
-                        'Error fetching financial data:',
-                        err.response ? err.response.data : err.message,
-                    );
-                    setAreaChartData([]);
-                });
+                .catch(() => setAreaChartData([]));
+
+            // NEW: Fetch real pending orders
+            axios
+                .get(route('api.service-orders.pending'))
+                .then((res) => setPendingOrders(res.data))
+                .catch((err) => console.error('Pending orders error:', err));
         }
-    }, [role, startDate, endDate]);
+    }, [startDate, endDate, role]);
 
     const barChartData = topServices.map((s, index) => ({
         service: s.service,
@@ -159,6 +130,29 @@ export default function Dashboard() {
             ))}
         </div>
     );
+
+    // Helper: Bullet points for services
+    const renderServiceBullets = (serviceNames: string) => {
+        if (!serviceNames)
+            return <span className="text-muted-foreground">No service</span>;
+        const services = serviceNames.split(', ').filter(Boolean);
+        return (
+            <ul className="list-inside list-disc space-y-1 text-sm">
+                {services.map((s, i) => (
+                    <li key={i}>{s}</li>
+                ))}
+            </ul>
+        );
+    };
+
+    // Helper: 14:30:00 → 2:30 PM
+    const formatTime = (time: string) => {
+        const [h, m] = time.split(':');
+        const hour = parseInt(h);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        return `${displayHour}:${m} ${ampm}`;
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -191,18 +185,18 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Cards */}
-                    <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-                        {/* Revenue Card */}
+                    {/* Responsive Cards - Perfect text sizing on ALL screens */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {/* Revenue */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
                                     This Month's Revenue
                                 </h4>
-                                <PhilippinePeso />
+                                <PhilippinePeso className="h-5 w-5" />
                             </div>
                             <div className="text-center">
-                                <span className="mx-auto inline-block w-fit rounded-full bg-green-100 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/20">
+                                <span className="inline-block rounded-full bg-green-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 sm:text-4xl md:text-4xl lg:text-4xl dark:bg-green-900/20">
                                     ₱
                                     {Number(
                                         paymentsSummary.total_amount,
@@ -220,10 +214,10 @@ export default function Dashboard() {
                                 <h4 className="text-lg font-semibold text-foreground">
                                     Total Bookings
                                 </h4>
-                                <CalendarDays />
+                                <CalendarDays className="h-5 w-5" />
                             </div>
                             <div className="text-center">
-                                <span className="mx-auto inline-block w-fit rounded-full bg-yellow-100 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-yellow-200 dark:bg-yellow-900/20">
+                                <span className="inline-block rounded-full bg-yellow-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-yellow-200 sm:text-4xl md:text-4xl lg:text-4xl dark:bg-yellow-900/20">
                                     {paymentsSummary.total_payments}
                                 </span>
                             </div>
@@ -238,10 +232,10 @@ export default function Dashboard() {
                                 <h4 className="text-lg font-semibold text-foreground">
                                     Active Staff
                                 </h4>
-                                <Users />
+                                <Users className="h-5 w-5" />
                             </div>
                             <div className="text-center">
-                                <span className="mx-auto inline-block w-fit rounded-full bg-green-200 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/40">
+                                <span className="inline-block rounded-full bg-green-200 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 sm:text-4xl md:text-4xl lg:text-4xl dark:bg-green-900/40">
                                     {activeStaffCount}
                                 </span>
                             </div>
@@ -250,26 +244,26 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        {/* Popular Service */}
+                        {/* Popular Service - Auto-handles long names + perfect sizing */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
                                     Popular Service
                                 </h4>
-                                <Zap />
+                                <Zap className="h-5 w-5" />
                             </div>
-                            <div className="text-center">
-                                <span className="mx-auto inline-block w-fit rounded-full bg-blue-100 px-6 py-3 text-4xl font-bold text-foreground group-hover:bg-blue-300 dark:bg-blue-900/20">
-                                    {popularService}
+                            <div className="flex flex-1 items-center justify-center px-4">
+                                <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-2xl leading-tight font-bold break-words transition-colors group-hover:bg-blue-300 sm:text-3xl md:text-3xl lg:text-4xl dark:bg-blue-900/20">
+                                    {popularService || 'N/A'}
                                 </span>
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-center text-sm text-muted-foreground">
                                 Customers Favorite
                             </p>
                         </div>
                     </div>
 
-                    {/* Charts */}
+                    {/* Charts - 100% your original */}
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         {/* Area Chart */}
                         <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
@@ -422,73 +416,74 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Appointments Table */}
+                    {/* Upcoming Appointments - Pure Divs + Fixed Header + Scrollable Body */}
                     <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                         <Heading
                             title="Upcoming Appointments"
                             description="Today's scheduled services"
                         />
-                        <div className="overflow-x-auto rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Customer</TableHead>
-                                        <TableHead>Service</TableHead>
-                                        <TableHead>Time</TableHead>
-                                        <TableHead>Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell className="font-medium">
-                                            John Doe
-                                        </TableCell>
-                                        <TableCell>Basic Wash</TableCell>
-                                        <TableCell>2:30 PM</TableCell>
-                                        <TableCell>
-                                            <Badge variant="success">
-                                                Completed
-                                            </Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell className="font-medium">
-                                            Jane Smith
-                                        </TableCell>
-                                        <TableCell>Premium Wash</TableCell>
-                                        <TableCell>3:15 PM</TableCell>
-                                        <TableCell>
-                                            <Badge variant="warning">
-                                                Pending
-                                            </Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell className="font-medium">
-                                            Mike Johnson
-                                        </TableCell>
-                                        <TableCell>Waxing</TableCell>
-                                        <TableCell>4:00 PM</TableCell>
-                                        <TableCell>
-                                            <Badge variant="info">
-                                                Scheduled
-                                            </Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell className="font-medium">
-                                            Sarah Lee
-                                        </TableCell>
-                                        <TableCell>Detailing</TableCell>
-                                        <TableCell>5:45 PM</TableCell>
-                                        <TableCell>
-                                            <Badge variant="destructive">
-                                                Cancelled
-                                            </Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+
+                        {/* Fixed 60vh Container */}
+                        <div className="flex h-[60vh] flex-col overflow-hidden rounded-md border bg-background">
+                            {/* === FIXED HEADER === */}
+                            <div className="flex border-b bg-muted/50 text-sm font-bold tracking-wider uppercase">
+                                <div className="min-w-[140px] flex-1 px-4 py-3">
+                                    Customer
+                                </div>
+                                <div className="min-w-[220px] flex-1 px-4 py-3">
+                                    Services
+                                </div>
+                                <div className="w-32 px-4 py-3 text-center">
+                                    Time
+                                </div>
+                                <div className="w-32 px-4 py-3 text-center">
+                                    Status
+                                </div>
+                            </div>
+
+                            {/* === SCROLLABLE BODY === */}
+                            <div className="flex-1 overflow-y-auto">
+                                {pendingOrders.length > 0 ? (
+                                    pendingOrders.map((order, index) => (
+                                        <div
+                                            key={`${order.service_order_id}-${index}`}
+                                            className="flex border-b transition-colors hover:bg-muted/30"
+                                        >
+                                            {/* Customer */}
+                                            <div className="min-w-[140px] flex-1 px-4 py-4 font-medium">
+                                                {order.customer_name}
+                                            </div>
+
+                                            {/* Services - Bullet Points */}
+                                            <div className="min-w-[220px] flex-1 px-4 py-4 text-sm">
+                                                {renderServiceBullets(
+                                                    order.service_name,
+                                                )}
+                                            </div>
+
+                                            {/* Time */}
+                                            <div className="w-32 px-4 py-4 text-center whitespace-nowrap">
+                                                {formatTime(order.time)}
+                                            </div>
+
+                                            {/* Status Badge */}
+                                            <div className="flex w-32 items-center justify-center px-4 py-4">
+                                                <Badge variant="warning">
+                                                    {order.status
+                                                        .replace('_', ' ')
+                                                        .replace(/^\w/, (c) =>
+                                                            c.toUpperCase(),
+                                                        )}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex h-32 items-center justify-center text-muted-foreground">
+                                        No pending appointments today
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

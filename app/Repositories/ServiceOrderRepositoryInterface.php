@@ -20,4 +20,13 @@ interface ServiceOrderRepositoryInterface
     public function upcomingBookings(int $userId);
 
     public function getOrdersWithStatus(?string $status = null);
+
+    /**
+     * Get pending service orders with:
+     *  - customer name
+     *  - comma separated service names
+     *  - order time
+     *  - status
+     */
+    public function getPendingOrders();
 }

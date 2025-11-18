@@ -139,30 +139,35 @@ export default function Bookings() {
                     description="View and manage your appointments"
                 />
 
-                {/* Status Filter Buttons */}
-                <div className="flex w-full gap-2 rounded-lg bg-secondary p-1.5">
-                    {statuses.map((status) => {
-                        const href =
-                            status === 'all'
-                                ? '/bookings'
-                                : `/bookings?status=${status}`;
-                        const isActive = status === selectedStatus;
-                        return (
-                            <Link
-                                key={status}
-                                href={href}
-                                className={`flex-1 rounded-md p-2 text-center ${
-                                    isActive
-                                        ? 'bg-highlight text-black'
-                                        : 'bg-tertiary'
-                                }`}
-                            >
-                                {status
-                                    .replace('_', ' ')
-                                    .replace(/^\w/, (c) => c.toUpperCase())}
-                            </Link>
-                        );
-                    })}
+                {/* Status Filter Buttons - Perfectly Responsive */}
+                <div className="w-full">
+                    <div className="inline-flex w-full flex-wrap gap-2 rounded-lg bg-secondary p-1.5 sm:flex-nowrap">
+                        {statuses.map((status) => {
+                            const href =
+                                status === 'all'
+                                    ? '/bookings'
+                                    : `/bookings?status=${status}`;
+                            const isActive = status === selectedStatus;
+
+                            const label = status
+                                .replace('_', ' ')
+                                .replace(/^\w/, (c) => c.toUpperCase());
+
+                            return (
+                                <Link
+                                    key={status}
+                                    href={href}
+                                    className={`flex-1 rounded-md px-4 py-2 text-center text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                                        isActive
+                                            ? 'bg-highlight text-black shadow-sm'
+                                            : 'bg-tertiary text-foreground hover:bg-tertiary/80'
+                                    } `}
+                                >
+                                    {label}
+                                </Link>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Scrollable Bookings */}

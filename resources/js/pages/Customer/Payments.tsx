@@ -14,9 +14,10 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import * as XLSX from 'xlsx';
 import { route } from 'ziggy-js';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -36,104 +37,70 @@ export default function Payments() {
             .catch((err) => console.error(err));
     }, []);
 
-    const downloadXLSX = () => {
-        const headers = [
-            'Date',
-            'Services',
-            'Amount',
-            'Payment Method',
-            'GCash Ref',
-        ];
-        const data = payments.map((payment) => {
-            const services = payment.services
+    // =============== PDF EXPORT FUNCTION ===============
+    const downloadPDF = () => {
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        // Title
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Gearhead - Payment History Report', 14, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.setFont('helvetica', 'normal');
+        doc.text(
+            `Generated on: ${new Date().toLocaleDateString('en-PH')}`,
+            14,
+            28,
+        );
+
+        // Simple & safe amount formatting
+        const formatAmount = (amount: string | number) => {
+            const num = parseFloat(amount.toString());
+            if (isNaN(num)) return '0.00';
+            return `${num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+        };
+
+        const tableData = payments.map((payment) => [
+            new Date(payment.created_at).toLocaleDateString('en-PH'),
+            payment.services
                 ? payment.services
                       .split(',')
                       .map((s: string) => s.trim())
                       .join('\n')
-                : 'N/A';
-            return {
-                Date: payment.created_at,
-                Services: services,
-                Amount: parseFloat(payment.amount),
-                'Payment Method': payment.payment_method,
-                'GCash Ref': payment.gcash_reference || 'N/A',
-            };
+                : 'N/A',
+            formatAmount(payment.amount), // ← Clean peso string
+            payment.payment_method || 'N/A',
+            payment.gcash_reference || 'N/A',
+        ]);
+
+        autoTable(doc, {
+            head: [
+                ['Date', 'Services', 'Amount', 'Payment Method', 'GCash Ref'],
+            ],
+            body: tableData,
+            startY: 35,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [255, 226, 38],
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+            },
+            styles: { fontSize: 10, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 28, halign: 'center' },
+                1: { cellWidth: 65, valign: 'top' },
+                2: { cellWidth: 30, halign: 'right', fontStyle: 'bold' },
+                3: { cellWidth: 35, halign: 'center' },
+                4: { cellWidth: 32, halign: 'right' },
+            },
+            margin: { top: 35, left: 14, right: 14 },
         });
 
-        const ws = XLSX.utils.json_to_sheet(data, { header: headers });
-
-        // Bold headers with highlight background
-        const headerStyle = {
-            font: { bold: true },
-            fill: {
-                patternType: 'solid',
-                fgColor: { rgb: 'FFF4FBF5' },
-            },
-        };
-        const range = XLSX.utils.decode_range(ws['!ref']!);
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
-            if (!ws[cellAddress]) continue;
-            ws[cellAddress].s = headerStyle;
-        }
-
-        // Format Amount column as currency (PHP)
-        const amountStyle = {
-            numFmt: '₱#,##0.00',
-            alignment: { horizontal: 'right' },
-        };
-        for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-            const cellAddress = XLSX.utils.encode_cell({ r: R, c: 2 }); // Column C (Amount)
-            if (!ws[cellAddress]) continue;
-            ws[cellAddress].s = amountStyle;
-        }
-
-        // Right-align GCash Ref column
-        const gcashStyle = { alignment: { horizontal: 'right' } };
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-            const cellAddress = XLSX.utils.encode_cell({ r: R, c: 4 }); // Column E (GCash Ref)
-            if (!ws[cellAddress]) continue;
-            if (R === 0) {
-                // Header
-                ws[cellAddress].s = { ...headerStyle, ...gcashStyle };
-            } else {
-                ws[cellAddress].s = { ...ws[cellAddress].s, ...gcashStyle };
-            }
-        }
-
-        // Auto-fit columns (approximate widths)
-        const colWidths = [
-            { wch: 18 }, // Date
-            { wch: 40 }, // Services (wider for multi-line)
-            { wch: 12 }, // Amount
-            { wch: 15 }, // Payment Method
-            { wch: 20 }, // GCash Ref
-        ];
-        ws['!cols'] = colWidths;
-
-        // Add thin borders to all cells
-        const borderStyle = {
-            top: { style: 'thin' },
-            bottom: { style: 'thin' },
-            left: { style: 'thin' },
-            right: { style: 'thin' },
-        };
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws[cellAddress]) continue;
-                ws[cellAddress].s = {
-                    ...ws[cellAddress].s,
-                    border: borderStyle,
-                };
-            }
-        }
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Payments');
-
-        const filename = `payment-history-${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, filename);
+        doc.save(
+            `payment-history-${new Date().toISOString().split('T')[0]}.pdf`,
+        );
     };
 
     return (
@@ -146,14 +113,14 @@ export default function Payments() {
                 />
 
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
-                    <div className="flex items-center justify-between">
+                    <div className="mb-4 flex items-center justify-between">
                         <HeadingSmall
                             title="Transaction Summary"
                             description="Recent payment records"
                         />
-                        <Button onClick={downloadXLSX} variant="highlight">
+                        <Button onClick={downloadPDF} variant="highlight">
                             <Download className="mr-2 h-4 w-4" />
-                            Download XLSX
+                            Download PDF
                         </Button>
                     </div>
 
@@ -162,7 +129,7 @@ export default function Payments() {
                             <TableCaption>
                                 A list of your recent payments.
                             </TableCaption>
-                            <TableHeader className="sticky top-0 z-10 border-b">
+                            <TableHeader className="sticky top-0 z-10 border-b bg-background">
                                 <TableRow>
                                     <TableHead className="text-base font-bold">
                                         Date
@@ -182,53 +149,69 @@ export default function Payments() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {payments.map((payment, index) => (
-                                    <TableRow
-                                        key={index}
-                                        className={`border-t ${index % 2 === 0 ? 'bg-highlight/10' : ''}`}
-                                    >
-                                        <TableCell className="text-base">
-                                            {payment.created_at}
-                                        </TableCell>
-                                        <TableCell className="text-base">
-                                            {payment.services ? (
-                                                <ul className="list-inside list-disc space-y-1">
-                                                    {payment.services
-                                                        .split(',')
-                                                        .map(
-                                                            (
-                                                                service: string,
-                                                                idx: number,
-                                                            ) => (
-                                                                <li
-                                                                    key={idx}
-                                                                    className="text-base"
-                                                                >
-                                                                    {service.trim()}
-                                                                </li>
-                                                            ),
-                                                        )}
-                                                </ul>
-                                            ) : (
-                                                <span className="text-base">
-                                                    N/A
-                                                </span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right text-base font-medium">
-                                            ₱
-                                            {parseFloat(payment.amount).toFixed(
-                                                2,
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-base">
-                                            {payment.payment_method}
-                                        </TableCell>
-                                        <TableCell className="text-right text-base">
-                                            {payment.gcash_reference || 'N/A'}
+                                {payments.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={5}
+                                            className="py-10 text-center text-muted-foreground"
+                                        >
+                                            No payments found.
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ) : (
+                                    payments.map((payment, index) => (
+                                        <TableRow
+                                            key={index}
+                                            className={`border-t ${index % 2 === 0 ? 'bg-highlight/5' : ''}`}
+                                        >
+                                            <TableCell className="text-base">
+                                                {new Date(
+                                                    payment.created_at,
+                                                ).toLocaleDateString('en-PH')}
+                                            </TableCell>
+                                            <TableCell className="text-base">
+                                                {payment.services ? (
+                                                    <ul className="list-inside list-disc space-y-1">
+                                                        {payment.services
+                                                            .split(',')
+                                                            .map(
+                                                                (
+                                                                    service: string,
+                                                                    idx: number,
+                                                                ) => (
+                                                                    <li
+                                                                        key={
+                                                                            idx
+                                                                        }
+                                                                    >
+                                                                        {service.trim()}
+                                                                    </li>
+                                                                ),
+                                                            )}
+                                                    </ul>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        N/A
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right text-base font-medium">
+                                                ₱
+                                                {parseFloat(
+                                                    payment.amount,
+                                                ).toFixed(2)}
+                                            </TableCell>
+                                            <TableCell className="text-base">
+                                                {payment.payment_method ||
+                                                    'N/A'}
+                                            </TableCell>
+                                            <TableCell className="text-right text-base">
+                                                {payment.gcash_reference ||
+                                                    'N/A'}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </div>

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\SupplyPurchaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -18,19 +20,22 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])->name('admin.supply-purchases.financial-summary');
 
     // * Admin-specific top selling services route
-    Route::get('/services/top', [ServiceController::class, 'topServices'])->name('admin.services.top-selling')->middleware('role:admin');
+    Route::get('/services/top', [ServiceController::class, 'topServices'])->name('admin.services.top-selling');
 
     // * Staff route for Rendering and Managing Staffs
     Route::get('/staffs', [EmployeeController::class, 'index'])
-        ->name('admin.staffs')->middleware('role:admin');
+        ->name('admin.staffs');
     Route::post('/staffs', [EmployeeController::class, 'store'])
-        ->name('admin.staffs.store')->middleware('role:admin');
+        ->name('admin.staffs.store');
     Route::put('/staffs/{id}', [EmployeeController::class, 'update'])
-        ->name('admin.staffs.update')->middleware('role:admin');
+        ->name('admin.staffs.update');
     Route::delete('/staffs/{id}', [EmployeeController::class, 'destroy'])
-        ->name('admin.staffs.delete')->middleware('role:admin');
+        ->name('admin.staffs.delete');
     Route::get('/staffs/active-count', [EmployeeController::class, 'activeCount'])
-        ->name('admin.staffs.active-count')->middleware('role:admin');
+        ->name('admin.staffs.active-count');
+
+    Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
+        ->name('api.service-orders.pending');
 });
 
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {

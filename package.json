@@ -50,6 +50,8 @@
         "file-saver": "^2.0.5",
         "globals": "^15.14.0",
         "input-otp": "^1.4.2",
+        "jspdf": "^3.0.3",
+        "jspdf-autotable": "^5.0.2",
         "laravel-vite-plugin": "^2.0",
         "lucide-react": "^0.552.0",
         "react": "^19.0.0",

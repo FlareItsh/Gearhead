@@ -99,4 +99,36 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
 
         return $query->get();
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPendingOrders()
+    {
+        return DB::table('service_orders as so')
+            ->join('users as u', 'u.user_id', '=', 'so.user_id')
+            ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->join('services as s', 's.service_id', '=', 'sod.service_id')
+            ->where('so.status', 'pending')
+            ->select([
+                'so.service_order_id',
+                // Build full customer name from first/middle/last name
+                DB::raw("CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) as customer_name"),
+                // Concatenate all service names for the order
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_name'),
+                DB::raw('TIME(so.order_date) as time'),
+                DB::raw('DATE(so.order_date) as order_date_only'),
+                'so.status',
+            ])
+            ->groupBy(
+                'so.service_order_id',
+                'u.first_name',
+                'u.middle_name',
+                'u.last_name',
+                'so.order_date',
+                'so.status'
+            )
+            ->orderBy('so.order_date', 'asc')
+            ->get();
+    }
 }
