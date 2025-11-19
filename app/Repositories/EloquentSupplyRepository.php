@@ -2,33 +2,39 @@
 
 namespace App\Repositories;
 
-use App\Models\Supply;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EloquentSupplyRepository implements SupplyRepositoryInterface
 {
     public function all(): Collection
     {
-        return Supply::all();
+        return DB::table('supplies')->get();
     }
 
-    public function findById(int $id): ?Supply
+    public function findById(int $id)
     {
-        return Supply::find($id);
+        return DB::table('supplies')
+            ->where('supply_id', $id)
+            ->first();
     }
 
-    public function create(array $data): Supply
+    public function create(array $data)
     {
-        return Supply::create($data);
+        return DB::table('supplies')->insertGetId($data);
     }
 
-    public function update(Supply $supply, array $data): bool
+    public function update(int $id, array $data)
     {
-        return $supply->update($data);
+        return DB::table('supplies')
+            ->where('supply_id', $id)
+            ->update($data) > 0;
     }
 
-    public function delete(Supply $supply): bool
+    public function delete(int $id)
     {
-        return $supply->delete();
+        return DB::table('supplies')
+            ->where('supply_id', $id)
+            ->delete() > 0;
     }
 }

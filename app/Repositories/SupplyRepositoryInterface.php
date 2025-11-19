@@ -2,18 +2,15 @@
 
 namespace App\Repositories;
 
-use App\Models\Supply;
-use Illuminate\Database\Eloquent\Collection;
-
 interface SupplyRepositoryInterface
 {
-    public function all(): Collection;
+    public function all();
 
-    public function findById(int $id): ?Supply;
+    public function findById(int $id);
 
-    public function create(array $data): Supply;
+    public function create(array $data);
 
-    public function update(Supply $supply, array $data): bool;
+    public function update(int $id, array $data);
 
-    public function delete(Supply $supply): bool;
+    public function delete(int $id);
 }

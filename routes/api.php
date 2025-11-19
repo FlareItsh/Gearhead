@@ -5,6 +5,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\SupplyController;
 use App\Http\Controllers\SupplyPurchaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,17 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
         ->name('api.service-orders.pending');
+
+    Route::get('/supplies', [SupplyController::class, 'index'])
+        ->name('supplies.index');
+    Route::get('/supplies/{id}', [SupplyController::class, 'show'])
+        ->name('supplies.show');
+    Route::post('/supplies', [SupplyController::class, 'store'])
+        ->name('supplies.store');
+    Route::put('/supplies/{id}', [SupplyController::class, 'update'])
+        ->name('supplies.update');
+    Route::delete('/supplies/{id}', [SupplyController::class, 'destroy'])
+        ->name('supplies.destroy');
 });
 
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
