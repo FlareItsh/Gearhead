@@ -48,6 +48,8 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
 
     Route::get('/bookings/upcoming', [ServiceOrderController::class, 'upcoming'])
         ->name('bookings.upcoming');
+    Route::post('/bookings', [ServiceOrderController::class, 'store'])
+        ->name('bookings.store');
     Route::post('/bookings/cancel/{id}', [CustomerController::class, 'cancelBooking'])
         ->name('bookings.cancel');
 });

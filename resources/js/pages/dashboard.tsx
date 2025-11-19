@@ -196,7 +196,7 @@ export default function Dashboard() {
                                 <PhilippinePeso className="h-5 w-5" />
                             </div>
                             <div className="text-center">
-                                <span className="inline-block rounded-full bg-green-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 sm:text-4xl md:text-4xl lg:text-4xl dark:bg-green-900/20">
+                                <span className="inline-block rounded-full bg-green-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/20">
                                     ₱
                                     {Number(
                                         paymentsSummary.total_amount,
@@ -217,7 +217,7 @@ export default function Dashboard() {
                                 <CalendarDays className="h-5 w-5" />
                             </div>
                             <div className="text-center">
-                                <span className="inline-block rounded-full bg-yellow-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-yellow-200 sm:text-4xl md:text-4xl lg:text-4xl dark:bg-yellow-900/20">
+                                <span className="inline-block rounded-full bg-yellow-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-yellow-200 dark:bg-yellow-900/20">
                                     {paymentsSummary.total_payments}
                                 </span>
                             </div>
@@ -235,7 +235,7 @@ export default function Dashboard() {
                                 <Users className="h-5 w-5" />
                             </div>
                             <div className="text-center">
-                                <span className="inline-block rounded-full bg-green-200 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 sm:text-4xl md:text-4xl lg:text-4xl dark:bg-green-900/40">
+                                <span className="inline-block rounded-full bg-green-200 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/40">
                                     {activeStaffCount}
                                 </span>
                             </div>
@@ -253,7 +253,7 @@ export default function Dashboard() {
                                 <Zap className="h-5 w-5" />
                             </div>
                             <div className="flex flex-1 items-center justify-center px-4">
-                                <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-2xl leading-tight font-bold break-words transition-colors group-hover:bg-blue-300 sm:text-3xl md:text-3xl lg:text-4xl dark:bg-blue-900/20">
+                                <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-3xl leading-tight font-bold break-words transition-colors group-hover:bg-blue-300 dark:bg-blue-900/20">
                                     {popularService || 'N/A'}
                                 </span>
                             </div>
@@ -332,21 +332,21 @@ export default function Dashboard() {
                                     />
                                     <Area
                                         dataKey="revenue"
-                                        type="monotone"
+                                        type="natural"
                                         stroke={areaChartConfig.revenue.color}
                                         fill="url(#revenue)"
                                         strokeWidth={2}
                                     />
                                     <Area
                                         dataKey="expenses"
-                                        type="monotone"
+                                        type="natural"
                                         stroke={areaChartConfig.expenses.color}
                                         fill="url(#expenses)"
                                         strokeWidth={2}
                                     />
                                     <Area
                                         dataKey="profit"
-                                        type="monotone"
+                                        type="natural"
                                         stroke={areaChartConfig.profit.color}
                                         fill="url(#profit)"
                                         strokeWidth={2}
@@ -434,7 +434,7 @@ export default function Dashboard() {
                                     Services
                                 </div>
                                 <div className="w-32 px-4 py-3 text-center">
-                                    Time
+                                    Expected Time
                                 </div>
                                 <div className="w-32 px-4 py-3 text-center">
                                     Status

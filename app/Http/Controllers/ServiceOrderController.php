@@ -28,7 +28,25 @@ class ServiceOrderController extends Controller
 
     public function store(Request $request)
     {
-        $created = $this->repo->create($request->all());
+        $data = $request->only(['user_id', 'employee_id', 'bay_id', 'status', 'order_date', 'order_type']);
+
+        // Ensure user_id is the authenticated user when available
+        if ($request->user()) {
+            $data['user_id'] = $request->user()->user_id;
+        }
+
+        // Default order_date if not provided
+        if (empty($data['order_date'])) {
+            $data['order_date'] = now();
+        }
+
+        $details = $request->input('details');
+
+        if (is_array($details) && count($details) > 0) {
+            $created = $this->repo->createWithDetails($data, $details);
+        } else {
+            $created = $this->repo->create($data);
+        }
 
         return response()->json($created, 201);
     }

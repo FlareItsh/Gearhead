@@ -13,6 +13,14 @@ interface ServiceOrderRepositoryInterface
 
     public function create(array $data): ServiceOrder;
 
+    /**
+     * Create a service order together with its details in a transaction.
+     *
+     * @param array $orderData
+     * @param array $details  Array of arrays with keys: service_id, quantity
+     * @return ServiceOrder
+     */
+    public function createWithDetails(array $orderData, array $details): ServiceOrder;
     public function update(ServiceOrder $order, array $data): bool;
 
     public function delete(ServiceOrder $order): bool;

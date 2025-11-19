@@ -23,6 +23,33 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return ServiceOrder::create($data);
     }
 
+    /**
+     * Create a service order with details inside a DB transaction.
+     *
+     * @param array $orderData
+     * @param array $details
+     * @return ServiceOrder
+     */
+    public function createWithDetails(array $orderData, array $details): ServiceOrder
+    {
+        return DB::transaction(function () use ($orderData, $details) {
+            $order = ServiceOrder::create($orderData);
+
+            // Ensure details are mapped to expected fields (service_id, quantity)
+            $mapped = array_map(function ($d) {
+                return [
+                    'service_id' => $d['service_id'] ?? null,
+                    'quantity' => $d['quantity'] ?? 1,
+                ];
+            }, $details);
+
+            // Create relation records
+            $order->details()->createMany($mapped);
+
+            return $order->fresh('details');
+        });
+    }
+
     public function update(ServiceOrder $order, array $data): bool
     {
         return $order->update($data);
@@ -110,6 +137,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
             ->join('services as s', 's.service_id', '=', 'sod.service_id')
             ->where('so.status', 'pending')
+            // Only today's pending orders
+            ->whereRaw('DATE(so.order_date) = CURDATE()')
             ->select([
                 'so.service_order_id',
                 // Build full customer name from first/middle/last name
