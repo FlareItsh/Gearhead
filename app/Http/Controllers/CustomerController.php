@@ -114,4 +114,11 @@ class CustomerController extends Controller
 
         return back()->with('success', 'Booking cancelled successfully.');
     }
+
+    public function getCustomers()
+    {
+        $customers = $this->users->getCustomersWithBookings();
+
+        return response()->json($customers);
+    }
 }

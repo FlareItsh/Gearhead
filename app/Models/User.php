@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasFullName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -65,5 +66,13 @@ class User extends Authenticatable
     public function isAdministrator(): bool
     {
         return $this->hasRole('admin');
+    }
+
+    /**
+     * Get the service orders for the user.
+     */
+    public function serviceOrders(): HasMany
+    {
+        return $this->hasMany(ServiceOrder::class, 'user_id', 'user_id');
     }
 }

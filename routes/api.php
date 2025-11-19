@@ -48,6 +48,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('supplies.update');
     Route::delete('/supplies/{id}', [SupplyController::class, 'destroy'])
         ->name('supplies.destroy');
+
+    Route::get('/customers/index', [CustomerController::class, 'getCustomers'])
+        ->name('admin.customers.index');
 });
 
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
