@@ -38,6 +38,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
         ->name('api.service-orders.pending');
 
+    Route::get('/service-orders/bookings', [ServiceOrderController::class, 'getBookings'])
+        ->name('api.service-orders.bookings');
+
     Route::get('/supplies', [SupplyController::class, 'index'])
         ->name('supplies.index');
     Route::get('/supplies/{id}', [SupplyController::class, 'show'])

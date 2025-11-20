@@ -93,6 +93,19 @@ class ServiceOrderController extends Controller
     }
 
     /**
+     * Get all bookings with optional date range filtering.
+     */
+    public function getBookings(Request $request)
+    {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $bookings = $this->repo->getAllBookings($startDate, $endDate);
+
+        return response()->json($bookings);
+    }
+
+    /**
      * Book services for the authenticated user.
      * Creates a service order with multiple service details.
      */

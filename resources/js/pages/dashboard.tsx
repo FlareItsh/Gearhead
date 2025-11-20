@@ -55,6 +55,7 @@ export default function Dashboard() {
     const role = (page.props as { auth?: { user?: { role?: string } } })?.auth
         ?.user?.role;
 
+    // Data states
     const [paymentsSummary, setPaymentsSummary] = useState({
         total_amount: 0,
         total_payments: 0,
@@ -67,13 +68,50 @@ export default function Dashboard() {
     const [areaChartData, setAreaChartData] = useState<any[]>([]);
     const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
 
-    const [startDate, setStartDate] = useState('2025-11-01');
-    const [endDate, setEndDate] = useState('2025-11-16');
+    // Date range (dynamic month-to-date)
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
 
-    // Fetch all data (unchanged from your code)
+    // Loading state for cards only
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Set dynamic dates (Philippine local time)
+    useEffect(() => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+
+        const firstDay = new Date(year, month, 1);
+        const todayLocal = new Date(year, month, day);
+
+        const formatLocal = (date: Date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        setStartDate(formatLocal(firstDay)); // e.g., 2025-11-01
+        setEndDate(formatLocal(todayLocal)); // e.g., 2025-11-21
+    }, []);
+
+    // Fetch data + polling + skeleton control
     useEffect(() => {
         const fetchData = () => {
-            if (role !== 'customer') {
+            if (role !== 'customer' && startDate && endDate) {
+                // Turn off skeleton after first batch
+                Promise.allSettled([
+                    axios.get('/payments/summary', {
+                        params: { start_date: startDate, end_date: endDate },
+                    }),
+                    axios.get(route('admin.staffs.active-count')),
+                    axios.get(route('admin.services.top-selling'), {
+                        params: { start_date: startDate, end_date: endDate },
+                    }),
+                ]).finally(() => setIsLoading(false));
+
+                // Individual updates
                 axios
                     .get('/payments/summary', {
                         params: { start_date: startDate, end_date: endDate },
@@ -106,7 +144,6 @@ export default function Dashboard() {
                     .then((res) => setAreaChartData(res.data))
                     .catch(() => setAreaChartData([]));
 
-                // NEW: Fetch real pending orders
                 axios
                     .get(route('api.service-orders.pending'))
                     .then((res) => setPendingOrders(res.data))
@@ -116,14 +153,11 @@ export default function Dashboard() {
             }
         };
 
-        // Fetch immediately on mount
-        fetchData();
-
-        // Set up polling interval - refreshes every 10 seconds
-        const interval = setInterval(fetchData, 10000);
-
-        // Cleanup interval on unmount or when dependencies change
-        return () => clearInterval(interval);
+        if (startDate && endDate) {
+            fetchData();
+            const interval = setInterval(fetchData, 10000);
+            return () => clearInterval(interval);
+        }
     }, [startDate, endDate, role]);
 
     const barChartData = topServices.map((s, index) => ({
@@ -146,7 +180,6 @@ export default function Dashboard() {
         </div>
     );
 
-    // Helper: Bullet points for services
     const renderServiceBullets = (serviceNames: string) => {
         if (!serviceNames)
             return <span className="text-muted-foreground">No service</span>;
@@ -160,7 +193,6 @@ export default function Dashboard() {
         );
     };
 
-    // Helper: 14:30:00 → 2:30 PM
     const formatTime = (time: string) => {
         const [h, m] = time.split(':');
         const hour = parseInt(h);
@@ -175,7 +207,8 @@ export default function Dashboard() {
             {role === 'customer' ? (
                 <CustomerDashboard />
             ) : (
-                <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
+                    {/* Header + Date Picker */}
                     <div className="flex items-center justify-between">
                         <Heading
                             title="Dashboard"
@@ -200,7 +233,7 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Responsive Cards - Perfect text sizing on ALL screens */}
+                    {/* Metric Cards with Skeleton */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {/* Revenue */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
@@ -208,16 +241,22 @@ export default function Dashboard() {
                                 <h4 className="text-lg font-semibold text-foreground">
                                     This Month's Revenue
                                 </h4>
-                                <PhilippinePeso className="h-5 w-5" />
+                                <PhilippinePeso className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <div className="text-center">
-                                <span className="inline-block rounded-full bg-green-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/20">
-                                    ₱
-                                    {Number(
-                                        paymentsSummary.total_amount,
-                                    ).toLocaleString()}
-                                </span>
-                            </div>
+                            {isLoading ? (
+                                <div className="flex flex-1 items-center justify-center">
+                                    <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
+                                </div>
+                            ) : (
+                                <div className="text-center">
+                                    <span className="inline-block rounded-full bg-green-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/20">
+                                        ₱
+                                        {Number(
+                                            paymentsSummary.total_amount,
+                                        ).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
                             <p className="text-sm text-muted-foreground">
                                 Keep it up!
                             </p>
@@ -229,13 +268,19 @@ export default function Dashboard() {
                                 <h4 className="text-lg font-semibold text-foreground">
                                     Total Bookings
                                 </h4>
-                                <CalendarDays className="h-5 w-5" />
+                                <CalendarDays className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <div className="text-center">
-                                <span className="inline-block rounded-full bg-yellow-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-yellow-200 dark:bg-yellow-900/20">
-                                    {paymentsSummary.total_payments}
-                                </span>
-                            </div>
+                            {isLoading ? (
+                                <div className="flex flex-1 items-center justify-center">
+                                    <div className="h-12 w-28 animate-pulse rounded-full bg-muted" />
+                                </div>
+                            ) : (
+                                <div className="text-center">
+                                    <span className="inline-block rounded-full bg-yellow-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-yellow-200 dark:bg-yellow-900/20">
+                                        {paymentsSummary.total_payments}
+                                    </span>
+                                </div>
+                            )}
                             <p className="text-sm text-muted-foreground">
                                 This Month
                             </p>
@@ -247,38 +292,50 @@ export default function Dashboard() {
                                 <h4 className="text-lg font-semibold text-foreground">
                                     Active Staff
                                 </h4>
-                                <Users className="h-5 w-5" />
+                                <Users className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <div className="text-center">
-                                <span className="inline-block rounded-full bg-green-200 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/40">
-                                    {activeStaffCount}
-                                </span>
-                            </div>
+                            {isLoading ? (
+                                <div className="flex flex-1 items-center justify-center">
+                                    <div className="h-12 w-24 animate-pulse rounded-full bg-muted" />
+                                </div>
+                            ) : (
+                                <div className="text-center">
+                                    <span className="inline-block rounded-full bg-green-200 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/40">
+                                        {activeStaffCount}
+                                    </span>
+                                </div>
+                            )}
                             <p className="text-sm text-muted-foreground">
                                 On duty today
                             </p>
                         </div>
 
-                        {/* Popular Service - Auto-handles long names + perfect sizing */}
+                        {/* Popular Service */}
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
                                     Popular Service
                                 </h4>
-                                <Zap className="h-5 w-5" />
+                                <Zap className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <div className="flex flex-1 items-center justify-center px-4">
-                                <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-3xl leading-tight font-bold break-words transition-colors group-hover:bg-blue-300 dark:bg-blue-900/20">
-                                    {popularService || 'N/A'}
-                                </span>
-                            </div>
+                            {isLoading ? (
+                                <div className="flex flex-1 items-center justify-center px-4">
+                                    <div className="h-10 w-48 animate-pulse rounded-full bg-muted" />
+                                </div>
+                            ) : (
+                                <div className="flex flex-1 items-center justify-center px-4">
+                                    <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-2xl leading-tight font-bold break-words text-foreground transition-colors group-hover:bg-blue-300 dark:bg-blue-900/20">
+                                        {popularService || 'N/A'}
+                                    </span>
+                                </div>
+                            )}
                             <p className="text-center text-sm text-muted-foreground">
                                 Customers Favorite
                             </p>
                         </div>
                     </div>
 
-                    {/* Charts - 100% your original */}
+                    {/* Charts */}
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         {/* Area Chart */}
                         <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
@@ -431,73 +488,103 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Upcoming Appointments - Pure Divs + Fixed Header + Scrollable Body */}
-                    <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+                    {/* Upcoming Appointments Table */}
+                    <div className="space-y-4 rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
                         <Heading
                             title="Upcoming Appointments"
                             description="Today's scheduled services"
                         />
-
-                        {/* Fixed 60vh Container */}
-                        <div className="flex h-[60vh] flex-col overflow-hidden rounded-md border bg-background">
-                            {/* === FIXED HEADER === */}
-                            <div className="flex border-b bg-muted/50 text-sm font-bold tracking-wider uppercase">
-                                <div className="min-w-[140px] flex-1 px-4 py-3">
-                                    Customer
-                                </div>
-                                <div className="min-w-[220px] flex-1 px-4 py-3">
-                                    Services
-                                </div>
-                                <div className="w-32 px-4 py-3 text-center">
-                                    Expected Time
-                                </div>
-                                <div className="w-32 px-4 py-3 text-center">
-                                    Status
-                                </div>
-                            </div>
-
-                            {/* === SCROLLABLE BODY === */}
-                            <div className="flex-1 overflow-y-auto">
-                                {pendingOrders.length > 0 ? (
-                                    pendingOrders.map((order, index) => (
-                                        <div
-                                            key={`${order.service_order_id}-${index}`}
-                                            className="flex border-b transition-colors hover:bg-muted/30"
-                                        >
-                                            {/* Customer */}
-                                            <div className="min-w-[140px] flex-1 px-4 py-4 font-medium">
-                                                {order.customer_name}
-                                            </div>
-
-                                            {/* Services - Bullet Points */}
-                                            <div className="min-w-[220px] flex-1 px-4 py-4 text-sm">
-                                                {renderServiceBullets(
-                                                    order.service_name,
-                                                )}
-                                            </div>
-
-                                            {/* Time */}
-                                            <div className="w-32 px-4 py-4 text-center whitespace-nowrap">
-                                                {formatTime(order.time)}
-                                            </div>
-
-                                            {/* Status Badge */}
-                                            <div className="flex w-32 items-center justify-center px-4 py-4">
-                                                <Badge variant="warning">
-                                                    {order.status
-                                                        .replace('_', ' ')
-                                                        .replace(/^\w/, (c) =>
-                                                            c.toUpperCase(),
-                                                        )}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex h-32 items-center justify-center text-muted-foreground">
-                                        No pending appointments today
-                                    </div>
-                                )}
+                        <div className="overflow-hidden rounded-lg border border-border shadow-sm">
+                            <div className="max-h-[60vh] overflow-y-auto">
+                                <table className="w-full table-fixed border-collapse">
+                                    <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                                        <tr className="border-b border-border">
+                                            <th className="w-[22%] px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                                Customer
+                                            </th>
+                                            <th className="w-[38%] px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                                Services
+                                            </th>
+                                            <th className="w-[20%] px-6 py-4 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                                Expected Time
+                                            </th>
+                                            <th className="w-[20%] px-6 py-4 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                                Status
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/50 bg-background">
+                                        {pendingOrders.length > 0 ? (
+                                            pendingOrders.map(
+                                                (order, index) => (
+                                                    <tr
+                                                        key={`${order.service_order_id}-${index}`}
+                                                        className="group transition-all duration-150 hover:bg-muted/50"
+                                                    >
+                                                        <td className="px-6 py-5 font-medium whitespace-nowrap text-foreground">
+                                                            {
+                                                                order.customer_name
+                                                            }
+                                                        </td>
+                                                        <td className="px-6 py-5 text-sm text-foreground">
+                                                            {renderServiceBullets(
+                                                                order.service_name,
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-5 text-center">
+                                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                                                                {formatTime(
+                                                                    order.time,
+                                                                )}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-5 text-center">
+                                                            <Badge
+                                                                variant={
+                                                                    order.status ===
+                                                                    'pending'
+                                                                        ? 'warning'
+                                                                        : order.status ===
+                                                                            'in_progress'
+                                                                          ? 'default'
+                                                                          : order.status ===
+                                                                              'completed'
+                                                                            ? 'success'
+                                                                            : 'secondary'
+                                                                }
+                                                                className="font-medium capitalize shadow-sm"
+                                                            >
+                                                                {order.status.replace(
+                                                                    /_/g,
+                                                                    ' ',
+                                                                )}
+                                                            </Badge>
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )
+                                        ) : (
+                                            <tr>
+                                                <td
+                                                    colSpan={4}
+                                                    className="py-16 text-center"
+                                                >
+                                                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                                        <CalendarDays className="mb-3 h-12 w-12 opacity-40" />
+                                                        <p className="text-lg font-medium">
+                                                            No appointments
+                                                            today
+                                                        </p>
+                                                        <p className="text-sm">
+                                                            Enjoy the quiet
+                                                            moment!
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

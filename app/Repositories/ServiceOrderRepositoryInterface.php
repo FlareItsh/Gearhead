@@ -16,11 +16,10 @@ interface ServiceOrderRepositoryInterface
     /**
      * Create a service order together with its details in a transaction.
      *
-     * @param array $orderData
-     * @param array $details  Array of arrays with keys: service_id, quantity
-     * @return ServiceOrder
+     * @param  array  $details  Array of arrays with keys: service_id, quantity
      */
     public function createWithDetails(array $orderData, array $details): ServiceOrder;
+
     public function update(ServiceOrder $order, array $data): bool;
 
     public function delete(ServiceOrder $order): bool;
@@ -37,4 +36,15 @@ interface ServiceOrderRepositoryInterface
      *  - status
      */
     public function getPendingOrders();
+
+    /**
+     * Get all bookings with date range filter.
+     * Returns orders with customer name, service names, total price, and status.
+     * Sorts pending orders first, then by date descending.
+     *
+     * @param  string|null  $startDate  Y-m-d format
+     * @param  string|null  $endDate  Y-m-d format
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllBookings(?string $startDate = null, ?string $endDate = null);
 }

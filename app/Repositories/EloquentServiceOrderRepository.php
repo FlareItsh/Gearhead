@@ -25,10 +25,6 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
 
     /**
      * Create a service order with details inside a DB transaction.
-     *
-     * @param array $orderData
-     * @param array $details
-     * @return ServiceOrder
      */
     public function createWithDetails(array $orderData, array $details): ServiceOrder
     {
@@ -159,5 +155,48 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             )
             ->orderBy('so.order_date', 'asc')
             ->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAllBookings(?string $startDate = null, ?string $endDate = null)
+    {
+        $query = DB::table('service_orders as so')
+            ->join('users as u', 'u.user_id', '=', 'so.user_id')
+            ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->join('services as s', 's.service_id', '=', 'sod.service_id')
+            ->select([
+                'so.service_order_id',
+                DB::raw("CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) as customer_name"),
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
+                DB::raw('SUM(s.price * sod.quantity) as total_price'),
+                'so.order_date',
+                'so.status',
+            ])
+            ->groupBy(
+                'so.service_order_id',
+                'u.first_name',
+                'u.middle_name',
+                'u.last_name',
+                'so.order_date',
+                'so.status'
+            );
+
+        // Apply date range filters
+        if ($startDate) {
+            $query->whereDate('so.order_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('so.order_date', '<=', $endDate);
+        }
+
+        // Sort pending first, then by date descending
+        $query->orderByRaw("
+            FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled') ASC,
+            so.order_date DESC
+        ");
+
+        return $query->get();
     }
 }

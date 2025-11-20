@@ -1,96 +1,233 @@
-import React, { useState, useMemo } from "react";
-import AppLayout from "@/layouts/app-layout";
-import { type BreadcrumbItem } from "@/types";
-import { Head } from "@inertiajs/react";
-import Heading from "@/components/heading";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Search, ChevronDownIcon, Edit2, Check, XCircle, Clock } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/react';
+import axios from 'axios';
+import { Check, ChevronDownIcon, Clock, Search, XCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: "Bookings", href: "/admin/bookings" },
+    { title: 'Bookings', href: '/admin/bookings' },
 ];
 
 interface Booking {
-    id: number;
-    customer: string;
-    service: string;
-    datetime: string;
-    price: number;
-    status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
+    service_order_id: number;
+    customer_name: string;
+    service_names: string;
+    order_date: string;
+    total_price: number;
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
 }
 
-const mockBookings: Booking[] = [
-    { id: 1, customer: "Flare A. Itoshi", service: "Enginewash, Hand Wax", datetime: "2025-02-14 10:30 AM", price: 480, status: "Completed" },
-    { id: 2, customer: "Mariz S. Adlaw", service: "Basic Wash", datetime: "2025-02-14 11:00 AM", price: 500, status: "Completed" },
-    { id: 3, customer: "Carlo L. Bilbacua", service: "Underwash, Armor All", datetime: "2025-02-14 1:00 PM", price: 500, status: "Completed" },
-    { id: 4, customer: "Flare A. Itoshi", service: "High Gloss", datetime: "2025-02-14 2:15 PM", price: 350, status: "Completed" },
-    { id: 5, customer: "Mariz S. Adlaw", service: "Hand Wax", datetime: "2025-02-15 9:00 AM", price: 200, status: "Pending" },
-    { id: 6, customer: "Flare A. Itoshi", service: "Complete Package", datetime: "2025-02-15 10:00 AM", price: 350, status: "Pending" },
-    { id: 7, customer: "Carlo L. Bilbacua", service: "Buff Wax", datetime: "2025-02-15 11:00 AM", price: 390, status: "Pending" },
-    { id: 8, customer: "Flare A. Itoshi", service: "Waterproof", datetime: "2025-02-15 12:00 PM", price: 300, status: "Pending" },
-    { id: 9, customer: "Mariz S. Adlaw", service: "Enginewash", datetime: "2025-02-15 1:00 PM", price: 200, status: "Completed" },
-    { id: 10, customer: "Flare A. Itoshi", service: "Hard Shell", datetime: "2025-02-15 2:00 PM", price: 1350, status: "Completed" },
-];
-
 export default function AdminBookings() {
-    const [bookings] = useState<Booking[]>(mockBookings);
-    const [searchValue, setSearchValue] = useState("");
-    const [filter, setFilter] = useState<"All" | "Customer" | "Service" | "Status" | "Date">("All");
-    const [statusFilter, setStatusFilter] = useState<"All" | "Pending" | "Confirmed" | "Completed" | "Cancelled">("All");
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [searchValue, setSearchValue] = useState('');
+    const [filter, setFilter] = useState<
+        'All' | 'Customer' | 'Service' | 'Status' | 'Date'
+    >('All');
+    const [statusFilter, setStatusFilter] = useState<
+        'All' | 'pending' | 'in_progress' | 'completed' | 'cancelled'
+    >('All');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Set dynamic dates (month-to-date)
+    useEffect(() => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+
+        const firstDay = new Date(year, month, 1);
+        const todayLocal = new Date(year, month, day);
+
+        const formatLocal = (date: Date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        setStartDate(formatLocal(firstDay));
+        setEndDate(formatLocal(todayLocal));
+    }, []);
+
+    // Fetch bookings with date range
+    useEffect(() => {
+        if (startDate && endDate) {
+            const fetchBookings = () => {
+                axios
+                    .get('/service-orders/bookings', {
+                        params: { start_date: startDate, end_date: endDate },
+                    })
+                    .then((res) => {
+                        setBookings(res.data);
+                        setIsLoading(false);
+                    })
+                    .catch((err) => {
+                        console.error('Error fetching bookings:', err);
+                        setIsLoading(false);
+                    });
+            };
+
+            fetchBookings();
+            const interval = setInterval(fetchBookings, 10000);
+            return () => clearInterval(interval);
+        }
+    }, [startDate, endDate]);
 
     const filteredBookings = useMemo(() => {
         const term = searchValue.toLowerCase();
 
         return bookings.filter((b) => {
-            const matchesSearch = filter === "All" ? 
-                (b.customer.toLowerCase().includes(term) || b.service.toLowerCase().includes(term) || b.status.toLowerCase().includes(term) || b.datetime.toLowerCase().includes(term)) :
-                filter === "Customer" ? b.customer.toLowerCase().includes(term) :
-                filter === "Service" ? b.service.toLowerCase().includes(term) :
-                filter === "Status" ? b.status.toLowerCase().includes(term) :
-                filter === "Date" ? b.datetime.toLowerCase().includes(term) : true;
+            const matchesSearch =
+                filter === 'All'
+                    ? b.customer_name.toLowerCase().includes(term) ||
+                      b.service_names.toLowerCase().includes(term) ||
+                      b.status.toLowerCase().includes(term) ||
+                      b.order_date.toLowerCase().includes(term)
+                    : filter === 'Customer'
+                      ? b.customer_name.toLowerCase().includes(term)
+                      : filter === 'Service'
+                        ? b.service_names.toLowerCase().includes(term)
+                        : filter === 'Status'
+                          ? b.status.toLowerCase().includes(term)
+                          : filter === 'Date'
+                            ? b.order_date.toLowerCase().includes(term)
+                            : true;
 
-            const matchesStatus = statusFilter === "All" ? true : b.status === statusFilter;
+            const matchesStatus =
+                statusFilter === 'All' ? true : b.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
     }, [bookings, searchValue, filter, statusFilter]);
 
-    const getStatusBadge = (status: Booking["status"]) => {
+    const getStatusBadge = (status: Booking['status']) => {
         switch (status) {
-            case "Pending":
-                return <Badge variant="warning"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
-            case "Confirmed":
-                return <Badge variant="info"><Check className="h-3 w-3 mr-1" />Confirmed</Badge>;
-            case "Completed":
+            case 'pending':
+                return (
+                    <Badge variant="warning">
+                        <Clock className="mr-1 h-3 w-3" />
+                        Pending
+                    </Badge>
+                );
+            case 'in_progress':
+                return (
+                    <Badge variant="info">
+                        <Check className="mr-1 h-3 w-3" />
+                        In Progress
+                    </Badge>
+                );
+            case 'completed':
                 return <Badge variant="success">Completed</Badge>;
-            case "Cancelled":
-                return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>;
+            case 'cancelled':
+                return (
+                    <Badge variant="destructive">
+                        <XCircle className="mr-1 h-3 w-3" />
+                        Cancelled
+                    </Badge>
+                );
         }
+    };
+
+    const formatDateTime = (dateTime: string) => {
+        const date = new Date(dateTime);
+        return date.toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
+    };
+
+    const renderServiceBullets = (serviceNames: string) => {
+        if (!serviceNames)
+            return <span className="text-muted-foreground">No service</span>;
+        const services = serviceNames
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+        return (
+            <ul className="list-inside list-disc space-y-1 text-sm">
+                {services.map((s, i) => (
+                    <li key={i}>{s}</li>
+                ))}
+            </ul>
+        );
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Bookings" />
             <div className="flex flex-col gap-6 p-6">
-                <Heading title="Bookings" description="Manage and track customer bookings" />
-                
-                <Card className="border border-sidebar-border/70 bg-white dark:bg-neutral-900">
-                    <CardContent className="flex flex-col gap-4 p-4">
+                <div className="flex items-center justify-between">
+                    <Heading
+                        title="Bookings"
+                        description="Manage and track customer bookings"
+                    />
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-[140px]"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                            to
+                        </span>
+                        <Input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-[140px]"
+                        />
+                    </div>
+                </div>
+
+                <Card className="border border-border/50 bg-background text-foreground">
+                    <CardContent className="flex flex-col gap-4">
                         <div className="flex items-center justify-between gap-4">
-                            <h2 className="text-lg font-semibold text-neutral-800 dark:text-white">Search</h2>
+                            <h2 className="text-lg font-semibold">Search</h2>
                             <DropdownMenu>
-                                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
                                     {filter}
-                                    <ChevronDownIcon className="ml-2 h-4 w-4 text-neutral-500" />
+                                    <ChevronDownIcon className="ml-2 h-4 w-4" />
                                 </DropdownMenuTrigger>
 
                                 <DropdownMenuContent className="w-40">
-                                    {['All', 'Customer', 'Service', 'Status', 'Date'].map((f) => (
-                                        <DropdownMenuItem key={f} onClick={() => setFilter(f as typeof filter)}>
+                                    {[
+                                        'All',
+                                        'Customer',
+                                        'Service',
+                                        'Status',
+                                        'Date',
+                                    ].map((f) => (
+                                        <DropdownMenuItem
+                                            key={f}
+                                            onClick={() =>
+                                                setFilter(f as typeof filter)
+                                            }
+                                        >
                                             {f}
                                         </DropdownMenuItem>
                                     ))}
@@ -99,80 +236,117 @@ export default function AdminBookings() {
                         </div>
 
                         <div className="relative w-full">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                            <Search className="t absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                             <Input
                                 placeholder="Search bookings..."
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
-                                className="border-neutral-300 bg-white pl-10 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white w-full"
+                                className="w-full pl-10"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
                 <div className="flex w-full rounded-2xl bg-secondary p-1">
-                    {(['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'] as const).map(
-                        (s) => {
-                            const isActive = statusFilter === s;
+                    {(
+                        [
+                            'All',
+                            'pending',
+                            'in_progress',
+                            'completed',
+                            'cancelled',
+                        ] as const
+                    ).map((s) => {
+                        const isActive = statusFilter === s;
+                        const displayLabel =
+                            s === 'All'
+                                ? 'All'
+                                : s === 'in_progress'
+                                  ? 'In Progress'
+                                  : s.charAt(0).toUpperCase() + s.slice(1);
 
-                            return (
-                                <button key={s} onClick={() => setStatusFilter(s)}
-                                    className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all 
-                                        ${isActive ? "bg-highlight text-black shadow-sm" : "text-foreground/70"}`}
-                                > {s} </button>
-                            );
-                        }
-                    )}
+                        return (
+                            <button
+                                key={s}
+                                onClick={() => setStatusFilter(s)}
+                                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all ${isActive ? 'bg-highlight text-black shadow-sm' : 'text-foreground/70'}`}
+                            >
+                                {displayLabel}
+                            </button>
+                        );
+                    })}
                 </div>
 
-                <Card className="border border-sidebar-border/70 bg-white dark:bg-neutral-900">
-                    <CardContent className="p-4">
+                <Card className="border border-border/50 bg-background text-foreground">
+                    <CardContent>
                         <div className="mb-4 flex flex-col gap-1">
-                            <h2 className="font-semibold text-neutral-800 dark:text-white">Booking List</h2>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">Total Bookings: {filteredBookings.length}</p>
+                            <h2 className="font-semibold">Booking List</h2>
+                            <p className="t text-sm">
+                                Total Bookings: {filteredBookings.length}
+                            </p>
                         </div>
 
-                        {filteredBookings.length === 0 ? (
-                            <div className="py-12 text-center text-neutral-500 dark:text-neutral-400">
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-highlight" />
+                            </div>
+                        ) : filteredBookings.length === 0 ? (
+                            <div className="py-12 text-center">
                                 <p>No bookings found.</p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Customer</TableHead>
-                                            <TableHead>Service</TableHead>
-                                            <TableHead>Date & Time</TableHead>
-                                            <TableHead>Price</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Action</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-
-                                    <TableBody>
-                                        {filteredBookings.map((b) => (
-                                            <TableRow key={b.id}>
-                                                <TableCell>{b.customer}</TableCell>
-                                                <TableCell>{b.service}</TableCell>
-                                                <TableCell>{b.datetime}</TableCell>
-                                                <TableCell>{b.price}</TableCell>
-                                                <TableCell>{getStatusBadge(b.status)}</TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        disabled={b.status === "Completed"}
-                                                        className={b.status === "Completed" ? "text-neutral-400 cursor-not-allowed" : ""}
-                                                        onClick={() => console.log("Edit", b.id)}
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
+                            <div className="rounded-lg border border-border/50">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                                            <TableRow className="border-b border-border/50">
+                                                <TableHead>Customer</TableHead>
+                                                <TableHead>Services</TableHead>
+                                                <TableHead>
+                                                    Date & Time
+                                                </TableHead>
+                                                <TableHead>Price</TableHead>
+                                                <TableHead>Status</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                    </Table>
+                                </div>
+                                <div className="custom-scrollbar max-h-[60vh] overflow-y-auto">
+                                    <Table>
+                                        <TableBody>
+                                            {filteredBookings.map((b) => (
+                                                <TableRow
+                                                    key={b.service_order_id}
+                                                >
+                                                    <TableCell>
+                                                        {b.customer_name}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {renderServiceBullets(
+                                                            b.service_names,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formatDateTime(
+                                                            b.order_date,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        ₱
+                                                        {Number(
+                                                            b.total_price,
+                                                        ).toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {getStatusBadge(
+                                                            b.status,
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
                         )}
                     </CardContent>
