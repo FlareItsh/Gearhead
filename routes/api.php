@@ -18,10 +18,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/payments/summary', [PaymentController::class, 'summary'])
         ->name('payments.summary');
 
-    Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])->name('admin.supply-purchases.financial-summary');
+    Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])
+        ->name('admin.supply-purchases.financial-summary');
 
     // * Admin-specific top selling services route
-    Route::get('/services/top', [ServiceController::class, 'topServices'])->name('admin.services.top-selling');
+    Route::get('/services/top', [ServiceController::class, 'topServices'])
+        ->name('admin.services.top-selling');
+
+    // ⭐ Added: Search services using ?keyword=
+    Route::get('/services/search', [ServiceController::class, 'search'])
+        ->name('admin.services.search');
 
     // * Staff route for Rendering and Managing Staffs
     Route::get('/staffs', [EmployeeController::class, 'index'])
