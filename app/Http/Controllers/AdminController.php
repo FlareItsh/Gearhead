@@ -2,97 +2,157 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
+use App\Repositories\ServiceRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminController extends Controller
 {
     private UserRepositoryInterface $users;
+    private ServiceRepositoryInterface $services;
 
-    public function __construct(UserRepositoryInterface $users)
-    {
+    public function __construct(
+        UserRepositoryInterface $users,
+        ServiceRepositoryInterface $services
+    ) {
         $this->users = $users;
+        $this->services = $services;
     }
 
     public function registry(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Registry', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 
     public function bookings(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Bookings', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 
     public function customers(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Customers', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 
     public function services(Request $request)
     {
-        $users = $this->users->all();
+        // Get all services
+        $services = $this->services->all();
+
+        // Distinct categories (active only)
+        $categories = Service::distinct()
+            ->where('status', 'active')
+            ->pluck('category')
+            ->toArray();
+
+        // Selected category from query string
+        $selectedCategory = $request->query('category', 'All');
 
         return Inertia::render('Admin/Services', [
-            'users' => $users,
+            'services' => $services,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
         ]);
     }
 
     public function staffs(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Staffs', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 
     public function inventory(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Inventory', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 
     public function transactions(Request $request)
     {
-        $users = $this->users->all();
+        // Get all transactions with joined details
+        $transactions = DB::table('payments as p')
+            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
+            ->join('users as u', 'so.user_id', '=', 'u.user_id')
+            ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->leftJoin('services as s', 'sod.service_id', '=', 's.service_id')
+            ->select(
+                'p.payment_id',
+                'p.amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                'p.is_point_redeemed',
+                'p.created_at as payment_date',
+                'so.order_date',
+                'so.status',
+                'u.first_name',
+                'u.last_name',
+                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services')
+            )
+            ->groupBy(
+                'p.payment_id',
+                'p.amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                'p.is_point_redeemed',
+                'p.created_at',
+                'so.order_date',
+                'so.status',
+                'u.first_name',
+                'u.last_name'
+            )
+            ->orderBy('p.created_at', 'desc')
+            ->get()
+            ->map(function ($transaction) {
+                return [
+                    'payment_id' => $transaction->payment_id,
+                    'date' => $transaction->order_date ?? date('Y-m-d', strtotime($transaction->payment_date)),
+                    'customer' => $transaction->first_name . ' ' . $transaction->last_name,
+                    'services' => $transaction->services ?? 'N/A',
+                    'amount' => (float) $transaction->amount,
+                    'payment_method' => ucfirst($transaction->payment_method),
+                    'gcash_reference' => $transaction->gcash_reference,
+                    'status' => $transaction->status,
+                    'is_point_redeemed' => (bool) $transaction->is_point_redeemed,
+                ];
+            });
+
+        // Dashboard statistics
+        $stats = [
+            'total_revenue' => $transactions->sum('amount'),
+            'total_transactions' => $transactions->count(),
+            'cash_transactions' => $transactions->where('payment_method', 'Cash')->count(),
+            'gcash_transactions' => $transactions->where('payment_method', 'Gcash')->count(),
+            'points_redeemed_count' => $transactions->where('is_point_redeemed', true)->count(),
+        ];
 
         return Inertia::render('Admin/Transactions', [
-            'users' => $users,
+            'transactions' => $transactions,
+            'stats' => $stats,
         ]);
     }
 
     public function reports(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Reports', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 
     public function bays(Request $request)
     {
-        $users = $this->users->all();
-
         return Inertia::render('Admin/Bays', [
-            'users' => $users,
+            'users' => $this->users->all(),
         ]);
     }
 }

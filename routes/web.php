@@ -18,7 +18,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('customer')) {
             return $customer->dashboard($request);
         }
-
         return Inertia::render('dashboard');
     })->name('dashboard');
 
@@ -28,23 +27,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // * Role-aware shared routes
     Route::get('/bookings', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
-
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
             return $admin->bookings($request);
         }
-
-        $bookingRepo = app(BookingRepository::class); // manually resolve
-
+        $bookingRepo = app(BookingRepository::class);
         return $customer->bookings($request, $bookingRepo);
     })->name('bookings');
 
-    // * Role specific services route
     Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {
         $user = $request->user();
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
             return $admin->services($request);
         }
-
         return $customer->services($request);
     })->name('services');
 
@@ -53,10 +47,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('customer.payments')
         ->middleware('auth', 'role:customer');
 
-    // * Admin Specific routes (fixed controller method references and unique names)
+    // * Admin Specific routes
     Route::get('/registry', [AdminController::class, 'registry'])
         ->name('admin.registry')
         ->middleware('role:admin');
+
+    // THIS IS THE ONLY LINE YOU NEED TO CHANGE
+    Route::get('/registry/{id}/payment', function ($id) {
+        return Inertia::render('Admin/RegistryPayment', [  // ← Added "Admin/"
+            'bayId' => (int) $id
+        ]);
+    })->name('admin.registry.payment')->middleware('role:admin');
+    // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+
     Route::get('/customers', [AdminController::class, 'customers'])
         ->name('admin.customers')
         ->middleware('role:admin');
@@ -64,19 +67,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inventory', [AdminController::class, 'inventory'])
         ->name('admin.inventory')
         ->middleware('role:admin');
+
     Route::get('/transactions', [AdminController::class, 'transactions'])
         ->name('admin.transactions')
         ->middleware('role:admin');
+
     Route::get('/reports', [AdminController::class, 'reports'])
         ->name('admin.reports')
         ->middleware('role:admin');
+
     Route::get('/bays', [AdminController::class, 'bays'])
         ->name('admin.bays')
         ->middleware('role:admin');
-
 });
 
-// * Auth routes (register, login, etc.)
+// * Auth routes
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/api.php';
