@@ -72,43 +72,58 @@ export default function Dashboard() {
 
     // Fetch all data (unchanged from your code)
     useEffect(() => {
-        if (role !== 'customer') {
-            axios
-                .get('/payments/summary', {
-                    params: { start_date: startDate, end_date: endDate },
-                })
-                .then((res) => setPaymentsSummary(res.data));
+        const fetchData = () => {
+            if (role !== 'customer') {
+                axios
+                    .get('/payments/summary', {
+                        params: { start_date: startDate, end_date: endDate },
+                    })
+                    .then((res) => setPaymentsSummary(res.data));
 
-            axios
-                .get(route('admin.staffs.active-count'))
-                .then((res) => setActiveStaffCount(res.data.active_employees));
+                axios
+                    .get(route('admin.staffs.active-count'))
+                    .then((res) =>
+                        setActiveStaffCount(res.data.active_employees),
+                    );
 
-            axios
-                .get(route('admin.services.top-selling'), {
-                    params: { start_date: startDate, end_date: endDate },
-                })
-                .then((res) => {
-                    const mappedData = res.data.map((item: any) => ({
-                        service: item.service_name,
-                        value: item.total_bookings || 0,
-                    }));
-                    setTopServices(mappedData);
-                    setPopularService(mappedData[0]?.service || 'N/A');
-                });
+                axios
+                    .get(route('admin.services.top-selling'), {
+                        params: { start_date: startDate, end_date: endDate },
+                    })
+                    .then((res) => {
+                        const mappedData = res.data.map((item: any) => ({
+                            service: item.service_name,
+                            value: item.total_bookings || 0,
+                        }));
+                        setTopServices(mappedData);
+                        setPopularService(mappedData[0]?.service || 'N/A');
+                    });
 
-            axios
-                .get(route('admin.supply-purchases.financial-summary'), {
-                    params: { start_date: startDate, end_date: endDate },
-                })
-                .then((res) => setAreaChartData(res.data))
-                .catch(() => setAreaChartData([]));
+                axios
+                    .get(route('admin.supply-purchases.financial-summary'), {
+                        params: { start_date: startDate, end_date: endDate },
+                    })
+                    .then((res) => setAreaChartData(res.data))
+                    .catch(() => setAreaChartData([]));
 
-            // NEW: Fetch real pending orders
-            axios
-                .get(route('api.service-orders.pending'))
-                .then((res) => setPendingOrders(res.data))
-                .catch((err) => console.error('Pending orders error:', err));
-        }
+                // NEW: Fetch real pending orders
+                axios
+                    .get(route('api.service-orders.pending'))
+                    .then((res) => setPendingOrders(res.data))
+                    .catch((err) =>
+                        console.error('Pending orders error:', err),
+                    );
+            }
+        };
+
+        // Fetch immediately on mount
+        fetchData();
+
+        // Set up polling interval - refreshes every 10 seconds
+        const interval = setInterval(fetchData, 10000);
+
+        // Cleanup interval on unmount or when dependencies change
+        return () => clearInterval(interval);
     }, [startDate, endDate, role]);
 
     const barChartData = topServices.map((s, index) => ({

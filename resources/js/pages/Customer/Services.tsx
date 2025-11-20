@@ -3,12 +3,14 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { Clock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }];
 
 interface Service {
+    service_id?: number;
     service_name: string;
     description: string;
     estimated_duration: number;
@@ -32,6 +34,7 @@ export default function Services() {
     const [selectedServices, setSelectedServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string>('');
+    const [isBooking, setIsBooking] = useState(false);
 
     // Load/save cart
     useEffect(() => {
@@ -39,7 +42,7 @@ export default function Services() {
         if (saved) {
             try {
                 setSelectedServices(JSON.parse(saved));
-            } catch (e) {
+            } catch {
                 localStorage.removeItem('selectedServices');
             }
         }
@@ -60,6 +63,7 @@ export default function Services() {
         setSelectedServices((prev) => {
             const exists = prev.some(
                 (s) =>
+                    s.service_id === service.service_id &&
                     s.service_name === service.service_name &&
                     s.size === service.size,
             );
@@ -67,6 +71,7 @@ export default function Services() {
                 return prev.filter(
                     (s) =>
                         !(
+                            s.service_id === service.service_id &&
                             s.service_name === service.service_name &&
                             s.size === service.size
                         ),
@@ -81,6 +86,7 @@ export default function Services() {
             prev.filter(
                 (s) =>
                     !(
+                        s.service_id === service.service_id &&
                         s.service_name === service.service_name &&
                         s.size === service.size
                     ),
@@ -96,6 +102,7 @@ export default function Services() {
     const isSelected = (service: Service) =>
         selectedServices.some(
             (s) =>
+                s.service_id === service.service_id &&
                 s.service_name === service.service_name &&
                 s.size === service.size,
         );
@@ -144,6 +151,101 @@ export default function Services() {
 
         return slots;
     }, []);
+
+    const handleBook = async () => {
+        if (!selectedTime || selectedServices.length === 0) {
+            alert('Please select a time and at least one service');
+            return;
+        }
+
+        setIsBooking(true);
+        try {
+            // Get service_ids from selectedServices
+            // Try to use service_id if available, otherwise find it from the services array
+            const serviceIds = selectedServices
+                .map((selected) => {
+                    // If service_id is already in the selected service object, use it
+                    if ('service_id' in selected && selected.service_id) {
+                        return selected.service_id;
+                    }
+                    // Otherwise find it from the services array
+                    const foundService = services.find(
+                        (s) =>
+                            s.service_name === selected.service_name &&
+                            s.size === selected.size,
+                    );
+                    return foundService?.service_id ?? null;
+                })
+                .filter((id): id is number => id !== null);
+
+            console.log('Selected services count:', selectedServices.length);
+            console.log('Service IDs to send:', serviceIds);
+
+            if (serviceIds.length === 0) {
+                alert('Could not find service IDs. Please try again.');
+                setIsBooking(false);
+                return;
+            }
+
+            if (serviceIds.length !== selectedServices.length) {
+                console.warn(
+                    `Only ${serviceIds.length} out of ${selectedServices.length} services were found`,
+                );
+            }
+
+            // Convert time string to date format
+            // selectedTime is like "3:00 PM", we need "2025-11-20 15:00"
+            const today = new Date();
+            const [timeStr, period] = selectedTime.split(' ');
+            const [hourStr, minuteStr] = timeStr.split(':');
+            let hour = parseInt(hourStr);
+            const minute = parseInt(minuteStr);
+
+            if (period === 'PM' && hour !== 12) {
+                hour += 12;
+            } else if (period === 'AM' && hour === 12) {
+                hour = 0;
+            }
+
+            today.setHours(hour, minute, 0, 0);
+
+            // Format as YYYY-MM-DD HH:MM using local time, not UTC
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const date = String(today.getDate()).padStart(2, '0');
+            const hours = String(today.getHours()).padStart(2, '0');
+            const minutes = String(today.getMinutes()).padStart(2, '0');
+            const orderDate = `${year}-${month}-${date} ${hours}:${minutes}`;
+
+            console.log('Sending booking with order_date:', orderDate);
+            console.log('Sending booking with service_ids:', serviceIds);
+
+            const response = await axios.post('/bookings/book', {
+                order_date: orderDate,
+                service_ids: serviceIds,
+            });
+
+            // Success - clear selections and close modal
+            setSelectedServices([]);
+            localStorage.removeItem('selectedServices');
+            setIsModalOpen(false);
+            setSelectedTime('');
+
+            alert('Booking confirmed! Your reservation has been created.');
+            console.log('Booking response:', response.data);
+        } catch (error) {
+            console.error('Booking error:', error);
+            if (axios.isAxiosError(error) && error.response) {
+                alert(
+                    `Booking failed: ${error.response.data?.message || 'Unknown error'}`,
+                );
+            } else {
+                alert('Booking failed. Please try again.');
+            }
+        } finally {
+            setIsBooking(false);
+        }
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -202,7 +304,7 @@ export default function Services() {
                                             className="flex w-sm flex-col justify-between gap-5 rounded-sm border p-4"
                                         >
                                             <HeadingSmall
-                                                title={`${s.service_name} - ${s.size.charAt(0).toUpperCase()}`}
+                                                title={`${s.service_name}`}
                                                 description={s.description
                                                     .replace(/,\s*/g, ', ')
                                                     .split(', ')
@@ -233,7 +335,10 @@ export default function Services() {
                                                 </p>
                                             </div>
                                             <hr className="border-gray-400/50" />
-                                            <span>Car Size: {s.size}</span>
+                                            <span>
+                                                Car Size:{' '}
+                                                <strong>{s.size}</strong>
+                                            </span>
 
                                             <Button
                                                 variant={
@@ -347,7 +452,7 @@ export default function Services() {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-lg font-bold text-primary">
+                                            <span className="text-lg font-bold">
                                                 ₱
                                                 {Number(
                                                     s.price,
@@ -467,11 +572,18 @@ export default function Services() {
                                     size="lg"
                                     variant="highlight"
                                     className="flex-1 font-bold"
-                                    disabled={selectedServices.length === 0}
+                                    disabled={
+                                        selectedServices.length === 0 ||
+                                        !selectedTime ||
+                                        isBooking
+                                    }
+                                    onClick={handleBook}
                                 >
-                                    {selectedTime
-                                        ? `Book at ${selectedTime}`
-                                        : 'Proceed to Booking'}
+                                    {isBooking
+                                        ? 'Booking...'
+                                        : selectedTime
+                                          ? `Book at ${selectedTime}`
+                                          : 'Proceed to Booking'}
                                 </Button>
                             </div>
                         </div>

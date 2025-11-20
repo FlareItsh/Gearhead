@@ -91,4 +91,47 @@ class ServiceOrderController extends Controller
 
         return response()->json($data);
     }
+
+    /**
+     * Book services for the authenticated user.
+     * Creates a service order with multiple service details.
+     */
+    public function book(Request $request)
+    {
+        $validated = $request->validate([
+            'order_date' => 'required|date_format:Y-m-d H:i',
+            'service_ids' => 'required|array|min:1',
+            'service_ids.*' => 'required|integer|exists:services,service_id',
+        ]);
+
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $orderData = [
+            'user_id' => $user->user_id,
+            'employee_id' => null,
+            'bay_id' => null,
+            'status' => 'pending',
+            'order_date' => $validated['order_date'],
+            'order_type' => 'R', // Reservation
+        ];
+
+        // Map service_ids to details format expected by createWithDetails
+        $details = array_map(function ($service_id) {
+            return [
+                'service_id' => $service_id,
+                'quantity' => 1,
+            ];
+        }, $validated['service_ids']);
+
+        try {
+            $order = $this->repo->createWithDetails($orderData, $details);
+
+            return response()->json($order, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to create booking', 'error' => $e->getMessage()], 500);
+        }
+    }
 }
