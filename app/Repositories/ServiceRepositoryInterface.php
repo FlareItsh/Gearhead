@@ -27,6 +27,13 @@ interface ServiceRepositoryInterface
     public function getTopServices(int $limit = 4, ?string $startDate = null, ?string $endDate = null);
 
     /**
+     * Get top N services with size information for reports
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getTopServicesWithSize(int $limit = 10, ?string $startDate = null, ?string $endDate = null);
+
+    /**
      * Get the single most popular service
      *
      * @return object|null

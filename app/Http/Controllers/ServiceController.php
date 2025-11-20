@@ -62,7 +62,7 @@ class ServiceController extends Controller
      * Get top N best-selling services.
      */
     /**
-     * Get top 4 services for Bar chart
+     * Get top 10 services for Bar chart
      */
     public function topServices(Request $request)
     {
@@ -70,6 +70,19 @@ class ServiceController extends Controller
         $endDate = $request->query('end_date');
 
         $services = $this->repo->getTopServices(4, $startDate, $endDate);
+
+        return response()->json($services);
+    }
+
+    /**
+     * Get top 10 services with size for Reports page
+     */
+    public function topServicesWithSize(Request $request)
+    {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $services = $this->repo->getTopServicesWithSize(10, $startDate, $endDate);
 
         return response()->json($services);
     }

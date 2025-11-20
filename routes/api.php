@@ -25,6 +25,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/services/top', [ServiceController::class, 'topServices'])
         ->name('admin.services.top-selling');
 
+    // * Admin-specific top selling services with size for reports
+    Route::get('/services/top-with-size', [ServiceController::class, 'topServicesWithSize'])
+        ->name('admin.services.top-selling-with-size');
+
     // ⭐ Added: Search services using ?keyword=
     Route::get('/services/search', [ServiceController::class, 'search'])
         ->name('admin.services.search');

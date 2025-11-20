@@ -235,3 +235,33 @@
         width: 4px; /* If there's also vertical scroll */
     }
 }
+
+/* Perfect brush – no jitter, premium feel */
+.recharts-brush-traveller {
+    @apply !h-12 w-4 cursor-grab rounded-full bg-highlight/85 shadow-xl ring-4 ring-highlight/20 transition-shadow duration-150 active:cursor-grabbing;
+}
+
+.recharts-brush-traveller:hover {
+    @apply bg-highlight shadow-2xl ring-highlight/40;
+}
+
+/* Critical: NEVER use scale(), translate(), or any transform on the traveller! */
+.recharts-brush-traveller:active {
+    @apply bg-highlight shadow-2xl ring-highlight/50;
+}
+
+.recharts-brush-slide {
+    @apply fill-muted/20;
+}
+
+.recharts-brush-texts {
+    @apply hidden;
+}
+
+.dark .recharts-brush-traveller {
+    @apply bg-highlight/95 ring-highlight/30;
+}
+
+.dark .recharts-brush-traveller:hover {
+    @apply bg-highlight ring-highlight/50;
+}
