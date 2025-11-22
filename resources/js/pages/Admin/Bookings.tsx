@@ -278,76 +278,136 @@ export default function AdminBookings() {
                 </div>
 
                 <Card className="border border-border/50 bg-background text-foreground">
-                    <CardContent>
-                        <div className="mb-4 flex flex-col gap-1">
-                            <h2 className="font-semibold">Booking List</h2>
-                            <p className="t text-sm">
-                                Total Bookings: {filteredBookings.length}
-                            </p>
+                    <CardContent className="p-0">
+                        {/* Header */}
+                        <div className="border-b border-border/50 p-6">
+                            <div className="flex flex-col gap-1">
+                                <h2 className="text-lg font-semibold">
+                                    Booking List
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Total Bookings: {filteredBookings.length}
+                                </p>
+                            </div>
                         </div>
 
                         {isLoading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-highlight" />
+                            <div className="flex items-center justify-center py-32">
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-highlight" />
                             </div>
                         ) : filteredBookings.length === 0 ? (
-                            <div className="py-12 text-center">
-                                <p>No bookings found.</p>
+                            <div className="py-32 text-center text-muted-foreground">
+                                No bookings found for the selected filters.
                             </div>
                         ) : (
-                            <div className="rounded-lg border border-border/50">
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                                            <TableRow className="border-b border-border/50">
-                                                <TableHead>Customer</TableHead>
-                                                <TableHead>Services</TableHead>
-                                                <TableHead>
-                                                    Date & Time
-                                                </TableHead>
-                                                <TableHead>Price</TableHead>
-                                                <TableHead>Status</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                    </Table>
+                            <>
+                                {/* Desktop: Scrollable Table with Sticky Header */}
+                                <div className="hidden lg:block">
+                                    <div className="custom-scrollbar max-h-[65vh] overflow-y-auto">
+                                        <Table>
+                                            <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                                                <TableRow className="border-b border-border/50">
+                                                    <TableHead className="font-semibold">
+                                                        Customer
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Services
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Date & Time
+                                                    </TableHead>
+                                                    <TableHead className="text-right font-semibold">
+                                                        Price
+                                                    </TableHead>
+                                                    <TableHead className="text-center font-semibold">
+                                                        Status
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredBookings.map((b) => (
+                                                    <TableRow
+                                                        key={b.service_order_id}
+                                                        className="border-b border-border/30 transition-colors hover:bg-muted/40"
+                                                    >
+                                                        <TableCell className="font-medium">
+                                                            {b.customer_name}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-xs">
+                                                            {renderServiceBullets(
+                                                                b.service_names,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm">
+                                                            {formatDateTime(
+                                                                b.order_date,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-medium">
+                                                            ₱
+                                                            {Number(
+                                                                b.total_price,
+                                                            ).toLocaleString()}
+                                                        </TableCell>
+                                                        <TableCell className="text-center">
+                                                            {getStatusBadge(
+                                                                b.status,
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </div>
-                                <div className="custom-scrollbar max-h-[60vh] overflow-y-auto">
-                                    <Table>
-                                        <TableBody>
-                                            {filteredBookings.map((b) => (
-                                                <TableRow
-                                                    key={b.service_order_id}
-                                                >
-                                                    <TableCell>
+
+                                {/* Mobile: Responsive Cards */}
+                                <div className="block space-y-4 p-4 lg:hidden">
+                                    {filteredBookings.map((b) => (
+                                        <div
+                                            key={b.service_order_id}
+                                            className="rounded-xl border border-border/60 bg-card p-5 shadow-sm"
+                                        >
+                                            <div className="mb-3 flex items-start justify-between">
+                                                <div>
+                                                    <h3 className="font-semibold text-foreground">
                                                         {b.customer_name}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {renderServiceBullets(
-                                                            b.service_names,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </h3>
+                                                    <p className="mt-1 text-xs text-muted-foreground">
                                                         {formatDateTime(
                                                             b.order_date,
                                                         )}
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-lg font-bold">
                                                         ₱
                                                         {Number(
                                                             b.total_price,
                                                         ).toLocaleString()}
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </p>
+                                                    <div className="mt-2">
                                                         {getStatusBadge(
                                                             b.status,
                                                         )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-border/40 pt-3">
+                                                <p className="mb-2 text-sm font-medium text-foreground/90">
+                                                    Services:
+                                                </p>
+                                                <div className="space-y-1 text-sm">
+                                                    {renderServiceBullets(
+                                                        b.service_names,
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
+                            </>
                         )}
                     </CardContent>
                 </Card>

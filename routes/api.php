@@ -5,8 +5,10 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplyController;
 use App\Http\Controllers\SupplyPurchaseController;
+use App\Http\Controllers\SupplyPurchaseDetailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -81,6 +83,39 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('supplies.update');
     Route::delete('/supplies/{id}', [SupplyController::class, 'destroy'])
         ->name('supplies.destroy');
+
+    Route::get('/suppliers', [SupplierController::class, 'index'])
+        ->name('suppliers.index');
+    Route::get('/suppliers/{id}', [SupplierController::class, 'show'])
+        ->name('suppliers.show');
+    Route::post('/suppliers', [SupplierController::class, 'store'])
+        ->name('suppliers.store');
+    Route::put('/suppliers/{id}', [SupplierController::class, 'update'])
+        ->name('suppliers.update');
+    Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])
+        ->name('suppliers.destroy');
+
+    Route::get('/supply-purchases', [SupplyPurchaseController::class, 'index'])
+        ->name('supply-purchases.index');
+    Route::get('/supply-purchases/{id}', [SupplyPurchaseController::class, 'show'])
+        ->name('supply-purchases.show');
+    Route::post('/supply-purchases', [SupplyPurchaseController::class, 'store'])
+        ->name('supply-purchases.store');
+    Route::put('/supply-purchases/{id}', [SupplyPurchaseController::class, 'update'])
+        ->name('supply-purchases.update');
+    Route::delete('/supply-purchases/{id}', [SupplyPurchaseController::class, 'destroy'])
+        ->name('supply-purchases.destroy');
+
+    Route::get('/supply-purchase-details', [SupplyPurchaseDetailController::class, 'index'])
+        ->name('supply-purchase-details.index');
+    Route::get('/supply-purchase-details/{id}', [SupplyPurchaseDetailController::class, 'show'])
+        ->name('supply-purchase-details.show');
+    Route::post('/supply-purchase-details', [SupplyPurchaseDetailController::class, 'store'])
+        ->name('supply-purchase-details.store');
+    Route::put('/supply-purchase-details/{id}', [SupplyPurchaseDetailController::class, 'update'])
+        ->name('supply-purchase-details.update');
+    Route::delete('/supply-purchase-details/{id}', [SupplyPurchaseDetailController::class, 'destroy'])
+        ->name('supply-purchase-details.destroy');
 
     Route::get('/customers/index', [CustomerController::class, 'getCustomers'])
         ->name('admin.customers.index');
