@@ -54,6 +54,8 @@ export default function AdminServices({
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [showModal, setShowModal] = useState(false);
     const [editingService, setEditingService] = useState<Service | null>(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const { data, setData, processing, reset } = useForm({
         service_name: '',
@@ -144,14 +146,19 @@ export default function AdminServices({
                     data,
                     config,
                 );
+                setSuccessMessage('Service updated successfully!');
             } else {
                 console.log('Creating new service');
                 await axios.post('/api/services', data, config);
+                setSuccessMessage('Service created successfully!');
             }
             setShowModal(false);
             reset();
-            // Reload the page to get updated services
-            window.location.reload();
+            setShowSuccessModal(true);
+            // Reload the page after a short delay to get updated services
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
         } catch (error) {
             console.error('Full error:', error);
             if (axios.isAxiosError(error)) {
@@ -516,6 +523,32 @@ export default function AdminServices({
                                 {editingService
                                     ? 'Update Service'
                                     : 'Create Service'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Success Modal */}
+                <Dialog
+                    open={showSuccessModal}
+                    onOpenChange={setShowSuccessModal}
+                >
+                    <DialogContent className="w-full rounded-xl p-6 shadow-lg sm:max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle className="text-highlight">
+                                ✓ Success
+                            </DialogTitle>
+                        </DialogHeader>
+                        <p className="my-4 text-center text-foreground">
+                            {successMessage}
+                        </p>
+                        <DialogFooter className="flex justify-end gap-3">
+                            <Button
+                                variant="highlight"
+                                onClick={() => setShowSuccessModal(false)}
+                                className="w-full"
+                            >
+                                Done
                             </Button>
                         </DialogFooter>
                     </DialogContent>

@@ -37,7 +37,9 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
-import { ChevronDownIcon, Edit2, Search, Trash2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { ChevronDownIcon, Download, Edit2, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 axios.defaults.withCredentials = true;
@@ -334,6 +336,67 @@ export default function InventoryPage() {
         setTimeout(() => setEditItem(null), 300);
     };
 
+    // =============== PDF EXPORT FUNCTION ===============
+    const downloadPDF = () => {
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        // Title
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Gearhead - Inventory Report', 14, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.setFont('helvetica', 'normal');
+        doc.text(
+            `Generated on: ${new Date().toLocaleDateString('en-PH')}`,
+            14,
+            28,
+        );
+
+        const tableData = filteredSupplies.map((supply) => [
+            supply.supply_name,
+            supply.unit,
+            supply.quantity_stock.toString(),
+            supply.reorder_point.toString(),
+            supply.supply_type.charAt(0).toUpperCase() +
+                supply.supply_type.slice(1),
+        ]);
+
+        autoTable(doc, {
+            head: [
+                [
+                    'Item Name',
+                    'Unit',
+                    'Quantity Stock',
+                    'Reorder Level',
+                    'Type',
+                ],
+            ],
+            body: tableData,
+            startY: 35,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [255, 226, 38],
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+            },
+            styles: { fontSize: 10, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 50 },
+                1: { cellWidth: 20, halign: 'center' },
+                2: { cellWidth: 30, halign: 'right' },
+                3: { cellWidth: 30, halign: 'right' },
+                4: { cellWidth: 30, halign: 'center' },
+            },
+            margin: { top: 35, left: 14, right: 14 },
+        });
+
+        doc.save(
+            `inventory-report-${new Date().toISOString().split('T')[0]}.pdf`,
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Inventory" />
@@ -344,6 +407,10 @@ export default function InventoryPage() {
                         description="Track supplies and materials"
                     />
                     <div className="flex space-x-2">
+                        <Button onClick={downloadPDF} variant="secondary">
+                            <Download className="mr-2 h-4 w-4" />
+                            Download PDF
+                        </Button>
                         <Dialog
                             open={showAddItem}
                             onOpenChange={setShowAddItem}
@@ -437,7 +504,7 @@ export default function InventoryPage() {
                             onOpenChange={setShowPurchaseModal}
                         >
                             <DialogTrigger asChild>
-                                <Button variant="outline">
+                                <Button variant="highlight">
                                     + Add Purchase
                                 </Button>
                             </DialogTrigger>
@@ -545,17 +612,25 @@ export default function InventoryPage() {
                                                             type="number"
                                                             placeholder="Qty"
                                                             value={
-                                                                newDetail.quantity
+                                                                newDetail.quantity ===
+                                                                0
+                                                                    ? ''
+                                                                    : newDetail.quantity
                                                             }
                                                             onChange={(e) =>
                                                                 setNewDetail({
                                                                     ...newDetail,
                                                                     quantity:
-                                                                        parseFloat(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        ) || 0,
+                                                                        e.target
+                                                                            .value ===
+                                                                        ''
+                                                                            ? 0
+                                                                            : parseFloat(
+                                                                                  e
+                                                                                      .target
+                                                                                      .value,
+                                                                              ) ||
+                                                                              0,
                                                                 })
                                                             }
                                                         />
@@ -568,17 +643,25 @@ export default function InventoryPage() {
                                                             type="number"
                                                             placeholder="Price"
                                                             value={
-                                                                newDetail.unit_price
+                                                                newDetail.unit_price ===
+                                                                0
+                                                                    ? ''
+                                                                    : newDetail.unit_price
                                                             }
                                                             onChange={(e) =>
                                                                 setNewDetail({
                                                                     ...newDetail,
                                                                     unit_price:
-                                                                        parseFloat(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        ) || 0,
+                                                                        e.target
+                                                                            .value ===
+                                                                        ''
+                                                                            ? 0
+                                                                            : parseFloat(
+                                                                                  e
+                                                                                      .target
+                                                                                      .value,
+                                                                              ) ||
+                                                                              0,
                                                                 })
                                                             }
                                                         />
@@ -789,17 +872,19 @@ export default function InventoryPage() {
                         >
                             <DialogContent className="w-full rounded-xl p-6 shadow-lg sm:max-w-sm">
                                 <DialogHeader>
-                                    <DialogTitle className="text-green-600">
+                                    <DialogTitle className="text-highlight">
                                         ✓ Success
                                     </DialogTitle>
                                 </DialogHeader>
-                                <p className="my-4 text-center text-gray-700">
+                                <p className="my-4 text-center text-foreground">
                                     {successMessage}
                                 </p>
                                 <DialogFooter className="flex justify-end gap-3">
                                     <Button
                                         variant="highlight"
-                                        onClick={() => setShowSuccessModal(false)}
+                                        onClick={() =>
+                                            setShowSuccessModal(false)
+                                        }
                                         className="w-full"
                                     >
                                         Done
