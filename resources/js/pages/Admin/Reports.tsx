@@ -416,12 +416,12 @@ export default function Reports() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Reports" />
             <div className="flex flex-col gap-6 p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between">
                     <Heading
                         title="Reports"
                         description="Visual insights for management"
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full items-center justify-center gap-2 md:w-fit lg:w-fit">
                         <Input
                             type="date"
                             value={startDate}
@@ -778,7 +778,7 @@ export default function Reports() {
                                     }
                                     min={2000}
                                     max={new Date().getFullYear()}
-                                    className="w-[75px]"
+                                    className="w-[120px]"
                                     placeholder="Year"
                                 />
                             </div>
