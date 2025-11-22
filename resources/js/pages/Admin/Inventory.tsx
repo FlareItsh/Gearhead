@@ -100,7 +100,9 @@ export default function InventoryPage() {
     const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
     const [showPurchaseModal, setShowPurchaseModal] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState('');
-    const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetail[]>([]);
+    const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetail[]>(
+        [],
+    );
     const [newDetail, setNewDetail] = useState<PurchaseDetail>({
         supply_id: 0,
         quantity: 0,
@@ -132,7 +134,11 @@ export default function InventoryPage() {
     };
 
     const handleAddDetail = () => {
-        if (newDetail.supply_id === 0 || newDetail.quantity === 0 || newDetail.unit_price === 0) {
+        if (
+            newDetail.supply_id === 0 ||
+            newDetail.quantity === 0 ||
+            newDetail.unit_price === 0
+        ) {
             alert('Please fill in all fields');
             return;
         }
@@ -178,11 +184,14 @@ export default function InventoryPage() {
                 });
 
                 // Update supply quantity
-                const supply = allSupplies.find(s => s.supply_id === detail.supply_id);
+                const supply = allSupplies.find(
+                    (s) => s.supply_id === detail.supply_id,
+                );
                 if (supply) {
                     await axios.put(`/supplies/${detail.supply_id}`, {
                         ...supply,
-                        quantity_stock: Number(supply.quantity_stock) + detail.quantity,
+                        quantity_stock:
+                            Number(supply.quantity_stock) + detail.quantity,
                     });
                 }
             }
@@ -425,7 +434,9 @@ export default function InventoryPage() {
                             onOpenChange={setShowPurchaseModal}
                         >
                             <DialogTrigger asChild>
-                                <Button variant="outline">+ Add Purchase</Button>
+                                <Button variant="outline">
+                                    + Add Purchase
+                                </Button>
                             </DialogTrigger>
                             <DialogContent className="max-h-[90vh] w-full overflow-y-auto rounded-xl sm:max-w-2xl">
                                 <DialogHeader>
@@ -436,7 +447,8 @@ export default function InventoryPage() {
                                         </span>
                                     </DialogTitle>
                                     <DialogDescription>
-                                        Add a new supply purchase from a supplier.
+                                        Add a new supply purchase from a
+                                        supplier.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="flex flex-col gap-4">
@@ -453,14 +465,21 @@ export default function InventoryPage() {
                                                 <SelectValue placeholder="Choose a supplier..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {allSuppliers.map((supplier) => (
-                                                    <SelectItem
-                                                        key={supplier.supplier_id}
-                                                        value={supplier.supplier_id.toString()}
-                                                    >
-                                                        {supplier.first_name} {supplier.last_name}
-                                                    </SelectItem>
-                                                ))}
+                                                {allSuppliers.map(
+                                                    (supplier) => (
+                                                        <SelectItem
+                                                            key={
+                                                                supplier.supplier_id
+                                                            }
+                                                            value={supplier.supplier_id.toString()}
+                                                        >
+                                                            {
+                                                                supplier.first_name
+                                                            }{' '}
+                                                            {supplier.last_name}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -472,7 +491,7 @@ export default function InventoryPage() {
                                         </label>
                                         <div className="mt-2 flex flex-col gap-3">
                                             {/* Add Item Form */}
-                                            <div className="flex flex-col gap-2 border border-border/50 rounded-lg p-3 bg-muted/30">
+                                            <div className="flex flex-col gap-2 rounded-lg border border-border/50 bg-muted/30 p-3">
                                                 <div className="grid grid-cols-4 gap-2">
                                                     <div>
                                                         <label className="text-xs font-medium">
@@ -480,10 +499,15 @@ export default function InventoryPage() {
                                                         </label>
                                                         <Select
                                                             value={newDetail.supply_id.toString()}
-                                                            onValueChange={(val) =>
+                                                            onValueChange={(
+                                                                val,
+                                                            ) =>
                                                                 setNewDetail({
                                                                     ...newDetail,
-                                                                    supply_id: parseInt(val),
+                                                                    supply_id:
+                                                                        parseInt(
+                                                                            val,
+                                                                        ),
                                                                 })
                                                             }
                                                         >
@@ -491,14 +515,22 @@ export default function InventoryPage() {
                                                                 <SelectValue placeholder="Supply" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {allSupplies.map((supply) => (
-                                                                    <SelectItem
-                                                                        key={supply.supply_id}
-                                                                        value={supply.supply_id.toString()}
-                                                                    >
-                                                                        {supply.supply_name}
-                                                                    </SelectItem>
-                                                                ))}
+                                                                {allSupplies.map(
+                                                                    (
+                                                                        supply,
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                supply.supply_id
+                                                                            }
+                                                                            value={supply.supply_id.toString()}
+                                                                        >
+                                                                            {
+                                                                                supply.supply_name
+                                                                            }
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
@@ -509,11 +541,18 @@ export default function InventoryPage() {
                                                         <Input
                                                             type="number"
                                                             placeholder="Qty"
-                                                            value={newDetail.quantity}
+                                                            value={
+                                                                newDetail.quantity
+                                                            }
                                                             onChange={(e) =>
                                                                 setNewDetail({
                                                                     ...newDetail,
-                                                                    quantity: parseFloat(e.target.value) || 0,
+                                                                    quantity:
+                                                                        parseFloat(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        ) || 0,
                                                                 })
                                                             }
                                                         />
@@ -525,11 +564,18 @@ export default function InventoryPage() {
                                                         <Input
                                                             type="number"
                                                             placeholder="Price"
-                                                            value={newDetail.unit_price}
+                                                            value={
+                                                                newDetail.unit_price
+                                                            }
                                                             onChange={(e) =>
                                                                 setNewDetail({
                                                                     ...newDetail,
-                                                                    unit_price: parseFloat(e.target.value) || 0,
+                                                                    unit_price:
+                                                                        parseFloat(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        ) || 0,
                                                                 })
                                                             }
                                                         />
@@ -540,11 +586,15 @@ export default function InventoryPage() {
                                                         </label>
                                                         <Input
                                                             type="date"
-                                                            value={newDetail.purchase_date}
+                                                            value={
+                                                                newDetail.purchase_date
+                                                            }
                                                             onChange={(e) =>
                                                                 setNewDetail({
                                                                     ...newDetail,
-                                                                    purchase_date: e.target.value,
+                                                                    purchase_date:
+                                                                        e.target
+                                                                            .value,
                                                                 })
                                                             }
                                                         />
@@ -566,61 +616,85 @@ export default function InventoryPage() {
                                                     <table className="w-full text-sm">
                                                         <thead>
                                                             <tr className="border-b">
-                                                                <th className="text-left py-2">
+                                                                <th className="py-2 text-left">
                                                                     Supply
                                                                 </th>
-                                                                <th className="text-center py-2">
+                                                                <th className="py-2 text-center">
                                                                     Qty
                                                                 </th>
-                                                                <th className="text-center py-2">
+                                                                <th className="py-2 text-center">
                                                                     Unit Price
                                                                 </th>
-                                                                <th className="text-center py-2">
+                                                                <th className="py-2 text-center">
                                                                     Total
                                                                 </th>
-                                                                <th className="text-center py-2">
+                                                                <th className="py-2 text-center">
                                                                     Action
                                                                 </th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {purchaseDetails.map((detail, index) => {
-                                                                const supply = allSupplies.find(
-                                                                    (s) => s.supply_id === detail.supply_id,
-                                                                );
-                                                                const total =
-                                                                    detail.quantity * detail.unit_price;
-                                                                return (
-                                                                    <tr key={index} className="border-b">
-                                                                        <td className="py-2">
-                                                                            {supply?.supply_name || 'N/A'}
-                                                                        </td>
-                                                                        <td className="text-center">
-                                                                            {detail.quantity}
-                                                                        </td>
-                                                                        <td className="text-center">
-                                                                            ₱
-                                                                            {detail.unit_price.toFixed(2)}
-                                                                        </td>
-                                                                        <td className="text-center">
-                                                                            ₱{total.toFixed(2)}
-                                                                        </td>
-                                                                        <td className="text-center">
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() =>
-                                                                                    handleRemoveDetail(
-                                                                                        index,
-                                                                                    )
+                                                            {purchaseDetails.map(
+                                                                (
+                                                                    detail,
+                                                                    index,
+                                                                ) => {
+                                                                    const supply =
+                                                                        allSupplies.find(
+                                                                            (
+                                                                                s,
+                                                                            ) =>
+                                                                                s.supply_id ===
+                                                                                detail.supply_id,
+                                                                        );
+                                                                    const total =
+                                                                        detail.quantity *
+                                                                        detail.unit_price;
+                                                                    return (
+                                                                        <tr
+                                                                            key={
+                                                                                index
+                                                                            }
+                                                                            className="border-b"
+                                                                        >
+                                                                            <td className="py-2">
+                                                                                {supply?.supply_name ||
+                                                                                    'N/A'}
+                                                                            </td>
+                                                                            <td className="text-center">
+                                                                                {
+                                                                                    detail.quantity
                                                                                 }
-                                                                                className="text-red-500 hover:text-red-700"
-                                                                            >
-                                                                                <Trash2 className="h-4 w-4" />
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
-                                                                );
-                                                            })}
+                                                                            </td>
+                                                                            <td className="text-center">
+                                                                                ₱
+                                                                                {detail.unit_price.toFixed(
+                                                                                    2,
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="text-center">
+                                                                                ₱
+                                                                                {total.toFixed(
+                                                                                    2,
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="text-center">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() =>
+                                                                                        handleRemoveDetail(
+                                                                                            index,
+                                                                                        )
+                                                                                    }
+                                                                                    className="text-red-500 hover:text-red-700"
+                                                                                >
+                                                                                    <Trash2 className="h-4 w-4" />
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                },
+                                                            )}
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -636,7 +710,9 @@ export default function InventoryPage() {
                                                 {purchaseDetails
                                                     .reduce(
                                                         (sum, detail) =>
-                                                            sum + detail.quantity * detail.unit_price,
+                                                            sum +
+                                                            detail.quantity *
+                                                                detail.unit_price,
                                                         0,
                                                     )
                                                     .toFixed(2)}
