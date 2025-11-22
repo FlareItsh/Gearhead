@@ -40,6 +40,8 @@ import axios from 'axios';
 import { ChevronDownIcon, Edit2, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+axios.defaults.withCredentials = true;
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Inventory', href: '/inventory' },
 ];
@@ -196,7 +198,11 @@ export default function InventoryPage() {
             alert('Purchase recorded successfully!');
         } catch (err) {
             console.error('Failed to record purchase:', err);
-            alert('Failed to record purchase');
+            let errorMsg = 'Failed to record purchase';
+            if (err instanceof Error) {
+                errorMsg = err.message;
+            }
+            alert(`Error: ${errorMsg}`);
         }
     };
 
