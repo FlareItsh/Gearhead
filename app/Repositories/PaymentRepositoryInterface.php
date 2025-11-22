@@ -38,4 +38,24 @@ interface PaymentRepositoryInterface
      * Get total amount and count of payments within a date range.
      */
     public function getSummaryByDateRange(string $startDate, string $endDate): array;
+
+    /**
+     * Get monthly revenue for a specific year.
+     */
+    public function getMonthlyRevenueByYear(int $year): array;
+
+    /**
+     * Get financial summary (revenue, expenses, profit) by date range.
+     */
+    public function getFinancialSummaryByDateRange(string $startDate, string $endDate): array;
+
+    /**
+     * Get average booking value by date range.
+     */
+    public function getAverageBookingValueByDateRange(string $startDate, string $endDate): float;
+
+    /**
+     * Get customer retention rate by date range.
+     */
+    public function getCustomerRetentionRateByDateRange(string $startDate, string $endDate): float;
 }

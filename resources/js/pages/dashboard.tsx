@@ -75,6 +75,26 @@ export default function Dashboard() {
     // Loading state for cards only
     const [isLoading, setIsLoading] = useState(true);
 
+    // Helper function to format date range
+    const formatDateRange = (start: string, end: string): string => {
+        if (!start || !end) return '';
+        const startObj = new Date(start);
+        const endObj = new Date(end);
+
+        const formatDate = (date: Date) => {
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+            });
+        };
+
+        const startFormatted = formatDate(startObj);
+        const endFormatted = formatDate(endObj);
+
+        return `${startFormatted} - ${endFormatted}`;
+    };
+
     // Set dynamic dates (Philippine local time)
     useEffect(() => {
         const now = new Date();
@@ -239,7 +259,7 @@ export default function Dashboard() {
                         <div className="group relative flex aspect-video flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md dark:border-sidebar-border dark:hover:border-highlight/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-semibold text-foreground">
-                                    This Month's Revenue
+                                    Total Revenue
                                 </h4>
                                 <PhilippinePeso className="h-5 w-5 text-muted-foreground" />
                             </div>
@@ -258,7 +278,7 @@ export default function Dashboard() {
                                 </div>
                             )}
                             <p className="text-sm text-muted-foreground">
-                                Keep it up!
+                                {formatDateRange(startDate, endDate)}
                             </p>
                         </div>
 
@@ -282,7 +302,7 @@ export default function Dashboard() {
                                 </div>
                             )}
                             <p className="text-sm text-muted-foreground">
-                                This Month
+                                {formatDateRange(startDate, endDate)}
                             </p>
                         </div>
 
@@ -306,7 +326,17 @@ export default function Dashboard() {
                                 </div>
                             )}
                             <p className="text-sm text-muted-foreground">
-                                On duty today
+                                Active Staff as of{' '}
+                                {endDate
+                                    ? new Date(endDate).toLocaleDateString(
+                                          'en-US',
+                                          {
+                                              month: 'short',
+                                              day: 'numeric',
+                                              year: 'numeric',
+                                          },
+                                      )
+                                    : 'Today'}
                             </p>
                         </div>
 
@@ -329,7 +359,7 @@ export default function Dashboard() {
                                     </span>
                                 </div>
                             )}
-                            <p className="text-center text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                                 Customers Favorite
                             </p>
                         </div>
@@ -532,7 +562,7 @@ export default function Dashboard() {
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-5 text-center">
-                                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-foreground">
                                                                 {formatTime(
                                                                     order.time,
                                                                 )}

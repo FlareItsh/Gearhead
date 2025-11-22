@@ -193,7 +193,7 @@ export default function LP_Services() {
                                                 }
                                                 className={
                                                     card.popular
-                                                        ? 'w-full rounded-2xl bg-yellow-400 py-6 font-bold text-black shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:text-highlight-foreground dark:hover:bg-highlight/90'
+                                                        ? 'w-full rounded-2xl bg-yellow-400 py-6 font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90'
                                                         : 'w-full rounded-2xl border-yellow-400 py-6 font-bold text-yellow-400 shadow-lg hover:bg-yellow-400/10 dark:border-highlight dark:text-highlight dark:hover:bg-highlight/10'
                                                 }
                                             >
@@ -212,7 +212,7 @@ export default function LP_Services() {
                 <Link href="#" className="block w-full max-w-xs">
                     <Button
                         variant="highlight"
-                        className="w-full rounded-2xl bg-yellow-400 py-6 text-base font-bold text-black shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:text-highlight-foreground dark:hover:bg-highlight/90"
+                        className="w-full rounded-2xl bg-yellow-400 py-6 text-base font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90"
                     >
                         View All Services
                     </Button>

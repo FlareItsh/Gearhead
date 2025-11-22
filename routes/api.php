@@ -18,6 +18,18 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/payments/summary', [PaymentController::class, 'summary'])
         ->name('payments.summary');
 
+    Route::get('/payments/monthly-revenue', [PaymentController::class, 'monthlyRevenueByYear'])
+        ->name('payments.monthly-revenue');
+
+    Route::get('/payments/financial-summary', [PaymentController::class, 'financialSummaryByDateRange'])
+        ->name('payments.financial-summary');
+
+    Route::get('/payments/average-booking-value', [PaymentController::class, 'averageBookingValueByDateRange'])
+        ->name('payments.average-booking-value');
+
+    Route::get('/payments/retention-rate', [PaymentController::class, 'customerRetentionRateByDateRange'])
+        ->name('payments.retention-rate');
+
     Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])
         ->name('admin.supply-purchases.financial-summary');
 

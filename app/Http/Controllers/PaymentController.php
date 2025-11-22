@@ -103,4 +103,72 @@ class PaymentController extends Controller
             'end_date' => $request->end_date,
         ]));
     }
+
+    /**
+     * Get monthly revenue for a specific year.
+     */
+    public function monthlyRevenueByYear(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer|min:2000|max:'.date('Y'),
+        ]);
+
+        $data = $this->repo->getMonthlyRevenueByYear($request->year);
+
+        return response()->json($data);
+    }
+
+    /**
+     * Get financial summary (revenue, expenses, profit) by date range.
+     */
+    public function financialSummaryByDateRange(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $data = $this->repo->getFinancialSummaryByDateRange(
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json($data);
+    }
+
+    /**
+     * Get average booking value by date range.
+     */
+    public function averageBookingValueByDateRange(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $value = $this->repo->getAverageBookingValueByDateRange(
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json(['average_booking_value' => $value]);
+    }
+
+    /**
+     * Get customer retention rate by date range.
+     */
+    public function customerRetentionRateByDateRange(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $rate = $this->repo->getCustomerRetentionRateByDateRange(
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json(['retention_rate' => $rate]);
+    }
 }

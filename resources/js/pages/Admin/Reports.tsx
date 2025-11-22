@@ -10,6 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
+import { BarChart3, PhilippinePeso, Repeat2, TrendingUp } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import {
     Area,
@@ -23,7 +24,6 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { route } from 'ziggy-js';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Reports', href: '/reports' }];
 
@@ -37,12 +37,49 @@ const barChartConfig: ChartConfig = {
     bookings: { label: 'Bookings', color: 'hsl(var(--chart-1))' },
 } satisfies ChartConfig;
 
+const monthlyRevenueChartConfig: ChartConfig = {
+    revenue: { label: 'Monthly Revenue', color: 'hsl(var(--chart-1))' },
+} satisfies ChartConfig;
+
 export default function Reports() {
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
+    const [selectedYear, setSelectedYear] = useState<string>(
+        new Date().getFullYear().toString(),
+    );
     const [topServices, setTopServices] = useState<
         { service: string; size: string; value: number; label: string }[]
     >([]);
+    const [monthlyRevenueData, setMonthlyRevenueData] = useState<
+        Array<{ month: string; revenue: number }>
+    >([]);
+
+    // Metric states
+    const [totalRevenue, setTotalRevenue] = useState<number>(0);
+    const [totalExpenses, setTotalExpenses] = useState<number>(0);
+    const [totalProfit, setTotalProfit] = useState<number>(0);
+    const [averageBookingValue, setAverageBookingValue] = useState<number>(0);
+    const [retentionRate, setRetentionRate] = useState<number>(0);
+
+    // Helper function to format date range
+    const formatDateRange = (start: string, end: string): string => {
+        if (!start || !end) return '';
+        const startObj = new Date(start);
+        const endObj = new Date(end);
+
+        const formatDate = (date: Date) => {
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+            });
+        };
+
+        const startFormatted = formatDate(startObj);
+        const endFormatted = formatDate(endObj);
+
+        return `${startFormatted} - ${endFormatted}`;
+    };
 
     // Full source data + visible slice for zoom
     const [sourceAreaData, setSourceAreaData] = useState<
@@ -91,7 +128,16 @@ export default function Reports() {
                 axios.get('/services/top-with-size', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
-                axios.get(route('admin.supply-purchases.financial-summary'), {
+                axios.get('/payments/summary', {
+                    params: { start_date: startDate, end_date: endDate },
+                }),
+                axios.get('/payments/financial-summary', {
+                    params: { start_date: startDate, end_date: endDate },
+                }),
+                axios.get('/payments/average-booking-value', {
+                    params: { start_date: startDate, end_date: endDate },
+                }),
+                axios.get('/payments/retention-rate', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
             ]).finally(() => setIsLoading(false));
@@ -117,19 +163,72 @@ export default function Reports() {
                 });
 
             axios
-                .get(route('admin.supply-purchases.financial-summary'), {
+                .get('/payments/summary', {
+                    params: { start_date: startDate, end_date: endDate },
+                })
+                .then((res) => {
+                    setTotalRevenue(res.data.total_amount || 0);
+                });
+
+            axios
+                .get('/payments/financial-summary', {
                     params: { start_date: startDate, end_date: endDate },
                 })
                 .then((res) => {
                     setSourceAreaData(res.data);
+                    // Calculate expenses and profit from the detailed data
+                    const expenses = res.data.reduce(
+                        (sum: number, item: { expenses?: number }) =>
+                            sum + (item.expenses || 0),
+                        0,
+                    );
+                    const profit = res.data.reduce(
+                        (sum: number, item: { profit?: number }) =>
+                            sum + (item.profit || 0),
+                        0,
+                    );
+                    setTotalExpenses(expenses);
+                    setTotalProfit(profit);
                 })
                 .catch(() => setSourceAreaData([]));
+
+            axios
+                .get('/payments/average-booking-value', {
+                    params: { start_date: startDate, end_date: endDate },
+                })
+                .then((res) => {
+                    setAverageBookingValue(res.data.average_booking_value || 0);
+                })
+                .catch(() => setAverageBookingValue(0));
+
+            axios
+                .get('/payments/retention-rate', {
+                    params: { start_date: startDate, end_date: endDate },
+                })
+                .then((res) => {
+                    setRetentionRate(res.data.retention_rate || 0);
+                })
+                .catch(() => setRetentionRate(0));
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 10000);
+        const interval = setInterval(fetchData, 180000);
         return () => clearInterval(interval);
     }, [startDate, endDate]);
+
+    // Fetch monthly revenue data
+    useEffect(() => {
+        if (!selectedYear) return;
+
+        axios
+            .get('/payments/monthly-revenue', {
+                params: { year: parseInt(selectedYear) },
+            })
+            .then((res) => {
+                setMonthlyRevenueData(res.data);
+            })
+            .catch(() => setMonthlyRevenueData([]));
+    }, [selectedYear]);
 
     const zoomChart = useCallback(
         (direction: 'in' | 'out', cursorX?: number) => {
@@ -143,7 +242,10 @@ export default function Reports() {
                 // Calculate cursor position ratio (0 to 1) within chart
                 let cursorRatio = 0.5; // Default to center
                 if (cursorX !== undefined && chartContainerWidth > 0) {
-                    cursorRatio = Math.max(0, Math.min(1, cursorX / chartContainerWidth));
+                    cursorRatio = Math.max(
+                        0,
+                        Math.min(1, cursorX / chartContainerWidth),
+                    );
                 }
 
                 const cursorIndex = start + Math.floor(range * cursorRatio);
@@ -151,8 +253,13 @@ export default function Reports() {
                 if (direction === 'in') {
                     const newRange = Math.max(Math.floor(range * 0.7), 2);
                     // Position new range so cursor stays at same relative position
-                    const cursorOffsetInNewRange = Math.floor(newRange * cursorRatio);
-                    const newStart = Math.max(0, cursorIndex - cursorOffsetInNewRange);
+                    const cursorOffsetInNewRange = Math.floor(
+                        newRange * cursorRatio,
+                    );
+                    const newStart = Math.max(
+                        0,
+                        cursorIndex - cursorOffsetInNewRange,
+                    );
                     const newEnd = Math.min(
                         sourceAreaData.length - 1,
                         newStart + newRange,
@@ -164,8 +271,13 @@ export default function Reports() {
                         sourceAreaData.length - 1,
                     );
                     // Position new range so cursor stays at same relative position
-                    const cursorOffsetInNewRange = Math.floor(newRange * cursorRatio);
-                    const newStart = Math.max(0, cursorIndex - cursorOffsetInNewRange);
+                    const cursorOffsetInNewRange = Math.floor(
+                        newRange * cursorRatio,
+                    );
+                    const newStart = Math.max(
+                        0,
+                        cursorIndex - cursorOffsetInNewRange,
+                    );
                     const newEnd = Math.min(
                         sourceAreaData.length - 1,
                         newStart + newRange,
@@ -218,7 +330,9 @@ export default function Reports() {
                 ) as HTMLElement;
                 if (chartContainer?.contains(e.target as Node)) {
                     const rect = chartContainer.getBoundingClientRect();
-                    const cursorXRelative = (e.clientX - rect.left) * (chartContainerWidth / rect.width);
+                    const cursorXRelative =
+                        (e.clientX - rect.left) *
+                        (chartContainerWidth / rect.width);
                     zoomChart(e.deltaY > 0 ? 'out' : 'in', cursorXRelative);
                 }
             }
@@ -323,6 +437,136 @@ export default function Reports() {
                             onChange={(e) => setEndDate(e.target.value)}
                             className="w-[140px]"
                         />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    {/* Total Revenue Card */}
+                    <div className="group relative flex h-48 flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md sm:h-56 lg:h-64 dark:border-sidebar-border dark:hover:border-highlight/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-foreground">
+                                Total Revenue
+                            </h4>
+                            <PhilippinePeso className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-1 items-center justify-center">
+                                <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <span className="inline-block rounded-full bg-green-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-green-300 dark:bg-green-900/20">
+                                    ₱{Number(totalRevenue).toLocaleString()}
+                                </span>
+                            </div>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                            {formatDateRange(startDate, endDate)}
+                        </p>
+                    </div>
+
+                    {/* Total Expenses Card */}
+                    <div className="group relative flex h-48 flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md sm:h-56 lg:h-64 dark:border-sidebar-border dark:hover:border-highlight/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-foreground">
+                                Total Expenses
+                            </h4>
+                            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-1 items-center justify-center">
+                                <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <span className="inline-block rounded-full bg-red-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-red-300 dark:bg-red-900/20">
+                                    ₱{Number(totalExpenses).toLocaleString()}
+                                </span>
+                            </div>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                            {formatDateRange(startDate, endDate)}
+                        </p>
+                    </div>
+
+                    {/* Total Profit Card */}
+                    <div className="group relative flex h-48 flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md sm:h-56 lg:h-64 dark:border-sidebar-border dark:hover:border-highlight/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-foreground">
+                                Net Profit
+                            </h4>
+                            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-1 items-center justify-center">
+                                <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <span className="inline-block rounded-full bg-blue-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-blue-300 dark:bg-blue-900/20">
+                                    ₱{Number(totalProfit).toLocaleString()}
+                                </span>
+                            </div>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                            {formatDateRange(startDate, endDate)}
+                        </p>
+                    </div>
+
+                    {/* Average Booking Value Card */}
+                    <div className="group relative flex h-48 flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md sm:h-56 lg:h-64 dark:border-sidebar-border dark:hover:border-highlight/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-foreground">
+                                Avg Booking Value
+                            </h4>
+                            <PhilippinePeso className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-1 items-center justify-center">
+                                <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <span className="inline-block rounded-full bg-purple-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-purple-300 dark:bg-purple-900/20">
+                                    ₱
+                                    {Number(averageBookingValue).toLocaleString(
+                                        'en-US',
+                                        { maximumFractionDigits: 0 },
+                                    )}
+                                </span>
+                            </div>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                            {formatDateRange(startDate, endDate)}
+                        </p>
+                    </div>
+
+                    {/* Customer Retention Rate Card */}
+                    <div className="group relative flex h-48 flex-col justify-between overflow-hidden rounded-xl border border-sidebar-border/70 p-4 shadow-sm transition-all duration-200 hover:border-highlight/50 hover:shadow-md sm:h-56 lg:h-64 dark:border-sidebar-border dark:hover:border-highlight/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-foreground">
+                                Retention Rate
+                            </h4>
+                            <Repeat2 className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-1 items-center justify-center">
+                                <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <span className="inline-block rounded-full bg-orange-100 px-6 py-3 text-3xl font-bold text-foreground group-hover:bg-orange-300 dark:bg-orange-900/20">
+                                    {Number(retentionRate).toLocaleString(
+                                        'en-US',
+                                        { maximumFractionDigits: 1 },
+                                    )}
+                                    %
+                                </span>
+                            </div>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                            {formatDateRange(startDate, endDate)}
+                        </p>
                     </div>
                 </div>
 
@@ -510,6 +754,125 @@ export default function Reports() {
                                     <Legend content={AreaLegend} />
                                 </AreaChart>
                             </ChartContainer>
+                        )}
+                    </div>
+
+                    {/* Monthly Revenue by Year */}
+                    <div className="w-full rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <HeadingSmall
+                                    title="Monthly Revenue Trends"
+                                    description="Revenue trends by month"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">
+                                    Year:
+                                </span>
+                                <Input
+                                    type="number"
+                                    value={selectedYear}
+                                    onChange={(e) =>
+                                        setSelectedYear(e.target.value)
+                                    }
+                                    min={2000}
+                                    max={new Date().getFullYear()}
+                                    className="w-[75px]"
+                                    placeholder="Year"
+                                />
+                            </div>
+                        </div>
+
+                        {monthlyRevenueData.length === 0 ? (
+                            <div className="flex h-80 items-center justify-center text-muted-foreground">
+                                <p className="text-lg">
+                                    No revenue data for selected year
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-6">
+                                <ChartContainer
+                                    config={monthlyRevenueChartConfig}
+                                    className="h-80 w-full"
+                                >
+                                    <BarChart
+                                        data={monthlyRevenueData}
+                                        margin={{
+                                            top: 20,
+                                            right: 30,
+                                            left: 0,
+                                            bottom: 0,
+                                        }}
+                                    >
+                                        <YAxis
+                                            domain={[
+                                                0,
+                                                (d: number) =>
+                                                    Math.max(
+                                                        d * 1.3,
+                                                        d + 10000,
+                                                    ),
+                                            ]}
+                                            tickFormatter={(v) =>
+                                                `₱${(v / 1000).toFixed(0)}k`
+                                            }
+                                            tick={{ fontSize: 12 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <XAxis
+                                            dataKey="month"
+                                            tick={{ fontSize: 12 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <Tooltip
+                                            content={<ChartTooltipContent />}
+                                            formatter={(v) => [
+                                                `₱${(v as number).toLocaleString()}`,
+                                            ]}
+                                            labelFormatter={(label) =>
+                                                `${label}`
+                                            }
+                                        />
+                                        <Bar
+                                            dataKey="revenue"
+                                            radius={[12, 12, 0, 0]}
+                                        >
+                                            {monthlyRevenueData.map(
+                                                (entry, index) => {
+                                                    const monthColors = [
+                                                        'oklch(72% 0.26 30)', // Jan - warm red
+                                                        'oklch(75% 0.28 55)', // Feb
+                                                        'oklch(78% 0.22 85)', // Mar
+                                                        'oklch(80% 0.25 130)', // Apr - spring green
+                                                        'oklch(76% 0.24 170)', // May
+                                                        'oklch(74% 0.27 200)', // Jun - cyan
+                                                        'oklch(70% 0.29 240)', // Jul - blue
+                                                        'oklch(68% 0.26 270)', // Aug - purple
+                                                        'oklch(73% 0.25 300)', // Sep
+                                                        'oklch(77% 0.23 330)', // Oct - magenta
+                                                        'oklch(75% 0.24 10)', // Nov
+                                                        'oklch(70% 0.28 330)', // Dec - festive
+                                                    ];
+                                                    return (
+                                                        <Cell
+                                                            key={`cell-${index}`}
+                                                            fill={
+                                                                monthColors[
+                                                                    index %
+                                                                        monthColors.length
+                                                                ]
+                                                            }
+                                                        />
+                                                    );
+                                                },
+                                            )}
+                                        </Bar>
+                                    </BarChart>
+                                </ChartContainer>
+                            </div>
                         )}
                     </div>
 
