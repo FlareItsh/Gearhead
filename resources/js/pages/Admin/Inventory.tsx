@@ -156,9 +156,13 @@ export default function InventoryPage() {
         }
 
         try {
+            // Get the first purchase date from details
+            const purchaseDate = purchaseDetails[0].purchase_date;
+
             // Create purchase record
             const purchaseRes = await axios.post('/supply-purchases', {
                 supplier_id: parseInt(selectedSupplier),
+                purchase_date: purchaseDate,
             });
 
             const purchaseId = purchaseRes.data.supply_purchase_id;

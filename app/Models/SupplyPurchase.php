@@ -15,6 +15,7 @@ class SupplyPurchase extends Model
 
     protected $fillable = [
         'supplier_id',
+        'purchase_date',
     ];
 
     public function supplier()
