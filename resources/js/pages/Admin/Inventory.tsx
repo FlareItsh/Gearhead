@@ -109,6 +109,8 @@ export default function InventoryPage() {
         unit_price: 0,
         purchase_date: new Date().toISOString().split('T')[0],
     });
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
         loadSupplies();
@@ -208,7 +210,8 @@ export default function InventoryPage() {
                 purchase_date: new Date().toISOString().split('T')[0],
             });
 
-            alert('Purchase recorded successfully!');
+            setSuccessMessage('Purchase recorded successfully!');
+            setShowSuccessModal(true);
         } catch (err) {
             console.error('Failed to record purchase:', err);
             let errorMsg = 'Failed to record purchase';
@@ -774,6 +777,32 @@ export default function InventoryPage() {
                                         onClick={handleConfirm}
                                     >
                                         Yes
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+
+                        {/* Success Modal */}
+                        <Dialog
+                            open={showSuccessModal}
+                            onOpenChange={setShowSuccessModal}
+                        >
+                            <DialogContent className="w-full rounded-xl p-6 shadow-lg sm:max-w-sm">
+                                <DialogHeader>
+                                    <DialogTitle className="text-green-600">
+                                        ✓ Success
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <p className="my-4 text-center text-gray-700">
+                                    {successMessage}
+                                </p>
+                                <DialogFooter className="flex justify-end gap-3">
+                                    <Button
+                                        variant="highlight"
+                                        onClick={() => setShowSuccessModal(false)}
+                                        className="w-full"
+                                    >
+                                        Done
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>
