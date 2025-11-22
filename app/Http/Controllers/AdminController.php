@@ -45,12 +45,11 @@ class AdminController extends Controller
 
     public function services(Request $request)
     {
-        // Get all services
-        $services = $this->services->all();
+        // Get all services including inactive ones (for admin management)
+        $services = $this->services->allIncludingInactive();
 
-        // Distinct categories (active only)
+        // Distinct categories (all services including inactive)
         $categories = Service::distinct()
-            ->where('status', 'active')
             ->pluck('category')
             ->toArray();
 

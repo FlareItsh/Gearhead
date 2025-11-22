@@ -16,6 +16,12 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
         return Service::where('status', 'active')->get();
     }
 
+    public function allIncludingInactive(): Collection
+    {
+        // Return all services including inactive ones (for admin)
+        return Service::all();
+    }
+
     public function getAllByCategory(?string $category): Collection
     {
         $query = Service::where('status', 'active');

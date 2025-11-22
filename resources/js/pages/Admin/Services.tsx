@@ -1,4 +1,5 @@
 import Heading from '@/components/heading';
+import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -19,9 +20,13 @@ import {
 } from '@/components/ui/select';
 
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, useForm } from '@inertiajs/react';
-import { Clock, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
+import axios from 'axios';
+import { Clock, Pencil, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+
+// Configure axios to send cookies with requests
+axios.defaults.withCredentials = true;
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }];
 
@@ -50,7 +55,7 @@ export default function AdminServices({
     const [showModal, setShowModal] = useState(false);
     const [editingService, setEditingService] = useState<Service | null>(null);
 
-    const { data, setData, post, put, processing, reset } = useForm({
+    const { data, setData, processing, reset } = useForm({
         service_name: '',
         description: '',
         size: '',
@@ -60,14 +65,43 @@ export default function AdminServices({
         status: 'active',
     });
 
-    const filteredServices = services.filter((s) => {
-        const matchesCategory =
-            selectedCategory === 'All' || s.category === selectedCategory;
-        const matchesSearch =
-            s.service_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            s.description.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+    const filteredServices = services
+        .filter((s) => {
+            const matchesCategory =
+                selectedCategory === 'All' || s.category === selectedCategory;
+            const matchesSearch =
+                searchQuery === '' ||
+                s.service_name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                s.description
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                s.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                s.size.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch;
+        })
+        .sort((a, b) => {
+            // Size order mapping: Small < Medium < Large < X-Large < XX-Large
+            const sizeOrder: Record<string, number> = {
+                Small: 1,
+                Medium: 2,
+                Large: 3,
+                'X-Large': 4,
+                'XX-Large': 5,
+            };
+
+            // First sort by category alphabetically
+            const categoryCompare = a.category.localeCompare(b.category);
+            if (categoryCompare !== 0) {
+                return categoryCompare;
+            }
+
+            // Then sort by size order
+            const sizeA = sizeOrder[a.size] || 999;
+            const sizeB = sizeOrder[b.size] || 999;
+            return sizeA - sizeB;
+        });
 
     const handleEdit = (service: Service) => {
         setEditingService(service);
@@ -83,44 +117,54 @@ export default function AdminServices({
         setShowModal(true);
     };
 
-    const handleDelete = (id: number) => {
-        if (confirm('Are you sure you want to delete this service?')) {
-            router.delete(`/services/${id}`, { preserveScroll: true });
-        }
-    };
-
     const handleAddNew = () => {
         setEditingService(null);
         reset();
         setShowModal(true);
     };
 
-    const handleSubmit = () => {
-        if (editingService) {
-            put(`/services/${editingService.service_id}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowModal(false);
-                    reset();
+    const handleSubmit = async () => {
+        try {
+            const config = {
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content'),
                 },
-            });
-        } else {
-            post('/services', {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowModal(false);
-                    reset();
-                },
-            });
-        }
-    };
+            };
 
-    const formatDescription = (desc: string) => {
-        return desc
-            .replace(/,\s*/g, ', ')
-            .split(', ')
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-            .join(', ');
+            console.log('Submitting with data:', data);
+
+            if (editingService) {
+                console.log(`Updating service ${editingService.service_id}`);
+                await axios.put(
+                    `/api/services/${editingService.service_id}`,
+                    data,
+                    config,
+                );
+            } else {
+                console.log('Creating new service');
+                await axios.post('/api/services', data, config);
+            }
+            setShowModal(false);
+            reset();
+            // Reload the page to get updated services
+            window.location.reload();
+        } catch (error) {
+            console.error('Full error:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('Response status:', error.response?.status);
+                console.error('Response data:', error.response?.data);
+            }
+            alert(
+                'Error submitting service: ' +
+                    (axios.isAxiosError(error)
+                        ? error.response?.data?.message || error.message
+                        : 'Unknown error'),
+            );
+        }
     };
 
     return (
@@ -211,51 +255,48 @@ export default function AdminServices({
 
                     <div className="custom-scrollbar max-h-[60vh] overflow-y-auto">
                         {filteredServices.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                            <div className="flex flex-wrap justify-center gap-4">
                                 {filteredServices.map((s) => (
                                     <div
                                         key={s.service_id}
-                                        className="flex flex-col justify-between gap-3 rounded-sm border p-4 shadow-sm transition-all hover:shadow-md"
+                                        className={`flex w-sm flex-col justify-between gap-5 rounded-sm border p-4 ${
+                                            s.status === 'inactive'
+                                                ? 'opacity-50'
+                                                : ''
+                                        }`}
                                     >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1">
-                                                <h3 className="mb-1 truncate text-base font-bold">
-                                                    {s.service_name} -{' '}
-                                                    {s.size
-                                                        .charAt(0)
-                                                        .toUpperCase()}
-                                                </h3>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {formatDescription(
-                                                        s.description,
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() =>
-                                                        handleEdit(s)
-                                                    }
-                                                    className="rounded p-1.5 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
-                                                    title="Edit service"
-                                                >
-                                                    <Pencil className="h-4 w-4 text-black dark:text-white" />
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleDelete(
-                                                            s.service_id,
-                                                        )
-                                                    }
-                                                    className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950"
-                                                    title="Delete service"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
+                                        <div
+                                            className={
+                                                s.status === 'inactive'
+                                                    ? 'relative'
+                                                    : ''
+                                            }
+                                        >
+                                            {s.status === 'inactive' && (
+                                                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-black/50">
+                                                    <span className="text-lg font-bold text-white">
+                                                        INACTIVE
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <HeadingSmall
+                                                title={`${s.service_name}`}
+                                                description={s.description
+                                                    .replace(/,\s*/g, ', ')
+                                                    .split(', ')
+                                                    .map(
+                                                        (w) =>
+                                                            w
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                            w
+                                                                .slice(1)
+                                                                .toLowerCase(),
+                                                    )
+                                                    .join(', ')}
+                                            />
                                         </div>
-
-                                        <div className="flex items-center justify-between gap-2">
+                                        <div className="flex justify-between gap-2">
                                             <div className="flex items-center gap-2">
                                                 <Clock className="h-4 w-4" />
                                                 <span>
@@ -266,14 +307,19 @@ export default function AdminServices({
                                                 ₱{s.price.toLocaleString()}
                                             </p>
                                         </div>
-
                                         <hr className="border-gray-400/50" />
+                                        <span>
+                                            Car Size: <strong>{s.size}</strong>
+                                        </span>
 
-                                        <div className="flex justify-end">
-                                            <span className="font-bold">
-                                                {s.size}
-                                            </span>
-                                        </div>
+                                        <Button
+                                            variant="highlight"
+                                            className="mt-4 w-full"
+                                            onClick={() => handleEdit(s)}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                            Edit
+                                        </Button>
                                     </div>
                                 ))}
                             </div>

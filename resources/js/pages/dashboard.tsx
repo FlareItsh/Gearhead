@@ -175,7 +175,7 @@ export default function Dashboard() {
 
         if (startDate && endDate) {
             fetchData();
-            const interval = setInterval(fetchData, 10000);
+            const interval = setInterval(fetchData, 180000);
             return () => clearInterval(interval);
         }
     }, [startDate, endDate, role]);

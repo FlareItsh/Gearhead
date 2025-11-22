@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { Clock } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, Clock } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }];
 
@@ -35,6 +35,11 @@ export default function Services() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string>('');
     const [isBooking, setIsBooking] = useState(false);
+    const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
+    const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>(
+        'bottom',
+    );
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Load/save cart
     useEffect(() => {
@@ -47,6 +52,22 @@ export default function Services() {
             }
         }
     }, []);
+
+    // Handle dropdown position
+    useEffect(() => {
+        if (isTimeDropdownOpen && dropdownRef.current) {
+            const rect = dropdownRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            // If less than 300px space below and more space above, position to top
+            if (spaceBelow < 300 && spaceAbove > 300) {
+                setDropdownPosition('top');
+            } else {
+                setDropdownPosition('bottom');
+            }
+        }
+    }, [isTimeDropdownOpen]);
 
     useEffect(() => {
         if (selectedServices.length > 0) {
@@ -107,6 +128,33 @@ export default function Services() {
                 s.size === service.size,
         );
 
+    // Sort services by category and size
+    const sortedServices = useMemo(() => {
+        return [...services].sort((a, b) => {
+            // Size order mapping: Small < Medium < Large < X-Large < XX-Large
+            const sizeOrder: Record<string, number> = {
+                Small: 1,
+                Medium: 2,
+                Large: 3,
+                'X-Large': 4,
+                'XX-Large': 5,
+            };
+
+            // First sort by category alphabetically
+            const categoryCompare = (a.category || '').localeCompare(
+                b.category || '',
+            );
+            if (categoryCompare !== 0) {
+                return categoryCompare;
+            }
+
+            // Then sort by size order
+            const sizeA = sizeOrder[a.size] || 999;
+            const sizeB = sizeOrder[b.size] || 999;
+            return sizeA - sizeB;
+        });
+    }, [services]);
+
     // ─────────────────────────────────────────────────────────────
     // SMART TIME SLOT GENERATOR (Current time + 1 hour)
     // ─────────────────────────────────────────────
@@ -115,29 +163,36 @@ export default function Services() {
         let hour = now.getHours();
         let minute = now.getMinutes();
 
-        // Round up to next 30-min slot
-        if (minute > 0) {
-            minute = minute < 30 ? 30 : 60;
-        }
-        if (minute === 60) {
-            hour += 1;
-            minute = 0;
-        }
+        // Start at 6:30 AM earliest
+        const startHour = 6;
+        const startMinute = 30;
 
-        // Add 1-hour buffer
-        hour += 1;
+        // If current time is before 6:30 AM, start at 6:30 AM
+        if (hour < startHour || (hour === startHour && minute < startMinute)) {
+            hour = startHour;
+            minute = startMinute;
+        } else {
+            // Round up to next 30-min slot
+            if (minute > 0) {
+                minute = minute < 30 ? 30 : 60;
+            }
+            if (minute === 60) {
+                hour += 1;
+                minute = 0;
+            }
+
+            // Add 1-hour buffer
+            hour += 1;
+        }
 
         const slots: string[] = [];
 
-        while (slots.length < 30) {
-            // max 15 hours ahead
+        // Generate slots from start time until 10:00 PM
+        while (hour < 22 || (hour === 22 && minute === 0)) {
             const isPM = hour >= 12;
             const displayHour = hour % 12 === 0 ? 12 : hour % 12;
             const period = isPM ? 'PM' : 'AM';
             const timeStr = `${displayHour}:${minute === 0 ? '00' : '30'} ${period}`;
-
-            // Stop at 9:00 PM
-            if (hour >= 21 && minute >= 0) break;
 
             slots.push(timeStr);
 
@@ -147,6 +202,9 @@ export default function Services() {
                 minute = 0;
                 hour += 1;
             }
+
+            // Stop at 10:00 PM
+            if (hour > 22) break;
         }
 
         return slots;
@@ -296,7 +354,7 @@ export default function Services() {
                     <div className="custom-scrollbar h-[60vh] overflow-y-auto">
                         {services.length > 0 ? (
                             <div className="flex flex-wrap justify-center gap-4">
-                                {services.map((s, i) => {
+                                {sortedServices.map((s, i) => {
                                     const active = isSelected(s);
                                     return (
                                         <div
@@ -480,11 +538,13 @@ export default function Services() {
                                             (Next Available)
                                         </span>
                                     </label>
-                                    <div className="relative">
-                                        <select
-                                            value={selectedTime}
-                                            onChange={(e) =>
-                                                setSelectedTime(e.target.value)
+                                    <div className="relative" ref={dropdownRef}>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setIsTimeDropdownOpen(
+                                                    !isTimeDropdownOpen,
+                                                )
                                             }
                                             className={`w-full rounded-lg border bg-background px-4 py-4 pr-12 text-base font-medium transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none ${
                                                 selectedTime
@@ -492,33 +552,60 @@ export default function Services() {
                                                     : 'border-border hover:border-primary/40'
                                             }`}
                                         >
-                                            <option value="">
-                                                Choose available time...
-                                            </option>
-                                            {availableTimeSlots.map((time) => (
-                                                <option key={time} value={time}>
-                                                    {time}{' '}
-                                                    {time ===
-                                                        availableTimeSlots[0] &&
-                                                        '(Earliest available)'}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            {selectedTime
+                                                ? selectedTime
+                                                : 'Choose available time...'}
+                                        </button>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                                            <svg
-                                                className="h-5 w-5 text-muted-foreground"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M19 9l-7 7-7-7"
-                                                />
-                                            </svg>
+                                            <ChevronDown
+                                                className={`h-5 w-5 text-muted-foreground transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                                            />
                                         </div>
+
+                                        {isTimeDropdownOpen && (
+                                            <div
+                                                className={`custom-scrollbar absolute right-0 left-0 z-50 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-lg ${
+                                                    dropdownPosition === 'top'
+                                                        ? 'bottom-full mb-2'
+                                                        : 'top-full mt-2'
+                                                }`}
+                                            >
+                                                {availableTimeSlots.length >
+                                                0 ? (
+                                                    availableTimeSlots.map(
+                                                        (time) => (
+                                                            <button
+                                                                key={time}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedTime(
+                                                                        time,
+                                                                    );
+                                                                    setIsTimeDropdownOpen(
+                                                                        false,
+                                                                    );
+                                                                }}
+                                                                className={`block w-full px-4 py-3 text-left transition-colors hover:bg-primary/10 ${
+                                                                    selectedTime ===
+                                                                    time
+                                                                        ? 'bg-primary/20 font-semibold text-primary'
+                                                                        : 'text-foreground'
+                                                                }`}
+                                                            >
+                                                                {time}{' '}
+                                                                {time ===
+                                                                    availableTimeSlots[0] &&
+                                                                    '(Earliest available)'}
+                                                            </button>
+                                                        ),
+                                                    )
+                                                ) : (
+                                                    <div className="px-4 py-3 text-center text-sm text-muted-foreground">
+                                                        No available times
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                     {selectedTime && (
                                         <p className="mt-3 flex items-center gap-2 text-sm font-medium text-emerald-600">

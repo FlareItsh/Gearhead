@@ -9,6 +9,8 @@ interface ServiceRepositoryInterface
 {
     public function all(): Collection;
 
+    public function allIncludingInactive(): Collection;
+
     public function findById(int $id): ?Service;
 
     public function create(array $data): Service;

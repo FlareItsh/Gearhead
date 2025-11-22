@@ -33,6 +33,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])
         ->name('admin.supply-purchases.financial-summary');
 
+    // * Service CRUD routes (must come before specific service routes)
+    Route::post('/services', [ServiceController::class, 'store'])
+        ->name('services.store');
+    Route::put('/services/{id}', [ServiceController::class, 'update'])
+        ->name('services.update');
+    Route::delete('/services/{id}', [ServiceController::class, 'destroy'])
+        ->name('services.destroy');
+
     // * Admin-specific top selling services route
     Route::get('/services/top', [ServiceController::class, 'topServices'])
         ->name('admin.services.top-selling');
