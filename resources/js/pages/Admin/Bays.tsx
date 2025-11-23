@@ -1,141 +1,523 @@
-import React, { useState } from "react";
-import { Head } from "@inertiajs/react";
-import AppLayout from "@/layouts/app-layout";
-import { type BreadcrumbItem } from "@/types";
-import Heading from "@/components/heading";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import React, { useEffect, useState } from 'react';
+import { Head } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import axios from 'axios';
+import { Edit2, Trash2 } from 'lucide-react';
+
+axios.defaults.withCredentials = true;
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: "Bays", href: "/bays" },
+    { title: 'Bays', href: '/bays' },
 ];
 
-const mockBays = [
-    { bay_id: 1, bay_number: 1, status: "available", bay_type: "Normal" },
-    { bay_id: 2, bay_number: 2, status: "available", bay_type: "Normal" },
-    { bay_id: 3, bay_number: 3, status: "available", bay_type: "Normal" },
-    { bay_id: 4, bay_number: 4, status: "available", bay_type: "Normal" },
-    { bay_id: 5, bay_number: 5, status: "available", bay_type: "Normal" },
-    { bay_id: 6, bay_number: 6, status: "available", bay_type: "Underwash" },
-];
+interface Bay {
+    bay_id: number;
+    bay_number: number;
+    status: 'available' | 'occupied' | 'maintenance';
+    bay_type: 'Normal' | 'Underwash';
+    created_at?: string;
+    updated_at?: string;
+}
 
 export default function Bays() {
-    const [open, setOpen] = useState(false);
-    const [bayType, setBayType] = useState("");
-    const [bayList, setBayList] = useState(mockBays);
-    const [loading, setLoading] = useState(false);
+    const [bays, setBays] = useState<Bay[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [confirmMessage, setConfirmMessage] = useState("");
-    const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => {});
+    // Form state for add
+    const [addForm, setAddForm] = useState({
+        bay_number: '',
+        bay_type: 'Normal',
+    });
 
-    const handleAddBay = () => {
-        if (!bayType) return;
+    // Form state for edit
+    const [editForm, setEditForm] = useState<Bay | null>(null);
+    const [editBayForm, setEditBayForm] = useState({
+        bay_number: '',
+        bay_type: 'Normal' as 'Normal' | 'Underwash',
+        status: 'available' as 'available' | 'occupied' | 'maintenance',
+    });
 
-        setConfirmMessage(`Are you sure you want to add Bay #${bayList.length + 1} as ${bayType}?`);
-        setOnConfirmAction(() => async () => {
+    // Delete confirmation state
+    const [bayToDelete, setBayToDelete] = useState<Bay | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [addErrors, setAddErrors] = useState<Record<string, string>>({});
+    const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        loadBays();
+    }, []);
+
+    const loadBays = async () => {
+        try {
             setLoading(true);
-            try {
-                const newBay = {
-                    bay_id: bayList.length + 1,
-                    bay_number: bayList.length + 1,
-                    status: "available",
-                    bay_type: bayType,
-                };
-                setBayList([...bayList, newBay]);
-                setOpen(false);
-                setBayType("");
-            } catch (error) {
-                console.error("Error adding bay:", error);
-            } finally {
-                setLoading(false);
+            const res = await axios.get('/bays');
+            setBays(res.data);
+        } catch (err) {
+            console.error('Failed to fetch bays:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddBay = async () => {
+        const errors: Record<string, string> = {};
+
+        if (!addForm.bay_number) {
+            errors.bay_number = 'Bay number is required';
+        }
+        if (!addForm.bay_type) {
+            errors.bay_type = 'Bay type is required';
+        }
+
+        setAddErrors(errors);
+        if (Object.keys(errors).length > 0) return;
+
+        try {
+            setSubmitting(true);
+            await axios.post('/bays', {
+                bay_number: parseInt(addForm.bay_number),
+                bay_type: addForm.bay_type,
+                status: 'available',
+            });
+
+            setShowAddModal(false);
+            setAddForm({ bay_number: '', bay_type: 'Normal' });
+            setAddErrors({});
+            await loadBays();
+        } catch (err) {
+            const error = err as unknown as { response?: { data?: { errors: Record<string, string> } } };
+            if (error.response?.data?.errors) {
+                setAddErrors(error.response.data.errors);
+            } else {
+                setAddErrors({ submit: 'Failed to add bay' });
             }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const openEditModal = (bay: Bay) => {
+        setEditForm(bay);
+        setEditBayForm({
+            bay_number: bay.bay_number.toString(),
+            bay_type: bay.bay_type,
+            status: bay.status,
         });
-        setConfirmOpen(true);
+        setEditErrors({});
+        setShowEditModal(true);
     };
 
-    const handleCancelDialog = () => {
-        setConfirmMessage("Are you sure you want to cancel?");
-        setOnConfirmAction(() => () => setOpen(false));
-        setConfirmOpen(true);
+    const handleEditBay = async () => {
+        if (!editForm) return;
+
+        const errors: Record<string, string> = {};
+
+        if (!editBayForm.bay_number) {
+            errors.bay_number = 'Bay number is required';
+        }
+        if (!editBayForm.bay_type) {
+            errors.bay_type = 'Bay type is required';
+        }
+        if (!editBayForm.status) {
+            errors.status = 'Status is required';
+        }
+
+        setEditErrors(errors);
+        if (Object.keys(errors).length > 0) return;
+
+        try {
+            setSubmitting(true);
+            await axios.put(`/bays/${editForm.bay_id}`, {
+                bay_number: parseInt(editBayForm.bay_number),
+                bay_type: editBayForm.bay_type,
+                status: editBayForm.status,
+            });
+
+            setShowEditModal(false);
+            setEditForm(null);
+            setEditErrors({});
+            await loadBays();
+        } catch (err) {
+            const error = err as unknown as { response?: { data?: { errors: Record<string, string> } } };
+            if (error.response?.data?.errors) {
+                setEditErrors(error.response.data.errors);
+            } else {
+                setEditErrors({ submit: 'Failed to update bay' });
+            }
+        } finally {
+            setSubmitting(false);
+        }
     };
 
-    const handleConfirm = async () => {
-        await onConfirmAction();
-        setConfirmOpen(false);
+    const handleDeleteClick = (bay: Bay) => {
+        setBayToDelete(bay);
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!bayToDelete) return;
+
+        try {
+            setSubmitting(true);
+            await axios.delete(`/bays/${bayToDelete.bay_id}`);
+            setShowDeleteModal(false);
+            setBayToDelete(null);
+            await loadBays();
+        } catch (err) {
+            console.error('Failed to delete bay:', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const getStatusVariant = (status: string) => {
+        switch (status) {
+            case 'available':
+                return 'default';
+            case 'occupied':
+                return 'secondary';
+            case 'maintenance':
+                return 'destructive';
+            default:
+                return 'default';
+        }
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Bays"/>
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <Head title="Bays" />
+            <div className="flex flex-col gap-6 p-4">
                 <div className="flex items-center justify-between">
-                    <Heading title="Bay" description="Manage and Add Bays for new Carwash slots"/>
-                    <Button variant="highlight" onClick={() => setOpen(true)}>+ Add Bay</Button>
-                </div>
+                    <Heading
+                        title="Bay Management"
+                        description="Manage carwash bays and their availability"
+                    />
+                    <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+                        <DialogTrigger asChild>
+                            <Button variant="highlight">+ Add Bay</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>
+                                    Add New <span className="text-highlight font-semibold">Bay</span>
+                                </DialogTitle>
+                            </DialogHeader>
 
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    {bayList.map((bay) => (
-                        <div
-                            key={bay.bay_id}
-                            className="w-full h-48 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-900 shadow-sm p-4 relative"
-                        >
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-lg font-semibold">Bay #{bay.bay_number}</h3>
-                                <Badge
-                                    variant={bay.status === "available" ? "success" : "destructive"}
-                                    className="capitalize"
+                            <div className="grid gap-4 py-4">
+                                {/* Bay Number */}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="bay_number">Bay Number</Label>
+                                    <Input
+                                        id="bay_number"
+                                        type="number"
+                                        placeholder="e.g., 1"
+                                        value={addForm.bay_number}
+                                        onChange={(e) =>
+                                            setAddForm({
+                                                ...addForm,
+                                                bay_number: e.target.value,
+                                            })
+                                        }
+                                    />
+                                    {addErrors.bay_number && (
+                                        <p className="text-sm text-red-500">
+                                            {addErrors.bay_number}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Bay Type */}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="bay_type">Bay Type</Label>
+                                    <Select
+                                        value={addForm.bay_type}
+                                        onValueChange={(value) =>
+                                            setAddForm({
+                                                ...addForm,
+                                                bay_type: value,
+                                            })
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Normal">
+                                                Normal
+                                            </SelectItem>
+                                            <SelectItem value="Underwash">
+                                                Underwash
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {addErrors.bay_type && (
+                                        <p className="text-sm text-red-500">
+                                            {addErrors.bay_type}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {addErrors.submit && (
+                                    <p className="text-sm text-red-500">
+                                        {addErrors.submit}
+                                    </p>
+                                )}
+                            </div>
+
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="secondary">
+                                        Cancel
+                                    </Button>
+                                </DialogClose>
+                                <Button
+                                    variant="highlight"
+                                    onClick={handleAddBay}
+                                    disabled={submitting}
                                 >
-                                    {bay.status}
-                                </Badge>
-                            </div>
-                            
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <p className="text-gray-500 text-sm text-center">
-                                    Ready for next service ({bay.bay_type})
-                                </p>
-                            </div>
-                        </div>
-                    ))}
+                                    {submitting ? 'Adding...' : 'Add Bay'}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
-                <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogContent className="sm:max-w-md w-full rounded-xl p-6 shadow-lg">
-                        <DialogHeader className="mb-4">
-                            <DialogTitle>Add <span className="text-highlight font-bold">Bay</span></DialogTitle>
+                {/* Bays Grid */}
+                {loading ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                        Loading bays...
+                    </div>
+                ) : bays.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                        No bays found. Click "Add Bay" to create one.
+                    </div>
+                ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {bays.map((bay) => (
+                            <Card
+                                key={bay.bay_id}
+                                className="border border-border/60 bg-card"
+                            >
+                                <CardContent className="p-5">
+                                    <div className="mb-4 flex items-start justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-semibold">
+                                                Bay #{bay.bay_number}
+                                            </h3>
+                                            <p className="text-sm text-muted-foreground">
+                                                {bay.bay_type} Bay
+                                            </p>
+                                        </div>
+                                        <Badge
+                                            variant={getStatusVariant(
+                                                bay.status,
+                                            )}
+                                            className="capitalize"
+                                        >
+                                            {bay.status}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => openEditModal(bay)}
+                                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-accent"
+                                        >
+                                            <Edit2 className="h-4 w-4" />
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleDeleteClick(bay)
+                                            }
+                                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            Delete
+                                        </button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+
+                {/* Edit Modal */}
+                <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>
+                                Edit <span className="text-highlight font-semibold">Bay</span>
+                            </DialogTitle>
                         </DialogHeader>
-                        <div className="mb-6">
-                            <p className="mb-1">Bay Type</p>
-                            <Select onValueChange={setBayType} value={bayType}>
-                                <SelectTrigger className="w-full border border-gray-300 rounded-md">
-                                    <SelectValue placeholder="Select Bay Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Normal">Normal</SelectItem>
-                                    <SelectItem value="Underwash">Underwash</SelectItem>
-                                </SelectContent>
-                            </Select>
+
+                        <div className="grid gap-4 py-4">
+                            {/* Bay Number */}
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit_bay_number">
+                                    Bay Number
+                                </Label>
+                                <Input
+                                    id="edit_bay_number"
+                                    type="number"
+                                    placeholder="e.g., 1"
+                                    value={editBayForm.bay_number}
+                                    onChange={(e) =>
+                                        setEditBayForm({
+                                            ...editBayForm,
+                                            bay_number: e.target.value,
+                                        })
+                                    }
+                                />
+                                {editErrors.bay_number && (
+                                    <p className="text-sm text-red-500">
+                                        {editErrors.bay_number}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Bay Type */}
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit_bay_type">Bay Type</Label>
+                                <Select
+                                    value={editBayForm.bay_type}
+                                    onValueChange={(value) =>
+                                        setEditBayForm({
+                                            ...editBayForm,
+                                            bay_type: value as
+                                                | 'Normal'
+                                                | 'Underwash',
+                                        })
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Normal">
+                                            Normal
+                                        </SelectItem>
+                                        <SelectItem value="Underwash">
+                                            Underwash
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {editErrors.bay_type && (
+                                    <p className="text-sm text-red-500">
+                                        {editErrors.bay_type}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Status */}
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit_status">Status</Label>
+                                <Select
+                                    value={editBayForm.status}
+                                    onValueChange={(value) =>
+                                        setEditBayForm({
+                                            ...editBayForm,
+                                            status: value as
+                                                | 'available'
+                                                | 'occupied'
+                                                | 'maintenance',
+                                        })
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="available">
+                                            Available
+                                        </SelectItem>
+                                        <SelectItem value="occupied">
+                                            Occupied
+                                        </SelectItem>
+                                        <SelectItem value="maintenance">
+                                            Maintenance
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {editErrors.status && (
+                                    <p className="text-sm text-red-500">
+                                        {editErrors.status}
+                                    </p>
+                                )}
+                            </div>
+
+                            {editErrors.submit && (
+                                <p className="text-sm text-red-500">
+                                    {editErrors.submit}
+                                </p>
+                            )}
                         </div>
-                        <DialogFooter className="flex justify-end gap-3">
-                            <Button variant="secondary" onClick={handleCancelDialog}>Cancel</Button>
-                            <Button variant="highlight" onClick={handleAddBay} disabled={loading}>
-                                {loading ? "Adding..." : "Confirm"}
+
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="secondary">Cancel</Button>
+                            </DialogClose>
+                            <Button
+                                variant="highlight"
+                                onClick={handleEditBay}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Updating...' : 'Update Bay'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
 
-                <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                    <DialogContent className="sm:max-w-sm w-full rounded-xl p-6 shadow-lg">
+                {/* Delete Confirmation Modal */}
+                <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+                    <DialogContent className="sm:max-w-sm">
                         <DialogHeader>
-                            <DialogTitle>Confirm Action</DialogTitle>
+                            <DialogTitle>Delete Bay</DialogTitle>
                         </DialogHeader>
-                        <p className="text-center text-gray-600 my-4">{confirmMessage}</p>
-                        <DialogFooter className="flex justify-end gap-3">
-                            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>No</Button>
-                            <Button variant="highlight" onClick={handleConfirm}>Yes</Button>
+                        <p className="text-center text-muted-foreground">
+                            Are you sure you want to delete{' '}
+                            <span className="font-semibold">
+                                Bay #{bayToDelete?.bay_number}
+                            </span>
+                            ? This action cannot be undone.
+                        </p>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="secondary">Cancel</Button>
+                            </DialogClose>
+                            <Button
+                                variant="destructive"
+                                onClick={handleConfirmDelete}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Deleting...' : 'Delete'}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
