@@ -519,6 +519,7 @@ export default function AdminServices({
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    {/* Duration Input - NO NEGATIVE VALUES */}
                                     <div className="grid gap-2">
                                         <Label htmlFor="estimated_duration">
                                             Duration (mins)
@@ -526,13 +527,38 @@ export default function AdminServices({
                                         <Input
                                             id="estimated_duration"
                                             type="number"
-                                            value={data.estimated_duration}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'estimated_duration',
-                                                    e.target.value,
-                                                )
+                                            min="0"
+                                            step="1"
+                                            placeholder="30"
+                                            value={
+                                                data.estimated_duration ===
+                                                    '0' ||
+                                                data.estimated_duration === ''
+                                                    ? ''
+                                                    : data.estimated_duration
                                             }
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (
+                                                    val === '' ||
+                                                    (parseFloat(val) >= 0 &&
+                                                        !isNaN(parseFloat(val)))
+                                                ) {
+                                                    setData(
+                                                        'estimated_duration',
+                                                        val === '' ? '' : val,
+                                                    );
+                                                }
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (
+                                                    ['-', 'e', 'E'].includes(
+                                                        e.key,
+                                                    )
+                                                ) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                         />
                                         {errors.estimated_duration && (
                                             <p className="text-sm text-red-500">
@@ -541,16 +567,43 @@ export default function AdminServices({
                                         )}
                                     </div>
 
+                                    {/* Price Input - NO NEGATIVE VALUES + 2 decimals allowed */}
                                     <div className="grid gap-2">
                                         <Label htmlFor="price">Price (₱)</Label>
                                         <Input
                                             id="price"
                                             type="number"
+                                            min="0"
                                             step="0.01"
-                                            value={data.price}
-                                            onChange={(e) =>
-                                                setData('price', e.target.value)
+                                            placeholder="250.00"
+                                            value={
+                                                data.price === '0' ||
+                                                data.price === '0'
+                                                    ? ''
+                                                    : data.price
                                             }
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (
+                                                    val === '' ||
+                                                    (parseFloat(val) >= 0 &&
+                                                        !isNaN(parseFloat(val)))
+                                                ) {
+                                                    setData(
+                                                        'price',
+                                                        val === '' ? '' : val,
+                                                    );
+                                                }
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (
+                                                    ['-', 'e', 'E'].includes(
+                                                        e.key,
+                                                    )
+                                                ) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                         />
                                         {errors.price && (
                                             <p className="text-sm text-red-500">

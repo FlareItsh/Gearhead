@@ -162,12 +162,29 @@ export default function Reports() {
                     setTopServices(mapped);
                 });
 
-            axios
-                .get('/payments/summary', {
+            Promise.all([
+                axios.get('/payments/summary', {
                     params: { start_date: startDate, end_date: endDate },
+                }),
+                axios.get('/supply-purchases/detailed', {
+                    params: { start_date: startDate, end_date: endDate },
+                }),
+            ])
+                .then(([summaryRes, purchasesRes]) => {
+                    const revenue = summaryRes.data.total_amount || 0;
+                    const totalExpensesAmount = purchasesRes.data.reduce(
+                        (sum: number, item: { total_amount?: number }) =>
+                            sum + (item.total_amount || 0),
+                        0,
+                    );
+                    const profit = revenue - totalExpensesAmount;
+
+                    setTotalRevenue(revenue);
+                    setTotalExpenses(totalExpensesAmount);
+                    setTotalProfit(profit);
                 })
-                .then((res) => {
-                    setTotalRevenue(res.data.total_amount || 0);
+                .catch(() => {
+                    setTotalExpenses(0);
                 });
 
             axios
@@ -176,19 +193,6 @@ export default function Reports() {
                 })
                 .then((res) => {
                     setSourceAreaData(res.data);
-                    // Calculate expenses and profit from the detailed data
-                    const expenses = res.data.reduce(
-                        (sum: number, item: { expenses?: number }) =>
-                            sum + (item.expenses || 0),
-                        0,
-                    );
-                    const profit = res.data.reduce(
-                        (sum: number, item: { profit?: number }) =>
-                            sum + (item.profit || 0),
-                        0,
-                    );
-                    setTotalExpenses(expenses);
-                    setTotalProfit(profit);
                 })
                 .catch(() => setSourceAreaData([]));
 
