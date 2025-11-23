@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
-import { User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 axios.defaults.withCredentials = true;
@@ -78,14 +77,14 @@ export default function Registry() {
         try {
             const res = await axios.get('/service-orders/pending');
             const ordersMap = new Map();
-            
+
             // Create a map of bay_id to service order for quick lookup
             res.data.forEach((order: ServiceOrder) => {
                 if (order.bay_id) {
                     ordersMap.set(order.bay_id, order);
                 }
             });
-            
+
             setServiceOrders(ordersMap);
         } catch (err) {
             console.error('Failed to fetch service orders:', err);
@@ -101,7 +100,8 @@ export default function Registry() {
                     : (detail.service.price as number);
             return sum + price;
         }, 0);
-    };    const handleStartService = (bay: Bay) => {
+    };
+    const handleStartService = (bay: Bay) => {
         router.visit(`/registry/${bay.bay_id}/select-services`);
     };
 
@@ -225,97 +225,81 @@ export default function Registry() {
                                         </div>
 
                                         {/* Service Order Details - Shown when occupied */}
-                                        {bay.status === 'occupied' && (() => {
-                                            const order = serviceOrders.get(bay.bay_id);
-                                            if (!order) return null;
-                                            const total = getOrderTotal(order);
+                                        {bay.status === 'occupied' &&
+                                            (() => {
+                                                const order = serviceOrders.get(
+                                                    bay.bay_id,
+                                                );
+                                                if (!order) return null;
+                                                const total =
+                                                    getOrderTotal(order);
 
-                                            return (
-                                                <div className="mb-4 space-y-3 rounded-lg border border-orange-200/50 bg-orange-50/50 p-4 dark:border-orange-900/50 dark:bg-orange-950/20">
-                                                    {/* Customer Section */}
-                                                    <div className="flex items-center gap-3 border-b border-orange-200/30 pb-3 dark:border-orange-900/30">
-                                                        <div className="rounded-full bg-orange-200/30 p-2 dark:bg-orange-900/30">
-                                                            <User className="h-5 w-5 text-orange-700 dark:text-orange-300" />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                                                                CUSTOMER
+                                                return (
+                                                    <div className="mt-4 space-y-2 text-sm">
+                                                        {/* Customer Name */}
+                                                        <div>
+                                                            <p className="text-xs font-semibold text-muted-foreground">
+                                                                Name:
                                                             </p>
-                                                            <p className="text-sm font-bold text-foreground">
-                                                                {order.user?.first_name}{' '}
-                                                                {order.user?.last_name}
+                                                            <p className="font-medium text-foreground">
+                                                                {
+                                                                    order
+                                                                        .user
+                                                                        ?.first_name
+                                                                }{' '}
+                                                                {
+                                                                    order
+                                                                        .user
+                                                                        ?.last_name
+                                                                }
                                                             </p>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Services Section */}
-                                                    {order.details &&
-                                                        order.details.length >
-                                                            0 && (
-                                                            <div>
-                                                                <p className="mb-2 text-xs font-medium text-orange-600 dark:text-orange-400">
-                                                                    SERVICES (
-                                                                    {
-                                                                        order
-                                                                            .details
-                                                                            .length
-                                                                    }
-                                                                    )
-                                                                </p>
-                                                                <div className="space-y-2">
-                                                                    {order.details.map(
-                                                                        (
-                                                                            detail,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    detail.service_order_detail_id
-                                                                                }
-                                                                                className="flex items-center justify-between rounded bg-white/30 px-2 py-1.5 text-xs dark:bg-black/20"
-                                                                            >
-                                                                                <span className="font-medium text-foreground">
+                                                        {/* Services List */}
+                                                        {order.details &&
+                                                            order.details
+                                                                .length > 0 && (
+                                                                <div>
+                                                                    <p className="text-xs font-semibold text-muted-foreground">
+                                                                        Service:
+                                                                    </p>
+                                                                    <div className="ml-4 space-y-1">
+                                                                        {order.details.map(
+                                                                            (
+                                                                                detail,
+                                                                            ) => (
+                                                                                <p
+                                                                                    key={
+                                                                                        detail.service_order_detail_id
+                                                                                    }
+                                                                                    className="text-foreground"
+                                                                                >
+                                                                                    -
                                                                                     {
                                                                                         detail
                                                                                             .service
                                                                                             .service_name
                                                                                     }
-                                                                                </span>
-                                                                                <span className="font-semibold text-orange-700 dark:text-orange-300">
-                                                                                    ₱
-                                                                                    {typeof detail
-                                                                                        .service
-                                                                                        .price ===
-                                                                                    'string'
-                                                                                        ? parseInt(
-                                                                                              detail
-                                                                                                  .service
-                                                                                                  .price,
-                                                                                          ).toLocaleString()
-                                                                                        : (detail.service
-                                                                                              .price as number).toLocaleString()}
-                                                                                </span>
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Total Amount */}
-                                                                <div className="mt-2 border-t border-orange-200/30 pt-2 dark:border-orange-900/30">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                                                                            TOTAL
-                                                                        </p>
-                                                                        <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
-                                                                            ₱
-                                                                            {total.toLocaleString()}
-                                                                        </p>
+                                                                                </p>
+                                                                            ),
+                                                                        )}
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                </div>
-                                            );
-                                        })()}
+                                                            )}
+
+                                                        {/* Total Amount */}
+                                                        <div className="border-t border-border pt-2">
+                                                            <p className="text-xs font-semibold text-muted-foreground">
+                                                                Total Amount:
+                                                            </p>
+                                                            <p className="font-bold text-foreground">
+                                                                ₱
+                                                                {total.toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
 
                                         {/* Action Buttons */}
                                         {isAvailable && (
