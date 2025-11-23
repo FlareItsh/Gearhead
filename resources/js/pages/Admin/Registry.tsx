@@ -90,7 +90,9 @@ export default function Registry() {
             res.data.forEach((order: ServiceOrder) => {
                 if (order.bay_id) {
                     ordersMap.set(order.bay_id, order);
-                    console.log(`Mapped order ${order.service_order_id} to bay ${order.bay_id}`);
+                    console.log(
+                        `Mapped order ${order.service_order_id} to bay ${order.bay_id}`,
+                    );
                 }
             });
 

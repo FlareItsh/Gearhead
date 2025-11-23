@@ -180,12 +180,21 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
             setSubmitting(true);
             const serviceIds = selectedServices.map((s) => s.service_id);
 
+            console.log('Creating service order for customer:', customer);
+            console.log('Customer ID:', customer.user_id);
+            console.log(
+                'Customer Name:',
+                `${customer.first_name} ${customer.last_name}`,
+            );
+
             // Create the service order and assign to bay
-            await axios.post('/service-orders/registry', {
+            const response = await axios.post('/service-orders/registry', {
                 customer_id: customer.user_id,
                 bay_id: bayId,
                 service_ids: serviceIds,
             });
+
+            console.log('Service order created:', response.data);
 
             // Navigate to registry after successful creation
             router.visit('/registry');

@@ -87,12 +87,19 @@ class ServiceOrderController extends Controller
 
     public function pending()
     {
-        // Get all orders that are pending or in_progress
+        // Get all orders that are pending or in_progress with full relationships
+        // GROUP BY bay_id to get only the latest order per bay
         $orders = \App\Models\ServiceOrder::query()
             ->whereIn('status', ['pending', 'in_progress'])
-            ->with(['user', 'details.service', 'bay'])
+            ->with([
+                'user:user_id,first_name,last_name,email,phone_number',
+                'details.service:service_id,service_name,price',
+                'bay:bay_id,bay_number'
+            ])
             ->orderBy('order_date', 'desc')
-            ->get();
+            ->get()
+            ->unique('bay_id')  // Keep only the first (latest) order per bay_id
+            ->values();
 
         return response()->json($orders);
     }
