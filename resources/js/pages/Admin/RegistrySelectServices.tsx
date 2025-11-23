@@ -16,7 +16,7 @@ interface Service {
     service_name: string;
     category: string;
     size: string;
-    price: number;
+    price: number | string;
     estimated_duration: number;
 }
 
@@ -118,7 +118,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
         selectedServices.some((s) => s.service_id === service.service_id);
 
     const getTotalPrice = () =>
-        selectedServices.reduce((sum, service) => sum + service.price, 0);
+        selectedServices.reduce((sum, service) => sum + (typeof service.price === 'string' ? parseFloat(service.price) : service.price), 0);
 
     const handleProceedToCustomer = () => {
         if (selectedServices.length === 0) {
@@ -261,7 +261,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                             Search Services
                                         </Label>
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                                            <Search className="absolute top-3 left-3 h-5 w-5 text-muted-foreground" />
                                             <Input
                                                 id="service-search"
                                                 type="text"
@@ -332,7 +332,8 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                                 ? 'service'
                                                 : 'services'}
                                         </p>
-                                        {(serviceSearch || selectedCategory) && (
+                                        {(serviceSearch ||
+                                            selectedCategory) && (
                                             <button
                                                 onClick={() => {
                                                     setServiceSearch('');
@@ -749,9 +750,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                 <div className="mt-6 flex gap-3">
                                     <Button
                                         variant="outline"
-                                        onClick={() =>
-                                            setIsNewCustomer(false)
-                                        }
+                                        onClick={() => setIsNewCustomer(false)}
                                         className="flex-1"
                                     >
                                         Back
