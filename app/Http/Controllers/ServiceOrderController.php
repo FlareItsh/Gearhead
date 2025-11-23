@@ -147,4 +147,54 @@ class ServiceOrderController extends Controller
             return response()->json(['message' => 'Failed to create booking', 'error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Create a service order from the registry with customer and services.
+     * Automatically assigns to a bay and marks it as occupied.
+     */
+    public function createFromRegistry(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|integer|exists:users,user_id',
+            'bay_id' => 'required|integer|exists:bays,bay_id',
+            'service_ids' => 'required|array|min:1',
+            'service_ids.*' => 'required|integer|exists:services,service_id',
+        ]);
+
+        try {
+            $orderData = [
+                'user_id' => $validated['customer_id'],
+                'employee_id' => null,
+                'bay_id' => $validated['bay_id'],
+                'status' => 'in_progress',
+                'order_date' => now(),
+                'order_type' => 'W', // Walk-in
+            ];
+
+            // Map service_ids to details format
+            $details = array_map(function ($service_id) {
+                return [
+                    'service_id' => $service_id,
+                    'quantity' => 1,
+                ];
+            }, $validated['service_ids']);
+
+            // Create the service order with details
+            $order = $this->repo->createWithDetails($orderData, $details);
+
+            // Update bay status to occupied
+            $bay = \App\Models\Bay::findOrFail($validated['bay_id']);
+            $bay->update(['status' => 'occupied']);
+
+            return response()->json([
+                'message' => 'Service order created successfully',
+                'order' => $order->load('details.service', 'user', 'bay'),
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create service order',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

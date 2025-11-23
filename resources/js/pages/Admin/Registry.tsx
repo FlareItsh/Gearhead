@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
+import { Clock, User, Wrench, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 axios.defaults.withCredentials = true;
@@ -13,6 +14,33 @@ axios.defaults.withCredentials = true;
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Registry', href: '/registry' },
 ];
+
+interface Service {
+    service_id: number;
+    service_name: string;
+    price: number | string;
+}
+
+interface ServiceOrderDetail {
+    service_order_detail_id: number;
+    service_id: number;
+    service: Service;
+}
+
+interface Customer {
+    user_id: number;
+    first_name: string;
+    last_name: string;
+}
+
+interface ServiceOrder {
+    service_order_id: number;
+    user_id: number;
+    bay_id: number;
+    status: string;
+    user?: Customer;
+    details?: ServiceOrderDetail[];
+}
 
 interface Bay {
     bay_id: number;
@@ -25,10 +53,12 @@ interface Bay {
 
 export default function Registry() {
     const [bays, setBays] = useState<Bay[]>([]);
+    const [serviceOrders, setServiceOrders] = useState<Map<number, ServiceOrder>>(new Map());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadBays();
+        loadServiceOrders();
     }, []);
 
     const loadBays = async () => {
@@ -42,6 +72,24 @@ export default function Registry() {
         }
     };
 
+    const loadServiceOrders = async () => {
+        try {
+            const res = await axios.get('/service-orders/pending');
+            const ordersMap = new Map();
+            
+            // Create a map of bay_id to service order for quick lookup
+            res.data.forEach((order: ServiceOrder) => {
+                if (order.bay_id) {
+                    ordersMap.set(order.bay_id, order);
+                }
+            });
+            
+            setServiceOrders(ordersMap);
+        } catch (err) {
+            console.error('Failed to fetch service orders:', err);
+        }
+    };
+
     const handleStartService = (bay: Bay) => {
         router.visit(`/registry/${bay.bay_id}/select-services`);
     };
@@ -50,6 +98,11 @@ export default function Registry() {
         router.visit(`/registry/${bayId}/payment`, {
             preserveState: true,
             preserveScroll: true,
+            onSuccess: () => {
+                // Reload bays and service orders after navigation
+                loadBays();
+                loadServiceOrders();
+            },
         });
     };
 
@@ -159,6 +212,95 @@ export default function Registry() {
                                                 {getStatusLabel(bay.status)}
                                             </Badge>
                                         </div>
+
+                                        {/* Service Order Details - Shown when occupied */}
+                                        {bay.status === 'occupied' &&
+                                            serviceOrders.get(bay.bay_id) && (
+                                                <div className="mb-4 space-y-3 rounded-lg bg-black/5 p-3 dark:bg-white/5">
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="h-4 w-4 text-muted-foreground" />
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Customer
+                                                            </p>
+                                                            <p className="font-semibold text-foreground">
+                                                                {
+                                                                    serviceOrders.get(
+                                                                        bay.bay_id,
+                                                                    )?.user
+                                                                        ?.first_name
+                                                                }{' '}
+                                                                {
+                                                                    serviceOrders.get(
+                                                                        bay.bay_id,
+                                                                    )?.user
+                                                                        ?.last_name
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {serviceOrders
+                                                        .get(bay.bay_id)
+                                                        ?.details &&
+                                                        serviceOrders
+                                                            .get(bay.bay_id)
+                                                            ?.details!.length >
+                                                            0 && (
+                                                            <div>
+                                                                <p className="mb-2 text-xs text-muted-foreground">
+                                                                    Services (
+                                                                    {
+                                                                        serviceOrders.get(
+                                                                            bay.bay_id,
+                                                                        )?.details
+                                                                            ?.length
+                                                                    }
+                                                                    )
+                                                                </p>
+                                                                <div className="space-y-1">
+                                                                    {serviceOrders
+                                                                        .get(
+                                                                            bay.bay_id,
+                                                                        )
+                                                                        ?.details?.map(
+                                                                            (
+                                                                                detail,
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        detail.service_order_detail_id
+                                                                                    }
+                                                                                    className="flex items-center justify-between text-xs"
+                                                                                >
+                                                                                    <span className="text-foreground">
+                                                                                        {
+                                                                                            detail
+                                                                                                .service
+                                                                                                .service_name
+                                                                                        }
+                                                                                    </span>
+                                                                                    <span className="text-muted-foreground">
+                                                                                        ₱
+                                                                                        {typeof detail
+                                                                                            .service
+                                                                                            .price ===
+                                                                                        'string'
+                                                                                            ? parseInt(
+                                                                                                  detail
+                                                                                                      .service
+                                                                                                      .price,
+                                                                                              ).toLocaleString()
+                                                                                            : (detail.service
+                                                                                                  .price as number).toLocaleString()}
+                                                                                    </span>
+                                                                                </div>
+                                                                            ),
+                                                                        )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            )}
 
                                         {/* Action Buttons */}
                                         {isAvailable && (

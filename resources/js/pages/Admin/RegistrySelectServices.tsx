@@ -118,7 +118,14 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
         selectedServices.some((s) => s.service_id === service.service_id);
 
     const getTotalPrice = () =>
-        selectedServices.reduce((sum, service) => sum + (typeof service.price === 'string' ? parseFloat(service.price) : service.price), 0);
+        selectedServices.reduce(
+            (sum, service) =>
+                sum +
+                (typeof service.price === 'string'
+                    ? parseFloat(service.price)
+                    : service.price),
+            0,
+        );
 
     const handleProceedToCustomer = () => {
         if (selectedServices.length === 0) {
@@ -166,17 +173,27 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
         }
     };
 
-    const proceedToPayment = (customer: Customer) => {
+    const proceedToPayment = async (customer: Customer) => {
         if (selectedServices.length === 0) return;
 
-        const serviceIds = selectedServices.map((s) => s.service_id).join(',');
-        router.visit(
-            `/registry/${bayId}/payment?customer_id=${customer.user_id}&services=${serviceIds}`,
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
+        try {
+            setSubmitting(true);
+            const serviceIds = selectedServices.map((s) => s.service_id);
+            
+            // Create the service order and assign to bay
+            await axios.post('/service-orders/registry', {
+                customer_id: customer.user_id,
+                bay_id: bayId,
+                service_ids: serviceIds,
+            });
+
+            // Navigate to registry after successful creation
+            router.visit('/registry');
+        } catch (err) {
+            console.error('Failed to create service order:', err);
+            setError('Failed to create service order. Please try again.');
+            setSubmitting(false);
+        }
     };
 
     const sortedServices = useMemo(() => {
@@ -356,7 +373,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-4">
+                                    <div className="custom-scrollbar h-[50vh] space-y-4 overflow-y-auto">
                                         {categories.map((category) => {
                                             const categoryServices =
                                                 filteredServices.filter(
@@ -486,7 +503,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
                                 {selectedServices.length > 0 && (
                                     <>
-                                        <div className="mb-4 max-h-48 space-y-2 overflow-y-auto rounded-lg bg-muted/50 p-3">
+                                        <div className="custom-scrollbar mb-4 max-h-48 space-y-2 overflow-y-auto rounded-lg bg-muted/50 p-3">
                                             {selectedServices.map((service) => (
                                                 <div
                                                     key={service.service_id}
