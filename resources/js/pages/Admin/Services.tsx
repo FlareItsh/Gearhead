@@ -316,8 +316,8 @@ export default function AdminServices({
                                             }
                                         >
                                             {s.status === 'inactive' && (
-                                                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-black/50">
-                                                    <span className="text-lg font-bold text-white">
+                                                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-highlight/60">
+                                                    <span className="text-lg font-bold text-red-500">
                                                         INACTIVE
                                                     </span>
                                                 </div>

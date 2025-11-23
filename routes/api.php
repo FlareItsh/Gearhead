@@ -35,6 +35,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])
         ->name('admin.supply-purchases.financial-summary');
 
+    Route::get('/supply-purchases/detailed', [SupplyPurchaseController::class, 'detailedPurchases'])
+        ->name('supply-purchases.detailed');
+
     // * Service CRUD routes (must come before specific service routes)
     Route::post('/services', [ServiceController::class, 'store'])
         ->name('services.store');

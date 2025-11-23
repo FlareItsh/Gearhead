@@ -23,4 +23,11 @@ interface SupplyPurchaseRepositoryInterface
      * @return array<array{date: string, revenue: float, expenses: float, profit: float}>
      */
     public function getFinancialSummary(?string $startDate = null, ?string $endDate = null);
+
+    /**
+     * Get supply purchases with detailed information including concatenated supplies and total amount.
+     *
+     * @return array<array{supply_purchase_id: int, purchase_date: string, purchase_reference: string, supplier_name: string, supplies: string, total_amount: float, status: string}>
+     */
+    public function getDetailedPurchases(?string $startDate = null, ?string $endDate = null);
 }
