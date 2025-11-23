@@ -91,7 +91,7 @@ class ServiceOrderController extends Controller
         $orders = \App\Models\ServiceOrder::query()
             ->whereIn('status', ['pending', 'in_progress'])
             ->with(['user', 'details.service', 'bay'])
-            ->whereRaw('DATE(order_date) = CURDATE()')
+            ->orderBy('order_date', 'desc')
             ->get();
 
         return response()->json($orders);

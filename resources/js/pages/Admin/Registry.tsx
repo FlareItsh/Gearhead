@@ -60,6 +60,13 @@ export default function Registry() {
     useEffect(() => {
         loadBays();
         loadServiceOrders();
+
+        // Refresh service orders every 3 seconds
+        const interval = setInterval(() => {
+            loadServiceOrders();
+        }, 3000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const loadBays = async () => {
@@ -76,12 +83,14 @@ export default function Registry() {
     const loadServiceOrders = async () => {
         try {
             const res = await axios.get('/service-orders/pending');
+            console.log('Fetched service orders:', res.data);
             const ordersMap = new Map();
 
             // Create a map of bay_id to service order for quick lookup
             res.data.forEach((order: ServiceOrder) => {
                 if (order.bay_id) {
                     ordersMap.set(order.bay_id, order);
+                    console.log(`Mapped order ${order.service_order_id} to bay ${order.bay_id}`);
                 }
             });
 
