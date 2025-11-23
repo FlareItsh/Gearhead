@@ -4,7 +4,7 @@ import { Car, Check, Droplets, Sparkles, Zap } from 'lucide-react';
 
 export default function LP_Services() {
     return (
-        <>
+        <section id = 'services'>
             {/* Header */}
             <div className="w-full py-10 text-center">
                 <h1 className="mb-4 text-5xl font-bold tracking-tight md:text-6xl">
@@ -218,6 +218,6 @@ export default function LP_Services() {
                     </Button>
                 </Link>
             </div>
-        </>
+        </section>
     );
 }

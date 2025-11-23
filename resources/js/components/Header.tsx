@@ -12,9 +12,10 @@ type NavLink = {
 };
 
 const defaultNavLinks: NavLink[] = [
-    { href: '#hero', label: 'Home', section: 'hero' },
+    { href: '#home', label: 'Home', section: 'home' },
+    { href: '#about', label: 'About', section: 'about'},
     { href: '#services', label: 'Services', section: 'services' },
-    { href: '#booking', label: 'Booking', section: 'booking' },
+    { href: '#review', label: 'Review', section: 'review'},
     { href: '#contact', label: 'Contact', section: 'contact' },
 ];
 
@@ -54,7 +55,7 @@ export default function Header({ navLinks }: HeaderProps) {
     };
 
     return (
-        <header className="w-full bg-background py-3 shadow-sm">
+        <header className="w-full bg-background py-3 shadow-sm sticky top-0 z-50">
             <nav className="mx-auto flex max-w-[95rem] items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
                 <Link href={home()} className="flex-shrink-0">

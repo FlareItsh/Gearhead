@@ -13,7 +13,10 @@ const links = {
 
 export default function Footer() {
     return (
-        <footer id="footer" className="w-full bg-black text-white">
+        <footer id="contact" className="w-full bg-black text-white">
+            <div>
+                {/* diri ang Ready to get started */}
+            </div>
             <div className="mx-auto max-w-6xl px-6 py-12 md:py-16 grid gap-10 sm:gap-12 md:grid-cols-4">
                 <div className="space-y-4">
                     <h3 className="text-2xl font-bold">About Us</h3>
@@ -45,11 +48,11 @@ export default function Footer() {
                                 <li key={item} className="cursor-pointer transition-colors duration-300 hover:text-yellow-500">
                                 <a
                                     href={
-                                    item === 'Home' ? '#hero' :
-                                    item === 'About' ? '#about' :
-                                    item === 'Services' ? '#services' :
-                                    item === 'Review' ? '#review' :
-                                    '#'
+                                        item === 'Home' ? '#hero' :
+                                        item === 'About' ? '#about' :
+                                        item === 'Services' ? '#services' :
+                                        item === 'Review' ? '#review' :
+                                        '#'
                                     }
                                 >
                                     {item}

@@ -17,19 +17,19 @@ export default function Welcome() {
                 />
             </Head>
             <Header />
-            <section>
+            <section id = "home" className="scroll-mt-18">
                 <Hero></Hero>
             </section>
-            <section>
+            <section id = "about" className="scroll-mt-18">
                 <About></About>
             </section>
-            <section>
+            <section id = "services" className="scroll-mt-18">
                 <LP_Services></LP_Services>
             </section>
-            <section>
+            <section id = "review" className="scroll-mt-18">
                 <Review></Review>
             </section>
-            <section>
+            <section id = "contact" className="scroll-mt-18">
                 <Footer></Footer>
             </section>
         </>
