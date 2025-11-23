@@ -211,6 +211,22 @@ export default function Bays() {
         }
     };
 
+    const getNextBayNumber = () => {
+        if (bays.length === 0) return 1;
+        const maxNumber = Math.max(...bays.map((b) => b.bay_number));
+        return maxNumber + 1;
+    };
+
+    const handleOpenAddModal = () => {
+        const nextNumber = getNextBayNumber();
+        setAddForm({
+            bay_number: nextNumber.toString(),
+            bay_type: 'Normal',
+        });
+        setAddErrors({});
+        setShowAddModal(true);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Bays" />
@@ -220,7 +236,16 @@ export default function Bays() {
                         title="Bay Management"
                         description="Manage carwash bays and their availability"
                     />
-                    <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+                    <Dialog
+                        open={showAddModal}
+                        onOpenChange={(open) => {
+                            if (open) {
+                                handleOpenAddModal();
+                            } else {
+                                setShowAddModal(false);
+                            }
+                        }}
+                    >
                         <DialogTrigger asChild>
                             <Button variant="highlight">+ Add Bay</Button>
                         </DialogTrigger>
@@ -245,12 +270,7 @@ export default function Bays() {
                                         type="number"
                                         placeholder="e.g., 1"
                                         value={addForm.bay_number}
-                                        onChange={(e) =>
-                                            setAddForm({
-                                                ...addForm,
-                                                bay_number: e.target.value,
-                                            })
-                                        }
+                                        readOnly
                                     />
                                     {addErrors.bay_number && (
                                         <p className="text-sm text-red-500">
