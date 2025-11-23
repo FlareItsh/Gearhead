@@ -56,6 +56,7 @@ export default function AdminServices({
     const [editingService, setEditingService] = useState<Service | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const { data, setData, processing, reset } = useForm({
         service_name: '',
@@ -116,16 +117,51 @@ export default function AdminServices({
             price: service.price.toString(),
             status: service.status,
         });
+        setErrors({});
         setShowModal(true);
     };
 
     const handleAddNew = () => {
         setEditingService(null);
         reset();
+        setErrors({});
         setShowModal(true);
     };
 
+    const validateFields = (): boolean => {
+        const newErrors: Record<string, string> = {};
+
+        if (!data.service_name.trim()) {
+            newErrors.service_name = 'Service name is required';
+        }
+        if (!data.description.trim()) {
+            newErrors.description = 'Description is required';
+        }
+        if (!data.category) {
+            newErrors.category = 'Category is required';
+        }
+        if (!data.size) {
+            newErrors.size = 'Size is required';
+        }
+        if (
+            !data.estimated_duration ||
+            parseFloat(data.estimated_duration) <= 0
+        ) {
+            newErrors.estimated_duration = 'Duration must be greater than 0';
+        }
+        if (!data.price || parseFloat(data.price) <= 0) {
+            newErrors.price = 'Price must be greater than 0';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async () => {
+        if (!validateFields()) {
+            return;
+        }
+
         try {
             const config = {
                 headers: {
@@ -343,9 +379,21 @@ export default function AdminServices({
                     <DialogContent className="w-full sm:max-w-[600px]">
                         <DialogHeader>
                             <DialogTitle>
-                                {editingService
-                                    ? 'Edit Service'
-                                    : 'Add New Service'}
+                                {editingService ? (
+                                    <>
+                                        Edit{' '}
+                                        <span className="text-yellow-400">
+                                            Service
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        Add{' '}
+                                        <span className="text-yellow-400">
+                                            Service
+                                        </span>
+                                    </>
+                                )}
                             </DialogTitle>
                             <DialogDescription>
                                 {editingService
@@ -370,6 +418,11 @@ export default function AdminServices({
                                             )
                                         }
                                     />
+                                    {errors.service_name && (
+                                        <p className="text-sm text-red-500">
+                                            {errors.service_name}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="grid gap-2">
@@ -388,6 +441,11 @@ export default function AdminServices({
                                         rows={3}
                                         className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     />
+                                    {errors.description && (
+                                        <p className="text-sm text-red-500">
+                                            {errors.description}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -420,6 +478,11 @@ export default function AdminServices({
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {errors.size && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.size}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="grid gap-2">
@@ -447,6 +510,11 @@ export default function AdminServices({
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {errors.category && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.category}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -466,6 +534,11 @@ export default function AdminServices({
                                                 )
                                             }
                                         />
+                                        {errors.estimated_duration && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.estimated_duration}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="grid gap-2">
@@ -479,6 +552,11 @@ export default function AdminServices({
                                                 setData('price', e.target.value)
                                             }
                                         />
+                                        {errors.price && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.price}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 

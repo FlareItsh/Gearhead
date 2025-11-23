@@ -249,7 +249,7 @@ export default function Bookings() {
                 {/* View Details Modal */}
                 {modalOpen && selectedBooking && (
                     <div
-                        className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${isClosing ? 'animate-out fade-out' : 'bg-highlight/2 backdrop-blur-sm'}`}
+                        className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${isClosing ? 'animate-out fade-out' : 'bg-black/50 backdrop-blur-xs'}`}
                     >
                         <div
                             className={`relative mx-4 w-full max-w-md transform rounded-xl border border-border bg-background p-6 shadow-2xl duration-500 ease-out ${isClosing ? 'animate-out fade-out zoom-out' : 'animate-in fade-in zoom-in'}`}
@@ -412,7 +412,7 @@ export default function Bookings() {
                 {/* Cancel Confirmation Modal */}
                 {cancelModalOpen && bookingToCancel && (
                     <div
-                        className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${isCancelClosing ? 'animate-out fade-out' : 'bg-highlight/2 backdrop-blur-sm'}`}
+                        className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${isCancelClosing ? 'animate-out fade-out' : 'bg-black/50 backdrop-blur-xs'}`}
                     >
                         <div
                             className={`relative mx-4 w-full max-w-md transform rounded-xl border border-border bg-background p-6 shadow-2xl duration-500 ease-out ${isCancelClosing ? 'animate-out fade-out zoom-out' : 'animate-in fade-in zoom-in'}`}
