@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
-import { Clock, User, Wrench, X } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 axios.defaults.withCredentials = true;
@@ -53,7 +53,9 @@ interface Bay {
 
 export default function Registry() {
     const [bays, setBays] = useState<Bay[]>([]);
-    const [serviceOrders, setServiceOrders] = useState<Map<number, ServiceOrder>>(new Map());
+    const [serviceOrders, setServiceOrders] = useState<
+        Map<number, ServiceOrder>
+    >(new Map());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -90,7 +92,16 @@ export default function Registry() {
         }
     };
 
-    const handleStartService = (bay: Bay) => {
+    const getOrderTotal = (order: ServiceOrder | undefined) => {
+        if (!order?.details) return 0;
+        return order.details.reduce((sum, detail) => {
+            const price =
+                typeof detail.service.price === 'string'
+                    ? parseInt(detail.service.price)
+                    : (detail.service.price as number);
+            return sum + price;
+        }, 0);
+    };    const handleStartService = (bay: Bay) => {
         router.visit(`/registry/${bay.bay_id}/select-services`);
     };
 
@@ -214,8 +225,12 @@ export default function Registry() {
                                         </div>
 
                                         {/* Service Order Details - Shown when occupied */}
-                                        {bay.status === 'occupied' &&
-                                            serviceOrders.get(bay.bay_id) && (
+                                        {bay.status === 'occupied' && (() => {
+                                            const order = serviceOrders.get(bay.bay_id);
+                                            if (!order) return null;
+                                            const total = getOrderTotal(order);
+
+                                            return (
                                                 <div className="mb-4 space-y-3 rounded-lg border border-orange-200/50 bg-orange-50/50 p-4 dark:border-orange-900/50 dark:bg-orange-950/20">
                                                     {/* Customer Section */}
                                                     <div className="flex items-center gap-3 border-b border-orange-200/30 pb-3 dark:border-orange-900/30">
@@ -227,78 +242,61 @@ export default function Registry() {
                                                                 CUSTOMER
                                                             </p>
                                                             <p className="text-sm font-bold text-foreground">
-                                                                {
-                                                                    serviceOrders.get(
-                                                                        bay.bay_id,
-                                                                    )?.user
-                                                                        ?.first_name
-                                                                }{' '}
-                                                                {
-                                                                    serviceOrders.get(
-                                                                        bay.bay_id,
-                                                                    )?.user
-                                                                        ?.last_name
-                                                                }
+                                                                {order.user?.first_name}{' '}
+                                                                {order.user?.last_name}
                                                             </p>
                                                         </div>
                                                     </div>
 
                                                     {/* Services Section */}
-                                                    {serviceOrders
-                                                        .get(bay.bay_id)
-                                                        ?.details &&
-                                                        serviceOrders
-                                                            .get(bay.bay_id)
-                                                            ?.details!.length >
+                                                    {order.details &&
+                                                        order.details.length >
                                                             0 && (
                                                             <div>
                                                                 <p className="mb-2 text-xs font-medium text-orange-600 dark:text-orange-400">
-                                                                    SERVICES ({
-                                                                        serviceOrders.get(
-                                                                            bay.bay_id,
-                                                                        )?.details
-                                                                            ?.length
-                                                                    })
+                                                                    SERVICES (
+                                                                    {
+                                                                        order
+                                                                            .details
+                                                                            .length
+                                                                    }
+                                                                    )
                                                                 </p>
                                                                 <div className="space-y-2">
-                                                                    {serviceOrders
-                                                                        .get(
-                                                                            bay.bay_id,
-                                                                        )
-                                                                        ?.details?.map(
-                                                                            (
-                                                                                detail,
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        detail.service_order_detail_id
-                                                                                    }
-                                                                                    className="flex items-center justify-between rounded bg-white/30 px-2 py-1.5 text-xs dark:bg-black/20"
-                                                                                >
-                                                                                    <span className="font-medium text-foreground">
-                                                                                        {
-                                                                                            detail
-                                                                                                .service
-                                                                                                .service_name
-                                                                                        }
-                                                                                    </span>
-                                                                                    <span className="font-semibold text-orange-700 dark:text-orange-300">
-                                                                                        ₱
-                                                                                        {typeof detail
+                                                                    {order.details.map(
+                                                                        (
+                                                                            detail,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    detail.service_order_detail_id
+                                                                                }
+                                                                                className="flex items-center justify-between rounded bg-white/30 px-2 py-1.5 text-xs dark:bg-black/20"
+                                                                            >
+                                                                                <span className="font-medium text-foreground">
+                                                                                    {
+                                                                                        detail
                                                                                             .service
-                                                                                            .price ===
-                                                                                        'string'
-                                                                                            ? parseInt(
-                                                                                                  detail
-                                                                                                      .service
-                                                                                                      .price,
-                                                                                              ).toLocaleString()
-                                                                                            : (detail.service
-                                                                                                  .price as number).toLocaleString()}
-                                                                                    </span>
-                                                                                </div>
-                                                                            ),
-                                                                        )}
+                                                                                            .service_name
+                                                                                    }
+                                                                                </span>
+                                                                                <span className="font-semibold text-orange-700 dark:text-orange-300">
+                                                                                    ₱
+                                                                                    {typeof detail
+                                                                                        .service
+                                                                                        .price ===
+                                                                                    'string'
+                                                                                        ? parseInt(
+                                                                                              detail
+                                                                                                  .service
+                                                                                                  .price,
+                                                                                          ).toLocaleString()
+                                                                                        : (detail.service
+                                                                                              .price as number).toLocaleString()}
+                                                                                </span>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
                                                                 </div>
 
                                                                 {/* Total Amount */}
@@ -309,41 +307,15 @@ export default function Registry() {
                                                                         </p>
                                                                         <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
                                                                             ₱
-                                                                            {(serviceOrders
-                                                                                .get(
-                                                                                    bay.bay_id,
-                                                                                )
-                                                                                ?.details?.reduce(
-                                                                                    (
-                                                                                        sum,
-                                                                                        detail,
-                                                                                    ) => {
-                                                                                        const price =
-                                                                                            typeof detail
-                                                                                                .service
-                                                                                                .price ===
-                                                                                            'string'
-                                                                                                ? parseInt(
-                                                                                                      detail
-                                                                                                          .service
-                                                                                                          .price,
-                                                                                                  )
-                                                                                                : (detail.service
-                                                                                                      .price as number);
-                                                                                        return (
-                                                                                            sum +
-                                                                                            price
-                                                                                        );
-                                                                                    },
-                                                                                    0,
-                                                                                ) || 0).toLocaleString()}
+                                                                            {total.toLocaleString()}
                                                                         </p>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         )}
                                                 </div>
-                                            )}
+                                            );
+                                        })()}
 
                                         {/* Action Buttons */}
                                         {isAvailable && (
