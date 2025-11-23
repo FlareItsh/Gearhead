@@ -137,6 +137,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('/customers/index', [CustomerController::class, 'getCustomers'])
         ->name('admin.customers.index');
+
+    // * Registry API: Services and Customers list
+    Route::get('/services/list', [ServiceController::class, 'index'])
+        ->name('services.list');
+    Route::get('/customers/list', [CustomerController::class, 'index'])
+        ->name('customers.list');
+    Route::post('/customers/create', [CustomerController::class, 'store'])
+        ->name('customers.create');
 });
 
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
