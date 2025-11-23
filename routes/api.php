@@ -21,19 +21,19 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/payments/summary', [PaymentController::class, 'summary'])
         ->name('payments.summary');
 
-    // * Bay CRUD routes
-    Route::get('/bays', [BayController::class, 'index'])
-        ->name('bays.index');
-    Route::get('/bays/{id}', [BayController::class, 'show'])
-        ->name('bays.show');
+    // * Bay CRUD routes - using different endpoint to avoid conflict with web route
     Route::post('/bays', [BayController::class, 'store'])
         ->name('bays.store');
     Route::put('/bays/{id}', [BayController::class, 'update'])
         ->name('bays.update');
     Route::delete('/bays/{id}', [BayController::class, 'destroy'])
         ->name('bays.destroy');
+    Route::get('/bays/list', [BayController::class, 'index'])
+        ->name('bays.index');
     Route::get('/bays/available', [BayController::class, 'available'])
         ->name('bays.available');
+    Route::get('/bays/{id}', [BayController::class, 'show'])
+        ->name('bays.show');
 
     Route::get('/payments/monthly-revenue', [PaymentController::class, 'monthlyRevenueByYear'])
         ->name('payments.monthly-revenue');

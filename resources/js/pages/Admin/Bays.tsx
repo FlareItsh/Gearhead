@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Dialog,
     DialogClose,
@@ -13,6 +11,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -20,18 +20,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { Edit2, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 axios.defaults.withCredentials = true;
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Bays', href: '/bays' },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Bays', href: '/bays' }];
 
 interface Bay {
     bay_id: number;
@@ -76,7 +74,7 @@ export default function Bays() {
     const loadBays = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('/bays');
+            const res = await axios.get('/bays/list');
             setBays(res.data);
         } catch (err) {
             console.error('Failed to fetch bays:', err);
@@ -111,7 +109,9 @@ export default function Bays() {
             setAddErrors({});
             await loadBays();
         } catch (err) {
-            const error = err as unknown as { response?: { data?: { errors: Record<string, string> } } };
+            const error = err as unknown as {
+                response?: { data?: { errors: Record<string, string> } };
+            };
             if (error.response?.data?.errors) {
                 setAddErrors(error.response.data.errors);
             } else {
@@ -164,7 +164,9 @@ export default function Bays() {
             setEditErrors({});
             await loadBays();
         } catch (err) {
-            const error = err as unknown as { response?: { data?: { errors: Record<string, string> } } };
+            const error = err as unknown as {
+                response?: { data?: { errors: Record<string, string> } };
+            };
             if (error.response?.data?.errors) {
                 setEditErrors(error.response.data.errors);
             } else {
@@ -225,14 +227,19 @@ export default function Bays() {
                         <DialogContent className="sm:max-w-md">
                             <DialogHeader>
                                 <DialogTitle>
-                                    Add New <span className="text-highlight font-semibold">Bay</span>
+                                    Add New{' '}
+                                    <span className="font-semibold text-highlight">
+                                        Bay
+                                    </span>
                                 </DialogTitle>
                             </DialogHeader>
 
                             <div className="grid gap-4 py-4">
                                 {/* Bay Number */}
                                 <div className="grid gap-2">
-                                    <Label htmlFor="bay_number">Bay Number</Label>
+                                    <Label htmlFor="bay_number">
+                                        Bay Number
+                                    </Label>
                                     <Input
                                         id="bay_number"
                                         type="number"
@@ -292,9 +299,7 @@ export default function Bays() {
 
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="secondary">
-                                        Cancel
-                                    </Button>
+                                    <Button variant="secondary">Cancel</Button>
                                 </DialogClose>
                                 <Button
                                     variant="highlight"
@@ -347,7 +352,7 @@ export default function Bays() {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => openEditModal(bay)}
-                                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-accent"
+                                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-accent"
                                         >
                                             <Edit2 className="h-4 w-4" />
                                             Edit
@@ -356,7 +361,7 @@ export default function Bays() {
                                             onClick={() =>
                                                 handleDeleteClick(bay)
                                             }
-                                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
+                                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                             Delete
@@ -373,7 +378,10 @@ export default function Bays() {
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>
-                                Edit <span className="text-highlight font-semibold">Bay</span>
+                                Edit{' '}
+                                <span className="font-semibold text-highlight">
+                                    Bay
+                                </span>
                             </DialogTitle>
                         </DialogHeader>
 
@@ -495,7 +503,10 @@ export default function Bays() {
                 </Dialog>
 
                 {/* Delete Confirmation Modal */}
-                <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+                <Dialog
+                    open={showDeleteModal}
+                    onOpenChange={setShowDeleteModal}
+                >
                     <DialogContent className="sm:max-w-sm">
                         <DialogHeader>
                             <DialogTitle>Delete Bay</DialogTitle>

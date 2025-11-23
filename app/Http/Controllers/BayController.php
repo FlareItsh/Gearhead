@@ -18,6 +18,7 @@ class BayController extends Controller
     {
         try {
             $bay = $this->bayRepository->find($id);
+
             return response()->json($bay);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Not found'], 404);
@@ -33,6 +34,7 @@ class BayController extends Controller
         ]);
 
         $bay = $this->bayRepository->create($validated);
+
         return response()->json($bay, 201);
     }
 
@@ -46,6 +48,7 @@ class BayController extends Controller
             ]);
 
             $bay = $this->bayRepository->update($id, $validated);
+
             return response()->json($bay);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Not found'], 404);
@@ -56,6 +59,7 @@ class BayController extends Controller
     {
         try {
             $this->bayRepository->delete($id);
+
             return response()->json(null, 204);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Not found'], 404);
