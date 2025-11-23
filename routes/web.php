@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use App\Models\Bay;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('customer')) {
             return $customer->dashboard($request);
         }
+
         return Inertia::render('dashboard');
     })->name('dashboard');
 
@@ -31,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return $admin->bookings($request);
         }
         $bookingRepo = app(BookingRepository::class);
+
         return $customer->bookings($request, $bookingRepo);
     })->name('bookings');
 
@@ -39,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
             return $admin->services($request);
         }
+
         return $customer->services($request);
     })->name('services');
 
@@ -52,10 +56,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.registry')
         ->middleware('role:admin');
 
+    Route::get('/registry/{bayId}/select-services', function ($bayId) {
+        // Get bay details from database
+        $bay = Bay::find($bayId);
+        if (! $bay) {
+            abort(404, 'Bay not found');
+        }
+
+        return Inertia::render('Admin/RegistrySelectServices', [
+            'bayId' => (int) $bayId,
+            'bayNumber' => (int) $bay->bay_number,
+        ]);
+    })->name('admin.registry.select-services')->middleware('role:admin');
+
     // THIS IS THE ONLY LINE YOU NEED TO CHANGE
     Route::get('/registry/{id}/payment', function ($id) {
         return Inertia::render('Admin/RegistryPayment', [  // ← Added "Admin/"
-            'bayId' => (int) $id
+            'bayId' => (int) $id,
         ]);
     })->name('admin.registry.payment')->middleware('role:admin');
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑

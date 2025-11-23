@@ -174,3 +174,4 @@ class CustomerController extends Controller
             'phone_number' => $customer->phone_number,
         ], 201);
     }
+}
