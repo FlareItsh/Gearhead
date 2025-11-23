@@ -33,8 +33,16 @@ class EloquentBayRepository implements BayRepositoryInterface
     public function delete(int $id): bool
     {
         $bay = Bay::findOrFail($id);
+        $deletedBayNumber = $bay->bay_number;
 
-        return $bay->delete();
+        // Delete the bay
+        $bay->delete();
+
+        // Renumber all bays with higher numbers
+        Bay::where('bay_number', '>', $deletedBayNumber)
+            ->decrement('bay_number');
+
+        return true;
     }
 
     public function getAvailable(): Collection

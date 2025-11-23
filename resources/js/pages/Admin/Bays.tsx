@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
@@ -201,13 +202,26 @@ export default function Bays() {
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'available':
-                return 'default';
+                return 'success';
             case 'occupied':
-                return 'secondary';
+                return 'warning';
             case 'maintenance':
                 return 'destructive';
             default:
                 return 'default';
+        }
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'available':
+                return 'Available';
+            case 'occupied':
+                return 'Occupied';
+            case 'maintenance':
+                return 'Under Maintenance';
+            default:
+                return status;
         }
     };
 
@@ -344,52 +358,89 @@ export default function Bays() {
                     </div>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {bays.map((bay) => (
-                            <Card
-                                key={bay.bay_id}
-                                className="border border-border/60 bg-card"
-                            >
-                                <CardContent className="p-5">
-                                    <div className="mb-4 flex items-start justify-between">
-                                        <div>
-                                            <h3 className="text-lg font-semibold">
-                                                Bay #{bay.bay_number}
-                                            </h3>
-                                            <p className="text-sm text-muted-foreground">
-                                                {bay.bay_type} Bay
-                                            </p>
-                                        </div>
-                                        <Badge
-                                            variant={getStatusVariant(
-                                                bay.status,
-                                            )}
-                                            className="capitalize"
-                                        >
-                                            {bay.status}
-                                        </Badge>
-                                    </div>
+                        {bays.map((bay) => {
+                            const isAvailable = bay.status === 'available';
+                            const isOccupied = bay.status === 'occupied';
+                            const isMaintenance = bay.status === 'maintenance';
 
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => openEditModal(bay)}
-                                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-accent"
-                                        >
-                                            <Edit2 className="h-4 w-4" />
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                handleDeleteClick(bay)
-                                            }
-                                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                            Delete
-                                        </button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                            return (
+                                <Card
+                                    key={bay.bay_id}
+                                    className={cn(
+                                        'group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl',
+                                        isAvailable &&
+                                            'border-green-200/50 bg-green-50/30 dark:border-green-900/50 dark:bg-green-950/20',
+                                        isOccupied &&
+                                            'border-orange-200/50 bg-orange-50/40 dark:border-orange-900/50 dark:bg-orange-950/30',
+                                        isMaintenance &&
+                                            'border-red-200/50 bg-red-50/40 dark:border-red-900/50 dark:bg-red-950/30',
+                                    )}
+                                >
+                                    {/* Optional glowing top border accent */}
+                                    <div
+                                        className={cn(
+                                            'absolute inset-x-0 top-0 h-1 transition-all duration-500',
+                                            isAvailable &&
+                                                'bg-gradient-to-r from-green-400 to-emerald-500',
+                                            isOccupied &&
+                                                'bg-gradient-to-r from-orange-400 to-amber-500',
+                                            isMaintenance &&
+                                                'bg-gradient-to-r from-red-500 to-rose-600',
+                                        )}
+                                    />
+
+                                    <CardContent className="px-10 py-5">
+                                        <div className="mb-5 flex items-start justify-between">
+                                            <div>
+                                                <h3 className="text-2xl font-bold tracking-tight text-foreground">
+                                                    Bay #{bay.bay_number}
+                                                </h3>
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                    {bay.bay_type ===
+                                                    'Underwash'
+                                                        ? 'Underwash Bay'
+                                                        : 'Standard Bay'}
+                                                </p>
+                                            </div>
+
+                                            {/* Status Badge */}
+                                            <Badge
+                                                variant={getStatusVariant(
+                                                    bay.status,
+                                                )}
+                                            >
+                                                {getStatusLabel(bay.status)}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="mt-6 flex gap-3">
+                                            <Button
+                                                onClick={() =>
+                                                    openEditModal(bay)
+                                                }
+                                                variant="highlight"
+                                                className="h-11 flex-1 border-border/70 font-medium hover:bg-accent hover:text-accent-foreground"
+                                            >
+                                                <Edit2 className="mr-2 h-4 w-4" />
+                                                Edit Bay
+                                            </Button>
+
+                                            <Button
+                                                onClick={() =>
+                                                    handleDeleteClick(bay)
+                                                }
+                                                variant="destructive"
+                                                className="h-11 flex-1 font-medium"
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
                     </div>
                 )}
 
