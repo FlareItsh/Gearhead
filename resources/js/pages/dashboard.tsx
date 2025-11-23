@@ -213,7 +213,8 @@ export default function Dashboard() {
         );
     };
 
-    const formatTime = (time: string) => {
+    const formatTime = (time: string | undefined) => {
+        if (!time) return 'N/A';
         const [h, m] = time.split(':');
         const hour = parseInt(h);
         const ampm = hour >= 12 ? 'PM' : 'AM';
