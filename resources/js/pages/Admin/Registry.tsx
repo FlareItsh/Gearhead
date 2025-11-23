@@ -216,14 +216,17 @@ export default function Registry() {
                                         {/* Service Order Details - Shown when occupied */}
                                         {bay.status === 'occupied' &&
                                             serviceOrders.get(bay.bay_id) && (
-                                                <div className="mb-4 space-y-3 rounded-lg bg-black/5 p-3 dark:bg-white/5">
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="h-4 w-4 text-muted-foreground" />
-                                                        <div>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                Customer
+                                                <div className="mb-4 space-y-3 rounded-lg border border-orange-200/50 bg-orange-50/50 p-4 dark:border-orange-900/50 dark:bg-orange-950/20">
+                                                    {/* Customer Section */}
+                                                    <div className="flex items-center gap-3 border-b border-orange-200/30 pb-3 dark:border-orange-900/30">
+                                                        <div className="rounded-full bg-orange-200/30 p-2 dark:bg-orange-900/30">
+                                                            <User className="h-5 w-5 text-orange-700 dark:text-orange-300" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                                                CUSTOMER
                                                             </p>
-                                                            <p className="font-semibold text-foreground">
+                                                            <p className="text-sm font-bold text-foreground">
                                                                 {
                                                                     serviceOrders.get(
                                                                         bay.bay_id,
@@ -239,6 +242,8 @@ export default function Registry() {
                                                             </p>
                                                         </div>
                                                     </div>
+
+                                                    {/* Services Section */}
                                                     {serviceOrders
                                                         .get(bay.bay_id)
                                                         ?.details &&
@@ -247,17 +252,15 @@ export default function Registry() {
                                                             ?.details!.length >
                                                             0 && (
                                                             <div>
-                                                                <p className="mb-2 text-xs text-muted-foreground">
-                                                                    Services (
-                                                                    {
+                                                                <p className="mb-2 text-xs font-medium text-orange-600 dark:text-orange-400">
+                                                                    SERVICES ({
                                                                         serviceOrders.get(
                                                                             bay.bay_id,
                                                                         )?.details
                                                                             ?.length
-                                                                    }
-                                                                    )
+                                                                    })
                                                                 </p>
-                                                                <div className="space-y-1">
+                                                                <div className="space-y-2">
                                                                     {serviceOrders
                                                                         .get(
                                                                             bay.bay_id,
@@ -270,16 +273,16 @@ export default function Registry() {
                                                                                     key={
                                                                                         detail.service_order_detail_id
                                                                                     }
-                                                                                    className="flex items-center justify-between text-xs"
+                                                                                    className="flex items-center justify-between rounded bg-white/30 px-2 py-1.5 text-xs dark:bg-black/20"
                                                                                 >
-                                                                                    <span className="text-foreground">
+                                                                                    <span className="font-medium text-foreground">
                                                                                         {
                                                                                             detail
                                                                                                 .service
                                                                                                 .service_name
                                                                                         }
                                                                                     </span>
-                                                                                    <span className="text-muted-foreground">
+                                                                                    <span className="font-semibold text-orange-700 dark:text-orange-300">
                                                                                         ₱
                                                                                         {typeof detail
                                                                                             .service
@@ -296,6 +299,46 @@ export default function Registry() {
                                                                                 </div>
                                                                             ),
                                                                         )}
+                                                                </div>
+
+                                                                {/* Total Amount */}
+                                                                <div className="mt-2 border-t border-orange-200/30 pt-2 dark:border-orange-900/30">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                                                            TOTAL
+                                                                        </p>
+                                                                        <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                                                                            ₱
+                                                                            {(serviceOrders
+                                                                                .get(
+                                                                                    bay.bay_id,
+                                                                                )
+                                                                                ?.details?.reduce(
+                                                                                    (
+                                                                                        sum,
+                                                                                        detail,
+                                                                                    ) => {
+                                                                                        const price =
+                                                                                            typeof detail
+                                                                                                .service
+                                                                                                .price ===
+                                                                                            'string'
+                                                                                                ? parseInt(
+                                                                                                      detail
+                                                                                                          .service
+                                                                                                          .price,
+                                                                                                  )
+                                                                                                : (detail.service
+                                                                                                      .price as number);
+                                                                                        return (
+                                                                                            sum +
+                                                                                            price
+                                                                                        );
+                                                                                    },
+                                                                                    0,
+                                                                                ) || 0).toLocaleString()}
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         )}
