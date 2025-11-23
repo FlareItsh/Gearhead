@@ -87,9 +87,14 @@ class ServiceOrderController extends Controller
 
     public function pending()
     {
-        $data = $this->repo->getPendingOrders();
+        // Get all orders that are pending or in_progress
+        $orders = \App\Models\ServiceOrder::query()
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->with(['user', 'details.service', 'bay'])
+            ->whereRaw('DATE(order_date) = CURDATE()')
+            ->get();
 
-        return response()->json($data);
+        return response()->json($orders);
     }
 
     /**

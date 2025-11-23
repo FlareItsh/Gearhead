@@ -243,13 +243,11 @@ export default function Registry() {
                                                             </p>
                                                             <p className="font-medium text-foreground">
                                                                 {
-                                                                    order
-                                                                        .user
+                                                                    order.user
                                                                         ?.first_name
                                                                 }{' '}
                                                                 {
-                                                                    order
-                                                                        .user
+                                                                    order.user
                                                                         ?.last_name
                                                                 }
                                                             </p>
