@@ -40,4 +40,11 @@ interface ServiceRepositoryInterface
      *
      * @return object|null
      */
+
+    /**
+     * Get all distinct service categories.
+     *
+     * @return array
+     */
+    public function getDistinctCategories(): array;
 }

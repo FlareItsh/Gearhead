@@ -49,4 +49,10 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
             ->orderBy('first_name')
             ->get();
     }
+
+    public function updateAssignedStatus(int $id, string $status): bool
+    {
+        $employee = Employee::findOrFail($id);
+        return $employee->update(['assigned_status' => $status]);
+    }
 }

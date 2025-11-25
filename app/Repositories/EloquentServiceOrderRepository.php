@@ -58,30 +58,27 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
 
     public function upcomingBookings(int $userId)
     {
-        return DB::table('service_orders')
-            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
-            ->where('service_orders.user_id', $userId)
-            ->whereIn('service_orders.status', ['pending', 'in_progress'])
+        return DB::table('service_orders as so')
+            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->where('so.user_id', $userId)
+            ->whereIn('so.status', ['pending', 'in_progress'])
             ->select(
-                'service_orders.service_order_id',
-                'service_orders.order_date',
-                'service_orders.order_type',
-                'service_orders.status',
-                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as service_names'),
-                DB::raw('SUM(services.price * service_order_details.quantity) as total_amount')
+                'so.service_order_id',
+                'so.order_date',
+                'so.order_type',
+                'so.status',
+                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as service_names'),
+                DB::raw('COALESCE(SUM(s.price * sod.quantity), 0) as total_amount')
             )
             ->groupBy(
-                'service_orders.service_order_id',
-                'service_orders.order_date',
-                'service_orders.order_type',
-                'service_orders.status'
+                'so.service_order_id',
+                'so.order_date',
+                'so.order_type',
+                'so.status'
             )
-            // Custom ordering: in_progress first, then pending; within each group most recent first
-            ->orderByRaw("
-            FIELD(service_orders.status, 'in_progress', 'pending') ASC,
-            service_orders.order_date DESC
-        ")
+            ->orderByRaw("FIELD(so.status, 'in_progress', 'pending')")
+            ->orderByDesc('so.order_date')
             ->get();
     }
 
@@ -94,6 +91,9 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
     public function getOrdersWithStatus(?string $status = null)
     {
         $query = DB::table('service_orders as so')
+            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
             ->select(
                 'so.service_order_id',
                 'so.status',
@@ -103,17 +103,13 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'p.amount as payment_amount',
                 'p.payment_method',
                 'p.gcash_reference',
-                DB::raw('GROUP_CONCAT(s.name SEPARATOR ", ") as services')
+                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services')
             )
-            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
-            ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
             ->groupBy('so.service_order_id', 'so.status', 'so.order_date', 'so.order_type', 'so.user_id', 'p.amount', 'p.payment_method', 'p.gcash_reference')
-            ->orderBy('so.order_date', 'desc');
+            ->orderByDesc('so.order_date');
 
         if ($status && $status !== 'all') {
             if ($status === 'upcoming') {
-                // upcoming = pending or in_progress
                 $query->whereIn('so.status', ['pending', 'in_progress']);
             } else {
                 $query->where('so.status', $status);
@@ -133,27 +129,16 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
             ->join('services as s', 's.service_id', '=', 'sod.service_id')
             ->whereIn('so.status', ['pending', 'in_progress'])
-            // Only today's pending/in-progress orders
             ->whereRaw('DATE(so.order_date) = CURDATE()')
-            ->select([
+            ->select(
                 'so.service_order_id',
-                // Build full customer name from first/middle/last name
-                DB::raw("CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) as customer_name"),
-                // Concatenate all service names for the order
+                DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
                 DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_name'),
-                DB::raw('TIME(so.order_date) as time'),
-                DB::raw('DATE(so.order_date) as order_date_only'),
-                'so.status',
-            ])
-            ->groupBy(
-                'so.service_order_id',
-                'u.first_name',
-                'u.middle_name',
-                'u.last_name',
                 'so.order_date',
                 'so.status'
             )
-            ->orderBy('so.order_date', 'asc')
+            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'u.first_name', 'u.middle_name', 'u.last_name')
+            ->orderBy('so.order_date')
             ->get();
     }
 
@@ -166,24 +151,16 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('users as u', 'u.user_id', '=', 'so.user_id')
             ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
             ->join('services as s', 's.service_id', '=', 'sod.service_id')
-            ->select([
+            ->select(
                 'so.service_order_id',
-                DB::raw("CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) as customer_name"),
+                DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
                 DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
-                DB::raw('SUM(s.price * sod.quantity) as total_price'),
-                'so.order_date',
-                'so.status',
-            ])
-            ->groupBy(
-                'so.service_order_id',
-                'u.first_name',
-                'u.middle_name',
-                'u.last_name',
+                DB::raw('COALESCE(SUM(s.price * sod.quantity), 0) as total_price'),
                 'so.order_date',
                 'so.status'
-            );
+            )
+            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'u.first_name', 'u.middle_name', 'u.last_name');
 
-        // Apply date range filters
         if ($startDate) {
             $query->whereDate('so.order_date', '>=', $startDate);
         }
@@ -191,12 +168,106 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             $query->whereDate('so.order_date', '<=', $endDate);
         }
 
-        // Sort pending first, then by date descending
-        $query->orderByRaw("
-            FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled') ASC,
-            so.order_date DESC
-        ");
+        return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
+            ->orderByDesc('so.order_date')
+            ->get();
+    }
 
-        return $query->get();
+    public function deleteServiceOrderDetails(int $serviceOrderId): bool
+    {
+        return DB::table('service_order_details')
+            ->where('service_order_id', $serviceOrderId)
+            ->delete() > 0;
+    }
+
+    public function replaceServiceOrderDetails(int $serviceOrderId, array $serviceIds): void
+    {
+        // Delete existing details
+        DB::table('service_order_details')
+            ->where('service_order_id', $serviceOrderId)
+            ->delete();
+
+        // Insert new details
+        foreach ($serviceIds as $serviceId) {
+            DB::table('service_order_details')->insert([
+                'service_order_id' => $serviceOrderId,
+                'service_id' => $serviceId,
+                'quantity' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    public function getTodayBookings()
+    {
+        $today = now()->format('Y-m-d');
+
+        return DB::table('service_orders as so')
+            ->join('users as u', 'so.user_id', '=', 'u.user_id')
+            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->where('so.status', 'pending')
+            ->where('so.order_type', 'R')
+            ->whereDate('so.order_date', $today)
+            ->select(
+                'so.service_order_id',
+                'so.user_id',
+                'so.order_date',
+                'u.first_name',
+                'u.last_name',
+                'u.phone_number as phone',
+                DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
+                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services'),
+                DB::raw('GROUP_CONCAT(s.service_id) as service_ids'),
+                DB::raw('COALESCE(SUM(s.price * sod.quantity), 0) as total')
+            )
+            ->groupBy('so.service_order_id', 'so.user_id', 'so.order_date', 'u.first_name', 'u.last_name', 'u.phone_number')
+            ->orderBy('so.order_date')
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'service_order_id' => $booking->service_order_id,
+                    'user_id' => $booking->user_id,
+                    'customer_name' => $booking->customer_name,
+                    'first_name' => $booking->first_name,
+                    'last_name' => $booking->last_name,
+                    'phone' => $booking->phone,
+                    'services' => $booking->services,
+                    'service_ids' => $booking->service_ids ? explode(',', $booking->service_ids) : [],
+                    'total' => $booking->total,
+                    'order_date' => $booking->order_date,
+                ];
+            });
+    }
+
+    public function cancelBooking(int $serviceOrderId): bool
+    {
+        return DB::table('service_orders')
+            ->where('service_order_id', $serviceOrderId)
+            ->update(['status' => 'cancelled', 'updated_at' => now()]) > 0;
+    }
+
+    public function countCompletedBookingsForUser(int $userId): int
+    {
+        return ServiceOrder::where('user_id', $userId)
+            ->whereHas('payments')
+            ->count();
+    }
+
+    public function getActiveOrders()
+    {
+        return ServiceOrder::whereIn('status', ['pending', 'in_progress'])
+            ->with([
+                'user:user_id,first_name,last_name,email,phone_number',
+                'details:service_order_detail_id,service_order_id,service_id,quantity',
+                'details.service:service_id,service_name,price',
+                'bay:bay_id,bay_number,status',
+                'employee:employee_id,first_name,last_name,phone_number,status,assigned_status',
+            ])
+            ->orderByDesc('order_date')
+            ->get()
+            ->unique('bay_id')
+            ->values();
     }
 }

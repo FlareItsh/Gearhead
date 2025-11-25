@@ -55,7 +55,12 @@ interface PaymentRepositoryInterface
     public function getAverageBookingValueByDateRange(string $startDate, string $endDate): float;
 
     /**
-     * Get customer retention rate by date range.
+     * Get customer retention rate for a specific date range.
      */
     public function getCustomerRetentionRateByDateRange(string $startDate, string $endDate): float;
+
+    /**
+     * Get all transactions with customer and service details.
+     */
+    public function getAllTransactions();
 }

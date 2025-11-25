@@ -45,4 +45,9 @@ interface EmployeeRepositoryInterface
      * @return Collection<Employee>
      */
     public function findActive(): Collection;
+
+    /**
+     * Update employee assigned status.
+     */
+    public function updateAssignedStatus(int $id, string $status): bool;
 }

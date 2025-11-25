@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Repositories\BookingRepository;
 use App\Repositories\PaymentRepositoryInterface;
 use App\Repositories\ServiceRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
+use App\Repositories\ServiceOrderRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
@@ -20,11 +19,18 @@ class CustomerController extends Controller
 
     private ServiceRepositoryInterface $services;
 
-    public function __construct(UserRepositoryInterface $users, PaymentRepositoryInterface $payments, ServiceRepositoryInterface $services)
-    {
+    private ServiceOrderRepositoryInterface $serviceOrders;
+
+    public function __construct(
+        UserRepositoryInterface $users,
+        PaymentRepositoryInterface $payments,
+        ServiceRepositoryInterface $services,
+        ServiceOrderRepositoryInterface $serviceOrders
+    ) {
         $this->users = $users;
         $this->payments = $payments;
         $this->services = $services;
+        $this->serviceOrders = $serviceOrders;
     }
 
     public function bookings(Request $request, BookingRepository $bookings)
@@ -94,13 +100,10 @@ class CustomerController extends Controller
     {
         $user = auth()->user();
 
-        // Find the booking
-        $booking = DB::table('service_orders')
-            ->where('service_order_id', $id)
-            ->where('user_id', $user->user_id) // ensure user owns this booking
-            ->first();
+        // Find the booking using repository
+        $booking = $this->serviceOrders->findById($id);
 
-        if (! $booking) {
+        if (! $booking || $booking->user_id != $user->user_id) {
             return back()->with('error', 'Booking not found.');
         }
 
@@ -109,10 +112,8 @@ class CustomerController extends Controller
             return back()->with('error', 'This booking cannot be cancelled.');
         }
 
-        // Update status to cancelled
-        DB::table('service_orders')
-            ->where('service_order_id', $id)
-            ->update(['status' => 'cancelled', 'updated_at' => now()]);
+        // Update status to cancelled using repository
+        $this->serviceOrders->cancelBooking($id);
 
         return back()->with('success', 'Booking cancelled successfully.');
     }
@@ -156,13 +157,13 @@ class CustomerController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        $customer = User::create([
+        $customer = $this->users->create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'],
             'address' => $validated['address'],
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
             'role' => 'customer',
         ]);
 

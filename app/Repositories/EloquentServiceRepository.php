@@ -30,7 +30,7 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
             $query->where('category', $category);
         }
 
-        return $query->get();
+        return $query->orderBy('service_name')->get();
     }
 
     public function findById(int $id): ?Service
@@ -55,17 +55,22 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
 
     public function getTopServices(int $limit = 4, ?string $startDate = null, ?string $endDate = null)
     {
-        $query = DB::table('payments')
-            ->join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
-            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
-            ->select('services.service_name', DB::raw('SUM(service_order_details.quantity) as total_bookings'))
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('payments.created_at', [$startDate, $endDate]);
-            })
-            ->groupBy('services.service_id', 'services.service_name')
+        $query = DB::table('service_order_details as sod')
+            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_orders as so', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->join('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
+            ->select(
+                's.service_id',
+                's.service_name',
+                DB::raw('COALESCE(SUM(sod.quantity), 0) as total_bookings')
+            )
+            ->groupBy('s.service_id', 's.service_name')
             ->orderByDesc('total_bookings')
             ->limit($limit);
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('p.created_at', [$startDate, $endDate]);
+        }
 
         return $query->get();
     }
@@ -75,22 +80,30 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
      */
     public function getTopServicesWithSize(int $limit = 10, ?string $startDate = null, ?string $endDate = null)
     {
-        $query = DB::table('payments')
-            ->join('service_orders', 'payments.service_order_id', '=', 'service_orders.service_order_id')
-            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
+        $query = DB::table('service_order_details as sod')
+            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_orders as so', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->join('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
             ->select(
-                'services.service_name',
-                'services.size',
-                DB::raw('SUM(service_order_details.quantity) as total_bookings')
+                's.service_name',
+                's.size',
+                DB::raw('COALESCE(SUM(sod.quantity), 0) as total_bookings')
             )
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('payments.created_at', [$startDate, $endDate]);
-            })
-            ->groupBy('services.service_id', 'services.service_name', 'services.size')
+            ->groupBy('s.service_id', 's.service_name', 's.size')
             ->orderByDesc('total_bookings')
             ->limit($limit);
 
+        if ($startDate && $endDate) {
+            $query->whereBetween('p.created_at', [$startDate, $endDate]);
+        }
+
         return $query->get();
+    }
+
+    public function getDistinctCategories(): array
+    {
+        return Service::distinct()
+            ->pluck('category')
+            ->toArray();
     }
 }

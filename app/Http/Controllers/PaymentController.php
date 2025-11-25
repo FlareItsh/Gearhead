@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\PaymentRepositoryInterface;
+use App\Repositories\ServiceOrderRepositoryInterface;
+use App\Repositories\EmployeeRepositoryInterface;
+use App\Repositories\BayRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -10,10 +13,20 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     protected PaymentRepositoryInterface $repo;
+    protected ServiceOrderRepositoryInterface $serviceOrders;
+    protected EmployeeRepositoryInterface $employees;
+    protected BayRepositoryInterface $bays;
 
-    public function __construct(PaymentRepositoryInterface $repo)
-    {
+    public function __construct(
+        PaymentRepositoryInterface $repo,
+        ServiceOrderRepositoryInterface $serviceOrders,
+        EmployeeRepositoryInterface $employees,
+        BayRepositoryInterface $bays
+    ) {
         $this->repo = $repo;
+        $this->serviceOrders = $serviceOrders;
+        $this->employees = $employees;
+        $this->bays = $bays;
     }
 
     public function index()
@@ -179,9 +192,7 @@ class PaymentController extends Controller
     private function checkLoyaltyEligibility(int $userId): bool
     {
         // Count completed service orders with payments for this user
-        $completedBookings = \App\Models\ServiceOrder::where('user_id', $userId)
-            ->whereHas('payments')
-            ->count();
+        $completedBookings = $this->serviceOrders->countCompletedBookingsForUser($userId);
 
         // Check if next booking would be the 9th (0, 9, 18, 27, etc.)
         return ($completedBookings + 1) % 9 === 0;
@@ -197,9 +208,7 @@ class PaymentController extends Controller
         ]);
 
         $userId = $validated['user_id'];
-        $completedBookings = \App\Models\ServiceOrder::where('user_id', $userId)
-            ->whereHas('payments')
-            ->count();
+        $completedBookings = $this->serviceOrders->countCompletedBookingsForUser($userId);
 
         $isEligible = ($completedBookings + 1) % 9 === 0;
         $pointsEarned = $completedBookings % 9;
@@ -233,7 +242,11 @@ class PaymentController extends Controller
             ]);
 
             // Get service order to check user
-            $serviceOrder = \App\Models\ServiceOrder::findOrFail($validated['service_order_id']);
+            $serviceOrder = $this->serviceOrders->findById($validated['service_order_id']);
+            
+            if (!$serviceOrder) {
+                return response()->json(['message' => 'Service order not found'], 404);
+            }
             
             // If loyalty redemption, verify eligibility
             if ($isLoyaltyRedemption) {
@@ -254,7 +267,7 @@ class PaymentController extends Controller
             }
 
             // Create payment record
-            $payment = \App\Models\Payment::create([
+            $payment = $this->repo->create([
                 'service_order_id' => $validated['service_order_id'],
                 'payment_method' => $isLoyaltyRedemption ? 'loyalty' : ($validated['payment_method'] ?? 'cash'),
                 'amount' => $isLoyaltyRedemption ? 0.00 : ($validated['amount'] ?? 0),
@@ -264,18 +277,15 @@ class PaymentController extends Controller
             ]);
 
             // Update service order status to completed
-            $serviceOrder = \App\Models\ServiceOrder::findOrFail($validated['service_order_id']);
-            $serviceOrder->update(['status' => 'completed']);
+            $this->serviceOrders->update($serviceOrder, ['status' => 'completed']);
 
             // Mark the employee as available if one was assigned
             if ($serviceOrder->employee_id) {
-                $employee = \App\Models\Employee::findOrFail($serviceOrder->employee_id);
-                $employee->update(['assigned_status' => 'available']);
+                $this->employees->updateAssignedStatus($serviceOrder->employee_id, 'available');
             }
 
             // Update bay status back to available
-            $bay = \App\Models\Bay::findOrFail($validated['bay_id']);
-            $bay->update(['status' => 'available']);
+            $this->bays->updateStatus($validated['bay_id'], 'available');
 
             return response()->json([
                 'message' => 'Payment processed successfully',

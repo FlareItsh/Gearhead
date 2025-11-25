@@ -47,4 +47,34 @@ interface ServiceOrderRepositoryInterface
      * @return \Illuminate\Support\Collection
      */
     public function getAllBookings(?string $startDate = null, ?string $endDate = null);
+
+    /**
+     * Delete all service order details for a service order.
+     */
+    public function deleteServiceOrderDetails(int $serviceOrderId): bool;
+
+    /**
+     * Replace service order details with new service IDs.
+     */
+    public function replaceServiceOrderDetails(int $serviceOrderId, array $serviceIds): void;
+
+    /**
+     * Get today's pending reservation bookings with customer and service details.
+     */
+    public function getTodayBookings();
+
+    /**
+     * Cancel a booking by updating its status to cancelled.
+     */
+    public function cancelBooking(int $serviceOrderId): bool;
+
+    /**
+     * Count completed service orders with payments for a user.
+     */
+    public function countCompletedBookingsForUser(int $userId): int;
+
+    /**
+     * Get active service orders (pending or in_progress) with full relationships.
+     */
+    public function getActiveOrders();
 }

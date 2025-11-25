@@ -38,4 +38,9 @@ interface BayRepositoryInterface
      * Get all available bays.
      */
     public function getAvailable(): Collection;
+
+    /**
+     * Update bay status.
+     */
+    public function updateStatus(int $id, string $status): bool;
 }

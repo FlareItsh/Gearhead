@@ -3,17 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\ServiceOrderRepositoryInterface;
+use App\Repositories\EmployeeRepositoryInterface;
+use App\Repositories\BayRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ServiceOrderController extends Controller
 {
     protected ServiceOrderRepositoryInterface $repo;
+    protected EmployeeRepositoryInterface $employees;
+    protected BayRepositoryInterface $bays;
 
-    public function __construct(ServiceOrderRepositoryInterface $repo)
-    {
+    public function __construct(
+        ServiceOrderRepositoryInterface $repo,
+        EmployeeRepositoryInterface $employees,
+        BayRepositoryInterface $bays
+    ) {
         $this->repo = $repo;
+        $this->employees = $employees;
+        $this->bays = $bays;
     }
 
     public function index()
@@ -52,8 +60,7 @@ class ServiceOrderController extends Controller
 
         // Mark employee as assigned if provided
         if (! empty($data['employee_id'])) {
-            $employee = \App\Models\Employee::findOrFail($data['employee_id']);
-            $employee->update(['assigned_status' => 'assigned']);
+            $this->employees->updateAssignedStatus($data['employee_id'], 'assigned');
         }
 
         return response()->json($created, 201);
@@ -72,21 +79,8 @@ class ServiceOrderController extends Controller
         if (array_key_exists('service_ids', $data)) {
             $serviceIds = $data['service_ids'];
 
-            // Delete existing service order details
-            DB::table('service_order_details')
-                ->where('service_order_id', $id)
-                ->delete();
-
-            // Insert new service order details
-            foreach ($serviceIds as $serviceId) {
-                DB::table('service_order_details')->insert([
-                    'service_order_id' => $id,
-                    'service_id' => $serviceId,
-                    'quantity' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            // Use repository to replace service order details
+            $this->repo->replaceServiceOrderDetails($id, $serviceIds);
 
             // Remove service_ids from data array as it's not a column in service_orders table
             unset($data['service_ids']);
@@ -101,18 +95,12 @@ class ServiceOrderController extends Controller
             if ($oldBayId != $newBayId) {
                 // Mark old bay as available if there was one
                 if ($oldBayId) {
-                    $oldBay = \App\Models\Bay::find($oldBayId);
-                    if ($oldBay) {
-                        $oldBay->update(['status' => 'available']);
-                    }
+                    $this->bays->updateStatus($oldBayId, 'available');
                 }
 
                 // Mark new bay as occupied
                 if ($newBayId) {
-                    $newBay = \App\Models\Bay::find($newBayId);
-                    if ($newBay) {
-                        $newBay->update(['status' => 'occupied']);
-                    }
+                    $this->bays->updateStatus($newBayId, 'occupied');
                 }
             }
         }
@@ -126,18 +114,12 @@ class ServiceOrderController extends Controller
             if ($oldEmployeeId != $newEmployeeId) {
                 // Mark old employee as available if there was one
                 if ($oldEmployeeId) {
-                    $oldEmployee = \App\Models\Employee::find($oldEmployeeId);
-                    if ($oldEmployee) {
-                        $oldEmployee->update(['assigned_status' => 'available']);
-                    }
+                    $this->employees->updateAssignedStatus($oldEmployeeId, 'available');
                 }
 
                 // Mark new employee as assigned if there is one
                 if ($newEmployeeId) {
-                    $newEmployee = \App\Models\Employee::find($newEmployeeId);
-                    if ($newEmployee) {
-                        $newEmployee->update(['assigned_status' => 'assigned']);
-                    }
+                    $this->employees->updateAssignedStatus($newEmployeeId, 'assigned');
                 }
             }
         }
@@ -171,58 +153,24 @@ class ServiceOrderController extends Controller
 
     public function pending()
     {
-        // Use raw SQL like Bookings page to avoid Eloquent timezone conversion
-        $orders = DB::table('service_orders')
-            ->join('users', 'service_orders.user_id', '=', 'users.user_id')
-            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
-            ->where('service_orders.status', 'pending')
-            ->select(
-                'service_orders.service_order_id',
-                'service_orders.order_date',
-                'service_orders.status',
-                DB::raw('CONCAT(users.first_name, " ", users.last_name) as customer_name'),
-                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as service_name')
-            )
-            ->groupBy(
-                'service_orders.service_order_id',
-                'service_orders.order_date',
-                'service_orders.status',
-                'users.first_name',
-                'users.last_name'
-            )
-            ->orderByDesc('service_orders.order_date')
-            ->get()
-            ->map(function ($order) {
-                return [
-                    'service_order_id' => $order->service_order_id,
-                    'customer_name' => $order->customer_name,
-                    'service_name' => $order->service_name,
-                    'time' => $order->order_date, // Raw datetime string from DB
-                    'status' => $order->status,
-                ];
-            });
+        $orders = $this->repo->getPendingOrders();
 
-        return response()->json($orders);
+        return response()->json($orders->map(function ($order) {
+            return [
+                'service_order_id' => $order->service_order_id,
+                'customer_name' => $order->customer_name,
+                'service_name' => $order->service_name,
+                'time' => $order->order_date,
+                'status' => $order->status,
+            ];
+        }));
     }
 
     public function active()
     {
         // Get all active orders (pending or in_progress) with full relationships
         // This is for Registry page - shows all active bays
-        $orders = \App\Models\ServiceOrder::query()
-            ->whereIn('status', ['pending', 'in_progress'])
-            ->with([
-                'user:user_id,first_name,last_name,email,phone_number',
-                'details:service_order_detail_id,service_order_id,service_id,quantity',
-                'details.service:service_id,service_name,price',
-                'bay:bay_id,bay_number,status',
-                'employee:employee_id,first_name,last_name,phone_number,status,assigned_status',
-            ])
-            ->orderBy('order_date', 'desc')
-            ->get()
-            ->unique('bay_id')  // Keep only the first (latest) order per bay_id
-            ->values();
+        $orders = $this->repo->getActiveOrders();
 
         Log::info('Active service orders:', [
             'count' => $orders->count(),
@@ -238,52 +186,7 @@ class ServiceOrderController extends Controller
      */
     public function todayBookings()
     {
-        $today = now()->format('Y-m-d');
-
-        // Use raw SQL to avoid timezone conversion and get accurate data
-        $bookings = DB::table('service_orders')
-            ->join('users', 'service_orders.user_id', '=', 'users.user_id')
-            ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
-            ->where('service_orders.status', 'pending')
-            ->where('service_orders.order_type', 'R') // 'R' for Reservation
-            ->whereDate('service_orders.order_date', $today)
-            ->select(
-                'service_orders.service_order_id',
-                'service_orders.user_id',
-                'service_orders.order_date',
-                'users.first_name',
-                'users.last_name',
-                'users.phone_number as phone',
-                DB::raw('CONCAT(users.first_name, " ", users.last_name) as customer_name'),
-                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'),
-                DB::raw('GROUP_CONCAT(services.service_id) as service_ids'),
-                DB::raw('SUM(services.price * service_order_details.quantity) as total')
-            )
-            ->groupBy(
-                'service_orders.service_order_id',
-                'service_orders.user_id',
-                'service_orders.order_date',
-                'users.first_name',
-                'users.last_name',
-                'users.phone_number'
-            )
-            ->orderBy('service_orders.order_date', 'asc')
-            ->get()
-            ->map(function ($booking) {
-                return [
-                    'service_order_id' => $booking->service_order_id,
-                    'user_id' => $booking->user_id,
-                    'customer_name' => $booking->customer_name,
-                    'first_name' => $booking->first_name,
-                    'last_name' => $booking->last_name,
-                    'phone' => $booking->phone,
-                    'services' => $booking->services,
-                    'service_ids' => $booking->service_ids ? explode(',', $booking->service_ids) : [],
-                    'total' => $booking->total,
-                    'order_date' => $booking->order_date,
-                ];
-            });
+        $bookings = $this->repo->getTodayBookings();
 
         return response()->json($bookings);
     }
@@ -381,13 +284,11 @@ class ServiceOrderController extends Controller
 
             // Mark employee as assigned if provided
             if (! empty($orderData['employee_id'])) {
-                $employee = \App\Models\Employee::findOrFail($orderData['employee_id']);
-                $employee->update(['assigned_status' => 'assigned']);
+                $this->employees->updateAssignedStatus($orderData['employee_id'], 'assigned');
             }
 
             // Update bay status to occupied
-            $bay = \App\Models\Bay::findOrFail($validated['bay_id']);
-            $bay->update(['status' => 'occupied']);
+            $this->bays->updateStatus($validated['bay_id'], 'occupied');
 
             return response()->json([
                 'message' => 'Service order created successfully',
@@ -418,16 +319,14 @@ class ServiceOrderController extends Controller
 
             // If there was a previous employee assigned, mark them as available
             if ($order->employee_id) {
-                $previousEmployee = \App\Models\Employee::findOrFail($order->employee_id);
-                $previousEmployee->update(['assigned_status' => 'available']);
+                $this->employees->updateAssignedStatus($order->employee_id, 'available');
             }
 
             // Update the service order with new employee
             $this->repo->update($order, ['employee_id' => $validated['employee_id']]);
 
             // Mark the new employee as assigned
-            $newEmployee = \App\Models\Employee::findOrFail($validated['employee_id']);
-            $newEmployee->update(['assigned_status' => 'assigned']);
+            $this->employees->updateAssignedStatus($validated['employee_id'], 'assigned');
 
             return response()->json([
                 'message' => 'Employee assigned successfully',

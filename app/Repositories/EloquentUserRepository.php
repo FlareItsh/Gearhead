@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -46,31 +47,23 @@ class EloquentUserRepository implements UserRepositoryInterface
 
     public function getCustomersWithBookings()
     {
-        $customers = User::where('role', 'customer')
-            ->with('serviceOrders.payments')
-            ->get()
-            ->map(function ($user) {
-                $bookings = $user->serviceOrders
-                    ->filter(function ($order) {
-                        return $order->payments->count() > 0;
-                    })
-                    ->count();
-                $loyaltyPoints = $bookings % 9;
-
-                return [
-                    'user_id' => $user->user_id,
-                    'first_name' => $user->first_name,
-                    'middle_name' => $user->middle_name,
-                    'last_name' => $user->last_name,
-                    'email' => $user->email,
-                    'phone_number' => $user->phone_number,
-                    'address' => $user->address,
-                    'role' => $user->role,
-                    'bookings' => $bookings,
-                    'loyaltyPoints' => $loyaltyPoints,
-                ];
-            });
-
-        return $customers;
+        return DB::table('users as u')
+            ->leftJoin('service_orders as so', 'u.user_id', '=', 'so.user_id')
+            ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
+            ->where('u.role', 'customer')
+            ->select(
+                'u.user_id',
+                'u.first_name',
+                'u.middle_name',
+                'u.last_name',
+                'u.email',
+                'u.phone_number',
+                'u.address',
+                'u.role',
+                DB::raw('COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) as bookings'),
+                DB::raw('(COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) % 9) as loyaltyPoints')
+            )
+            ->groupBy('u.user_id', 'u.first_name', 'u.middle_name', 'u.last_name', 'u.email', 'u.phone_number', 'u.address', 'u.role')
+            ->get();
     }
 }

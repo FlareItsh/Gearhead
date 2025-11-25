@@ -49,4 +49,10 @@ class EloquentBayRepository implements BayRepositoryInterface
     {
         return Bay::where('status', 'available')->orderBy('bay_number')->get();
     }
+
+    public function updateStatus(int $id, string $status): bool
+    {
+        $bay = Bay::findOrFail($id);
+        return $bay->update(['status' => $status]);
+    }
 }

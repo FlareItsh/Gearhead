@@ -2,24 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Service;
 use App\Repositories\ServiceRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
+use App\Repositories\PaymentRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminController extends Controller
 {
     private UserRepositoryInterface $users;
     private ServiceRepositoryInterface $services;
+    private PaymentRepositoryInterface $payments;
 
     public function __construct(
         UserRepositoryInterface $users,
-        ServiceRepositoryInterface $services
+        ServiceRepositoryInterface $services,
+        PaymentRepositoryInterface $payments
     ) {
         $this->users = $users;
         $this->services = $services;
+        $this->payments = $payments;
     }
 
     public function registry(Request $request)
@@ -49,9 +51,7 @@ class AdminController extends Controller
         $services = $this->services->allIncludingInactive();
 
         // Distinct categories (all services including inactive)
-        $categories = Service::distinct()
-            ->pluck('category')
-            ->toArray();
+        $categories = $this->services->getDistinctCategories();
 
         // Selected category from query string
         $selectedCategory = $request->query('category', 'All');
@@ -80,54 +80,7 @@ class AdminController extends Controller
     public function transactions(Request $request)
     {
         // Get all transactions with joined details
-        $transactions = DB::table('payments as p')
-            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
-            ->join('users as u', 'so.user_id', '=', 'u.user_id')
-            ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->leftJoin('services as s', 'sod.service_id', '=', 's.service_id')
-            ->select(
-                'p.payment_id',
-                'p.amount',
-                'p.payment_method',
-                'p.gcash_reference',
-                'p.gcash_screenshot',
-                'p.is_point_redeemed',
-                'p.created_at as payment_date',
-                'so.order_date',
-                'so.status',
-                'u.first_name',
-                'u.last_name',
-                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services')
-            )
-            ->groupBy(
-                'p.payment_id',
-                'p.amount',
-                'p.payment_method',
-                'p.gcash_reference',
-                'p.gcash_screenshot',
-                'p.is_point_redeemed',
-                'p.created_at',
-                'so.order_date',
-                'so.status',
-                'u.first_name',
-                'u.last_name'
-            )
-            ->orderBy('p.created_at', 'desc')
-            ->get()
-            ->map(function ($transaction) {
-                return [
-                    'payment_id' => $transaction->payment_id,
-                    'date' => $transaction->order_date ?? date('Y-m-d', strtotime($transaction->payment_date)),
-                    'customer' => $transaction->first_name . ' ' . $transaction->last_name,
-                    'services' => $transaction->services ?? 'N/A',
-                    'amount' => (float) $transaction->amount,
-                    'payment_method' => ucfirst($transaction->payment_method),
-                    'gcash_reference' => $transaction->gcash_reference,
-                    'gcash_screenshot' => $transaction->gcash_screenshot,
-                    'status' => $transaction->status,
-                    'is_point_redeemed' => (bool) $transaction->is_point_redeemed,
-                ];
-            });
+        $transactions = $this->payments->getAllTransactions();
 
         // Dashboard statistics
         $stats = [
