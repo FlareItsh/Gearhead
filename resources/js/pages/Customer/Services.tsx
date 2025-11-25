@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { ChevronDown, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronDown, Clock, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }];
@@ -40,6 +40,13 @@ export default function Services() {
         'bottom',
     );
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Modal state
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState<'success' | 'error' | 'warning'>(
+        'success',
+    );
+    const [modalMessage, setModalMessage] = useState('');
 
     // Load/save cart
     useEffect(() => {
@@ -212,7 +219,9 @@ export default function Services() {
 
     const handleBook = async () => {
         if (!selectedTime || selectedServices.length === 0) {
-            alert('Please select a time and at least one service');
+            setModalType('warning');
+            setModalMessage('Please select a time and at least one service');
+            setShowModal(true);
             return;
         }
 
@@ -240,7 +249,11 @@ export default function Services() {
             console.log('Service IDs to send:', serviceIds);
 
             if (serviceIds.length === 0) {
-                alert('Could not find service IDs. Please try again.');
+                setModalType('error');
+                setModalMessage(
+                    'Could not find service IDs. Please try again.',
+                );
+                setShowModal(true);
                 setIsBooking(false);
                 return;
             }
@@ -251,8 +264,8 @@ export default function Services() {
                 );
             }
 
-            // Convert time string to date format
-            // selectedTime is like "3:00 PM", we need "2025-11-20 15:00"
+            // Convert time to proper format with today's date
+            // selectedTime is like "3:00 PM"
             const today = new Date();
             const [timeStr, period] = selectedTime.split(' ');
             const [hourStr, minuteStr] = timeStr.split(':');
@@ -265,14 +278,12 @@ export default function Services() {
                 hour = 0;
             }
 
-            today.setHours(hour, minute, 0, 0);
-
-            // Format as YYYY-MM-DD HH:MM using local time, not UTC
+            // Format as YYYY-MM-DD HH:MM using today's date
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const date = String(today.getDate()).padStart(2, '0');
-            const hours = String(today.getHours()).padStart(2, '0');
-            const minutes = String(today.getMinutes()).padStart(2, '0');
+            const hours = String(hour).padStart(2, '0');
+            const minutes = String(minute).padStart(2, '0');
             const orderDate = `${year}-${month}-${date} ${hours}:${minutes}`;
 
             console.log('Sending booking with order_date:', orderDate);
@@ -289,16 +300,24 @@ export default function Services() {
             setIsModalOpen(false);
             setSelectedTime('');
 
-            alert('Booking confirmed! Your reservation has been created.');
+            setModalType('success');
+            setModalMessage(
+                'Booking confirmed! Your reservation has been created.',
+            );
+            setShowModal(true);
             console.log('Booking response:', response.data);
         } catch (error) {
             console.error('Booking error:', error);
             if (axios.isAxiosError(error) && error.response) {
-                alert(
+                setModalType('error');
+                setModalMessage(
                     `Booking failed: ${error.response.data?.message || 'Unknown error'}`,
                 );
+                setShowModal(true);
             } else {
-                alert('Booking failed. Please try again.');
+                setModalType('error');
+                setModalMessage('Booking failed. Please try again.');
+                setShowModal(true);
             }
         } finally {
             setIsBooking(false);
@@ -347,7 +366,7 @@ export default function Services() {
                 </div>
 
                 {/* Services Grid */}
-                <div className="p-2">
+                <div className="mb-5 p-2">
                     <h4 className="mb-2 text-2xl font-bold">
                         Services - {selectedCategory}
                     </h4>
@@ -529,13 +548,13 @@ export default function Services() {
                                 ))}
                             </div>
 
-                            {/* Smart Time Picker + Total */}
+                            {/* Time Picker + Total */}
                             <div className="space-y-5 border-t border-border/30 bg-muted/20 px-5 py-5">
                                 <div>
                                     <label className="mb-2 block text-sm font-medium text-foreground">
                                         Preferred Time{' '}
                                         <span className="text-muted-foreground">
-                                            (Next Available)
+                                            (Today Only)
                                         </span>
                                     </label>
                                     <div className="relative" ref={dropdownRef}>
@@ -676,6 +695,65 @@ export default function Services() {
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Status Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="relative w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-2xl">
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className="absolute top-4 right-4 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        {/* Icon */}
+                        <div className="mb-4 flex justify-center">
+                            {modalType === 'success' && (
+                                <div className="rounded-full bg-emerald-100 p-3">
+                                    <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                                </div>
+                            )}
+                            {modalType === 'error' && (
+                                <div className="rounded-full bg-destructive/10 p-3">
+                                    <AlertCircle className="h-8 w-8 text-destructive" />
+                                </div>
+                            )}
+                            {modalType === 'warning' && (
+                                <div className="rounded-full bg-orange-100 p-3">
+                                    <AlertCircle className="h-8 w-8 text-orange-600" />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="mb-2 text-center text-xl font-bold">
+                            {modalType === 'success' && 'Success!'}
+                            {modalType === 'error' && 'Error'}
+                            {modalType === 'warning' && 'Attention'}
+                        </h3>
+
+                        {/* Message */}
+                        <p className="mb-6 text-center text-muted-foreground">
+                            {modalMessage}
+                        </p>
+
+                        {/* OK Button */}
+                        <Button
+                            onClick={() => setShowModal(false)}
+                            className="w-full"
+                            variant={
+                                modalType === 'success'
+                                    ? 'default'
+                                    : 'destructive'
+                            }
+                        >
+                            OK
+                        </Button>
+                    </div>
+                </div>
             )}
         </AppLayout>
     );

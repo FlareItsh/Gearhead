@@ -31,6 +31,7 @@ class Employee extends Model
         'phone_number',
         'address',
         'status',
+        'assigned_status',
         'date_hired',
         'employment_ended_at',
     ];

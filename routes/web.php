@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PaymentController;
 use App\Models\Bay;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
@@ -75,6 +76,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'bayId' => (int) $id,
         ]);
     })->name('admin.registry.payment')->middleware('role:admin');
+    
+    Route::post('/payment/process', [PaymentController::class, 'process'])
+        ->name('payment.process')
+        ->middleware('role:admin');
+    
+    Route::post('/payment/check-loyalty', [PaymentController::class, 'checkLoyalty'])
+        ->name('payment.check-loyalty')
+        ->middleware('role:admin');
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
     Route::get('/customers', [AdminController::class, 'customers'])

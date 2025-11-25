@@ -140,4 +140,23 @@ class EmployeeController extends Controller
             'active_employees' => $count,
         ]);
     }
+
+    /**
+     * Get all active employees
+     */
+    public function activeAvailable()
+    {
+        $employees = $this->employees->findActive();
+
+        return response()->json($employees->map(function ($employee) {
+            return [
+                'employee_id' => $employee->employee_id,
+                'first_name' => $employee->first_name,
+                'last_name' => $employee->last_name,
+                'email' => $employee->email,
+                'phone_number' => $employee->phone_number,
+                'status' => $employee->status,
+            ];
+        })->toArray());
+    }
 }

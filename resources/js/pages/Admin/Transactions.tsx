@@ -34,6 +34,7 @@ interface Transaction {
     amount: number;
     payment_method: string;
     gcash_reference: string | null;
+    gcash_screenshot: string | null;
     status: string;
     is_point_redeemed: boolean;
     type: 'income';
@@ -147,6 +148,19 @@ const TransactionRow = ({ item }: { item: Transaction | SupplyPurchase }) => {
                             <span className="text-xs text-muted-foreground">
                                 Ref: {item.gcash_reference}
                             </span>
+                        )}
+                        {item.gcash_screenshot && (
+                            <button
+                                onClick={() =>
+                                    window.open(
+                                        `/${item.gcash_screenshot}`,
+                                        '_blank',
+                                    )
+                                }
+                                className="text-xs text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                                📷 {item.gcash_screenshot.split('/').pop()}
+                            </button>
                         )}
                     </div>
                 ) : (
@@ -356,7 +370,10 @@ export default function Transactions({ transactions }: TransactionsProps) {
                     : item.purchase_date.split(' ')[0],
                 isTx ? item.customer : item.supplier_name,
                 isTx ? item.services : item.supplies,
-                formatMoney(amount),
+                amount.toLocaleString('en-PH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                }),
                 isTx ? item.payment_method : item.purchase_reference || 'N/A',
                 item.status.charAt(0).toUpperCase() +
                     item.status.slice(1).replace('_', ' '),
@@ -367,7 +384,10 @@ export default function Transactions({ transactions }: TransactionsProps) {
             '',
             '',
             'TOTAL',
-            formatMoney(totalAmount),
+            totalAmount.toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }),
             '',
             `${dataToExport.length} record${dataToExport.length !== 1 ? 's' : ''}`,
         ]);
@@ -832,7 +852,7 @@ export default function Transactions({ transactions }: TransactionsProps) {
 
                                             <div className="border-t border-border/40 pt-4 text-sm">
                                                 <div className="flex items-center justify-between">
-                                                    <div>
+                                                    <div className="flex-1">
                                                         <p className="text-muted-foreground">
                                                             {isTransaction
                                                                 ? 'Payment Method'
@@ -844,6 +864,34 @@ export default function Transactions({ transactions }: TransactionsProps) {
                                                                 : item.purchase_reference ||
                                                                   'N/A'}
                                                         </p>
+                                                        {isTransaction &&
+                                                            item.gcash_reference && (
+                                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                                    Ref:{' '}
+                                                                    {
+                                                                        item.gcash_reference
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                        {isTransaction &&
+                                                            item.gcash_screenshot && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        window.open(
+                                                                            `/${item.gcash_screenshot}`,
+                                                                            '_blank',
+                                                                        )
+                                                                    }
+                                                                    className="mt-1 text-xs text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                                                                >
+                                                                    📷{' '}
+                                                                    {item.gcash_screenshot
+                                                                        .split(
+                                                                            '/',
+                                                                        )
+                                                                        .pop()}
+                                                                </button>
+                                                            )}
                                                     </div>
                                                     <Badge
                                                         variant={

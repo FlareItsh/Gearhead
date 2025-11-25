@@ -41,4 +41,12 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
     {
         return Employee::where('status', 'active')->count();
     }
+
+    public function findActive(): Collection
+    {
+        return Employee::where('status', 'active')
+            ->where('assigned_status', 'available')
+            ->orderBy('first_name')
+            ->get();
+    }
 }

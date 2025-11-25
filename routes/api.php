@@ -84,15 +84,29 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('admin.staffs.delete');
     Route::get('/staffs/active-count', [EmployeeController::class, 'activeCount'])
         ->name('admin.staffs.active-count');
+    Route::get('/employees/active-available', [EmployeeController::class, 'activeAvailable'])
+        ->name('admin.employees.active-available');
 
     Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
         ->name('api.service-orders.pending');
+
+    Route::get('/service-orders/active', [ServiceOrderController::class, 'active'])
+        ->name('api.service-orders.active');
+
+    Route::get('/service-orders/today-bookings', [ServiceOrderController::class, 'todayBookings'])
+        ->name('api.service-orders.today-bookings');
 
     Route::get('/service-orders/bookings', [ServiceOrderController::class, 'getBookings'])
         ->name('api.service-orders.bookings');
 
     Route::post('/service-orders/registry', [ServiceOrderController::class, 'createFromRegistry'])
         ->name('api.service-orders.registry');
+
+    Route::put('/service-orders/{id}', [ServiceOrderController::class, 'update'])
+        ->name('api.service-orders.update');
+
+    Route::put('/service-orders/{id}/assign-employee', [ServiceOrderController::class, 'assignEmployee'])
+        ->name('api.service-orders.assign-employee');
 
     Route::get('/supplies', [SupplyController::class, 'index'])
         ->name('supplies.index');

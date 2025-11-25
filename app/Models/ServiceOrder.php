@@ -23,7 +23,7 @@ class ServiceOrder extends Model
     ];
 
     protected $casts = [
-        'order_date' => 'date',
+        'order_date' => 'datetime',
     ];
 
     public function user()

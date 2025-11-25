@@ -38,4 +38,11 @@ interface EmployeeRepositoryInterface
      * Count employees with 'active' status.
      */
     public function countActiveEmployees(): int;
+
+    /**
+     * Get all active employees.
+     *
+     * @return Collection<Employee>
+     */
+    public function findActive(): Collection;
 }

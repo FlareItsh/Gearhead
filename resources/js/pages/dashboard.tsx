@@ -175,7 +175,7 @@ export default function Dashboard() {
 
         if (startDate && endDate) {
             fetchData();
-            const interval = setInterval(fetchData, 180000);
+            const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
             return () => clearInterval(interval);
         }
     }, [startDate, endDate, role]);
@@ -211,15 +211,6 @@ export default function Dashboard() {
                 ))}
             </ul>
         );
-    };
-
-    const formatTime = (time: string | undefined) => {
-        if (!time) return 'N/A';
-        const [h, m] = time.split(':');
-        const hour = parseInt(h);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        return `${displayHour}:${m} ${ampm}`;
     };
 
     return (
@@ -564,9 +555,9 @@ export default function Dashboard() {
                                                         </td>
                                                         <td className="px-6 py-5 text-center">
                                                             <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-foreground">
-                                                                {formatTime(
+                                                                {new Date(
                                                                     order.time,
-                                                                )}
+                                                                ).toLocaleString()}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-5 text-center">

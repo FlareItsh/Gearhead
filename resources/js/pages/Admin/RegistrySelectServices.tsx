@@ -20,6 +20,12 @@ interface Service {
     estimated_duration: number;
 }
 
+interface ServiceOrderDetail {
+    service_order_detail_id: number;
+    service_id: number;
+    service: Service;
+}
+
 interface Customer {
     user_id: number;
     first_name: string;
@@ -46,6 +52,20 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [serviceSearch, setServiceSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');
+    const [assignedEmployee, setAssignedEmployee] = useState<{
+        employee_id: number;
+        first_name: string;
+        last_name: string;
+    } | null>(null);
+    const [isEditingMode, setIsEditingMode] = useState(false);
+    const [editingOrder, setEditingOrder] = useState<{
+        service_order_id: number;
+        user_id: number;
+        bay_id: number;
+        status: string;
+        user?: Customer;
+        details?: ServiceOrderDetail[];
+    } | null>(null);
 
     // Customer selection state
     const [customerSearch, setCustomerSearch] = useState('');
@@ -54,15 +74,94 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
     const [newCustomerForm, setNewCustomerForm] = useState({
         first_name: '',
         last_name: '',
+        email: '',
         phone_number: '',
         address: '',
     });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [generatedNumber, setGeneratedNumber] = useState(
+        Math.floor(10000 + Math.random() * 90000).toString(),
+    );
 
     useEffect(() => {
         loadServices();
         loadCustomers();
+
+        // Parse query parameters for employee assignment or editing
+        const params = new URLSearchParams(window.location.search);
+        const employeeParam = params.get('employee');
+        const orderParam = params.get('order');
+        const editingParam = params.get('editing');
+        const bookingParam = params.get('booking');
+
+        if (employeeParam) {
+            try {
+                const employeeData = JSON.parse(
+                    decodeURIComponent(employeeParam),
+                );
+                setAssignedEmployee(employeeData);
+            } catch (err) {
+                console.error('Failed to parse employee data:', err);
+            }
+        }
+
+        if (orderParam && editingParam === 'true') {
+            try {
+                const orderData = JSON.parse(decodeURIComponent(orderParam));
+                setEditingOrder(orderData);
+                setIsEditingMode(true);
+                // Set the assigned employee from the order if available
+                if (orderData.employee) {
+                    setAssignedEmployee({
+                        employee_id: orderData.employee.employee_id,
+                        first_name: orderData.employee.first_name,
+                        last_name: orderData.employee.last_name,
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to parse order data:', err);
+            }
+        }
+
+        // Handle booking parameter for reservations
+        if (bookingParam) {
+            try {
+                const bookingData = JSON.parse(
+                    decodeURIComponent(bookingParam),
+                );
+
+                // Convert service_ids string to array of numbers
+                let serviceIds: number[] = [];
+                if (typeof bookingData.service_ids === 'string') {
+                    serviceIds = bookingData.service_ids.split(',').map(Number);
+                } else if (Array.isArray(bookingData.service_ids)) {
+                    serviceIds = bookingData.service_ids.map(Number);
+                }
+
+                // Store booking data to pre-populate customer and services
+                setEditingOrder({
+                    service_order_id: bookingData.service_order_id,
+                    user_id: bookingData.user_id,
+                    bay_id: bayId,
+                    status: 'pending',
+                    user: {
+                        user_id: bookingData.user_id,
+                        first_name: bookingData.first_name,
+                        last_name: bookingData.last_name,
+                        phone_number: bookingData.phone,
+                    },
+                    details: serviceIds.map((id: number, index: number) => ({
+                        service_order_detail_id: index,
+                        service_id: id,
+                        service: { service_id: id },
+                    })),
+                });
+                setIsEditingMode(true); // Use editing mode to skip customer selection
+            } catch (err) {
+                console.error('Failed to parse booking data:', err);
+            }
+        }
     }, []);
 
     useEffect(() => {
@@ -80,6 +179,19 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
             setFilteredCustomers([]);
         }
     }, [customerSearch, customers]);
+
+    useEffect(() => {
+        // Pre-populate services when editing existing order
+        if (isEditingMode && editingOrder?.details && services.length > 0) {
+            const existingServiceIds = editingOrder.details.map(
+                (d: ServiceOrderDetail) => d.service_id,
+            );
+            const selectedSvcs = services.filter((s) =>
+                existingServiceIds.includes(s.service_id),
+            );
+            setSelectedServices(selectedSvcs);
+        }
+    }, [isEditingMode, editingOrder, services]);
 
     const loadServices = async () => {
         try {
@@ -132,6 +244,13 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
             setError('Please select at least one service');
             return;
         }
+
+        // If editing, skip customer selection and proceed directly
+        if (isEditingMode && editingOrder?.user_id) {
+            proceedToPayment(editingOrder.user as Customer);
+            return;
+        }
+
         setShowCustomerModal(true);
         setError('');
     };
@@ -151,14 +270,40 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
         try {
             setSubmitting(true);
-            const generatedPassword = `${newCustomerForm.last_name}${newCustomerForm.first_name}12345`;
+
+            // Use provided email or generate temporary one
+            let finalEmail = newCustomerForm.email.trim();
+
+            if (!finalEmail) {
+                // Generate temporary email only if user didn't provide one
+                const firstName = newCustomerForm.first_name
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '');
+                const lastName = newCustomerForm.last_name
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '');
+                finalEmail = `${firstName}.${lastName}.${generatedNumber}@gearhead-temp.com`;
+            }
+
+            // Generate password with spaces removed from names
+            const lastNameNoSpaces = newCustomerForm.last_name.replace(
+                /\s+/g,
+                '',
+            );
+            const firstNameNoSpaces = newCustomerForm.first_name.replace(
+                /\s+/g,
+                '',
+            );
+            const generatedPassword = `${lastNameNoSpaces}${firstNameNoSpaces}${generatedNumber}`;
 
             const res = await axios.post('/customers/create', {
                 first_name: newCustomerForm.first_name,
                 last_name: newCustomerForm.last_name,
                 phone_number: newCustomerForm.phone_number || null,
                 address: newCustomerForm.address || null,
-                email: null,
+                email: finalEmail,
                 password: generatedPassword,
             });
 
@@ -180,27 +325,47 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
             setSubmitting(true);
             const serviceIds = selectedServices.map((s) => s.service_id);
 
-            console.log('Creating service order for customer:', customer);
-            console.log('Customer ID:', customer.user_id);
-            console.log(
-                'Customer Name:',
-                `${customer.first_name} ${customer.last_name}`,
-            );
+            if (isEditingMode && editingOrder?.service_order_id) {
+                // Update existing service order
+                console.log(
+                    'Updating service order:',
+                    editingOrder.service_order_id,
+                );
 
-            // Create the service order and assign to bay
-            const response = await axios.post('/service-orders/registry', {
-                customer_id: customer.user_id,
-                bay_id: bayId,
-                service_ids: serviceIds,
-            });
+                await axios.put(
+                    `/service-orders/${editingOrder.service_order_id}`,
+                    {
+                        service_ids: serviceIds,
+                        employee_id: assignedEmployee?.employee_id || null,
+                    },
+                );
 
-            console.log('Service order created:', response.data);
+                console.log('Service order updated');
+            } else {
+                // Create new service order
+                console.log('Creating service order for customer:', customer);
+                console.log('Customer ID:', customer.user_id);
+                console.log(
+                    'Customer Name:',
+                    `${customer.first_name} ${customer.last_name}`,
+                );
 
-            // Navigate to registry after successful creation
+                // Create the service order and assign to bay
+                const response = await axios.post('/service-orders/registry', {
+                    customer_id: customer.user_id,
+                    bay_id: bayId,
+                    service_ids: serviceIds,
+                    employee_id: assignedEmployee?.employee_id || null,
+                });
+
+                console.log('Service order created:', response.data);
+            }
+
+            // Navigate to registry after successful creation/update
             router.visit('/registry');
         } catch (err) {
-            console.error('Failed to create service order:', err);
-            setError('Failed to create service order. Please try again.');
+            console.error('Failed to process service order:', err);
+            setError('Failed to process service order. Please try again.');
             setSubmitting(false);
         }
     };
@@ -256,15 +421,28 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Select Services - Bay #${bayNumber}`} />
+            <Head
+                title={`${isEditingMode ? 'Edit' : 'Select'} Services - Bay #${bayNumber}`}
+            />
             <div className="flex flex-col gap-6 p-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">
-                        Select Services for Bay #{bayNumber}
+                        {isEditingMode ? 'Edit' : 'Select'} Services for Bay #
+                        {bayNumber}
                     </h1>
-                    <p className="text-muted-foreground">
-                        Choose services for this carwash order
-                    </p>
+                    <div className="mt-2 space-y-1">
+                        <p className="text-muted-foreground">
+                            {isEditingMode
+                                ? 'Update services for this order'
+                                : 'Choose services for this carwash order'}
+                        </p>
+                        {assignedEmployee && (
+                            <p className="text-sm font-medium text-highlight">
+                                Assigned Employee: {assignedEmployee.first_name}{' '}
+                                {assignedEmployee.last_name}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
@@ -541,7 +719,9 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                             className="w-full"
                                             onClick={handleProceedToCustomer}
                                         >
-                                            Proceed to Customer
+                                            {isEditingMode
+                                                ? 'Update Services'
+                                                : 'Proceed to Customer'}
                                         </Button>
                                     </>
                                 )}
@@ -676,7 +856,10 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                         ) : (
                             <>
                                 <h2 className="mb-6 text-2xl font-bold">
-                                    Create New Customer
+                                    Create{' '}
+                                    <span className="text-yellow-400">
+                                        New Customer
+                                    </span>
                                 </h2>
 
                                 {error && (
@@ -723,6 +906,24 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                         />
                                     </div>
 
+                                    {/* Email */}
+                                    <div>
+                                        <Label className="mb-2 block">
+                                            Email (Optional)
+                                        </Label>
+                                        <Input
+                                            type="email"
+                                            placeholder="Leave blank for auto-generated email"
+                                            value={newCustomerForm.email}
+                                            onChange={(e) =>
+                                                setNewCustomerForm({
+                                                    ...newCustomerForm,
+                                                    email: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+
                                     {/* Phone Number */}
                                     <div>
                                         <Label className="mb-2 block">
@@ -762,13 +963,37 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
                                     {/* Info */}
                                     <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-600 dark:bg-blue-950/20">
-                                        A temporary account will be created with
-                                        password:{' '}
-                                        <code className="font-mono font-semibold">
-                                            {newCustomerForm.last_name}
-                                            {newCustomerForm.first_name}
-                                            12345
-                                        </code>
+                                        <p className="mb-2">
+                                            A temporary account will be created
+                                            with:
+                                        </p>
+                                        <ul className="space-y-1">
+                                            {!newCustomerForm.email.trim() && (
+                                                <li>
+                                                    <strong>Email:</strong>{' '}
+                                                    <code className="font-mono">
+                                                        {newCustomerForm.first_name &&
+                                                        newCustomerForm.last_name
+                                                            ? `${newCustomerForm.first_name.toLowerCase().trim().replace(/\s+/g, '')}.${newCustomerForm.last_name.toLowerCase().trim().replace(/\s+/g, '')}.${generatedNumber}@gearhead-temp.com`
+                                                            : `firstname.lastname.${generatedNumber}@gearhead-temp.com`}
+                                                    </code>
+                                                </li>
+                                            )}
+                                            <li>
+                                                <strong>Password:</strong>{' '}
+                                                <code className="font-mono font-semibold">
+                                                    {newCustomerForm.last_name.replace(
+                                                        /\s+/g,
+                                                        '',
+                                                    )}
+                                                    {newCustomerForm.first_name.replace(
+                                                        /\s+/g,
+                                                        '',
+                                                    )}
+                                                    {generatedNumber}
+                                                </code>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
 
