@@ -165,7 +165,7 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
                             className="h-fit hover:bg-transparent focus-visible:bg-transparent active:bg-transparent data-[active=true]:bg-transparent"
                             asChild
                         >
-                            <Link href={dashboard()} prefetch>
+                            <Link href="/" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

@@ -1,19 +1,22 @@
 import { Button } from '@/components/ui/button';
-import { Link } from '@inertiajs/react';
+import { login } from '@/routes';
+import { type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { Car, Check, Droplets, Sparkles, Zap } from 'lucide-react';
 
 export default function LP_Services() {
+    const { auth } = usePage().props as unknown as SharedData;
     return (
-        <section id = 'services'>
+        <section id="services">
             {/* Header */}
             <div className="w-full py-10 text-center">
-                <h1 className="mb-4 text-5xl font-bold tracking-tight md:text-6xl">
+                <h1 className="mb-4 text-5xl font-bold tracking-tight">
                     <span className="text-foreground">Our </span>
-                    <span className="text-yellow-400 dark:text-highlight">
+                    <span className="text-yellow-500 dark:text-highlight">
                         Services
                     </span>
                 </h1>
-                <p className="mx-auto max-w-2xl text-lg text-muted-foreground md:text-xl">
+                <p className="mx-auto max-w-2xl text-muted-foreground">
                     Professional car wash packages tailored to your vehicle's
                     needs
                 </p>
@@ -113,28 +116,28 @@ export default function LP_Services() {
 
                         return (
                             <div key={index} className="w-full max-w-xs">
-                                <div className="hover:shadow-3xl flex h-full flex-col overflow-hidden rounded-3xl border border-transparent shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-3 dark:border-highlight/30">
+                                <div className="hover:shadow-3xl flex h-full flex-col overflow-hidden rounded-lg border border-transparent shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-3 dark:border-highlight/30">
                                     {/* Most Popular Badge - Yellow in light, amber in dark */}
                                     {card.popular && (
-                                        <div className="bg-yellow-400 p-3 text-center text-sm font-bold text-black dark:bg-highlight dark:text-highlight-foreground">
+                                        <div className="bg-yellow-500 p-2 text-center text-xs font-bold text-black dark:bg-highlight dark:text-highlight-foreground">
                                             Most Popular
                                         </div>
                                     )}
 
                                     {/* Header */}
-                                    <div className="px-6 pt-9 pb-7">
-                                        <div className="flex flex-col items-start gap-4">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-400/10 shadow-lg ring-8 ring-background/50 dark:bg-highlight/10">
+                                    <div className="px-5 pt-5 pb-3">
+                                        <div className="flex flex-col items-start gap-2.5">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/10 shadow-sm dark:bg-highlight/10">
                                                 <Icon
-                                                    className="h-9 w-9 text-yellow-400 dark:text-highlight"
+                                                    className="h-6 w-6 text-yellow-500 dark:text-highlight"
                                                     strokeWidth={2.5}
                                                 />
                                             </div>
                                             <div>
-                                                <h3 className="text-2xl font-bold text-foreground">
+                                                <h3 className="text-base font-bold text-foreground">
                                                     {card.title}
                                                 </h3>
-                                                <p className="mt-1.5 text-sm text-muted-foreground">
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
                                                     {card.subtitle}
                                                 </p>
                                             </div>
@@ -142,17 +145,17 @@ export default function LP_Services() {
                                     </div>
 
                                     {/* Pricing */}
-                                    <div className="px-6 pb-7">
-                                        <div className="flex flex-wrap justify-center gap-4">
+                                    <div className="px-5 pb-3">
+                                        <div className="flex flex-wrap justify-center gap-2.5">
                                             {card.prices.map((item) => (
                                                 <div
                                                     key={item.size}
-                                                    className="flex min-w-[92px] flex-col items-center justify-center rounded-2xl border border-border/40 bg-muted/5 px-5 py-5 shadow-lg backdrop-blur-sm transition-all hover:border-yellow-400/50 hover:bg-yellow-400/5 dark:hover:border-highlight/50 dark:hover:bg-highlight/5"
+                                                    className="flex min-w-[75px] flex-col items-center justify-center rounded-lg border border-border/40 bg-muted/5 px-3 py-2.5 shadow-sm backdrop-blur-sm transition-all hover:border-yellow-500/50 hover:bg-yellow-500/5 dark:hover:border-highlight/50 dark:hover:bg-highlight/5"
                                                 >
-                                                    <span className="text-lg font-medium text-muted-foreground">
+                                                    <span className="text-xs font-medium text-muted-foreground">
                                                         {item.size}
                                                     </span>
-                                                    <p className="mt-2 text-2xl font-bold text-yellow-400 dark:text-highlight">
+                                                    <p className="mt-1 text-base font-bold text-yellow-500 dark:text-highlight">
                                                         {item.price}
                                                     </p>
                                                 </div>
@@ -161,20 +164,20 @@ export default function LP_Services() {
                                     </div>
 
                                     {/* Features */}
-                                    <div className="flex-1 border-t border-border/30 px-6 py-6">
-                                        <div className="space-y-4">
+                                    <div className="flex-1 border-t border-border/30 px-5 py-3">
+                                        <div className="space-y-2.5">
                                             {card.features.map((feature) => (
                                                 <div
                                                     key={feature}
-                                                    className="flex items-center gap-4"
+                                                    className="flex items-center gap-2.5"
                                                 >
-                                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-yellow-400 bg-yellow-400/10 shadow-sm dark:border-highlight dark:bg-highlight/10">
+                                                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 border-yellow-500 bg-yellow-500/10 dark:border-highlight dark:bg-highlight/10">
                                                         <Check
-                                                            className="h-4 w-4 text-yellow-400 dark:text-highlight"
+                                                            className="h-3 w-3 text-yellow-500 dark:text-highlight"
                                                             strokeWidth={3}
                                                         />
                                                     </div>
-                                                    <span className="text-foreground">
+                                                    <span className="text-sm text-foreground">
                                                         {feature}
                                                     </span>
                                                 </div>
@@ -183,8 +186,15 @@ export default function LP_Services() {
                                     </div>
 
                                     {/* Button */}
-                                    <div className="px-6 pt-4 pb-8">
-                                        <Link href="#" className="block">
+                                    <div className="px-5 pt-3 pb-5">
+                                        <Link
+                                            href={
+                                                auth.user
+                                                    ? '/services'
+                                                    : login()
+                                            }
+                                            className="block"
+                                        >
                                             <Button
                                                 variant={
                                                     card.popular
@@ -193,8 +203,8 @@ export default function LP_Services() {
                                                 }
                                                 className={
                                                     card.popular
-                                                        ? 'w-full rounded-2xl bg-yellow-400 py-6 font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90'
-                                                        : 'w-full rounded-2xl border-yellow-400 py-6 font-bold text-yellow-400 shadow-lg hover:bg-yellow-400/10 dark:border-highlight dark:text-highlight dark:hover:bg-highlight/10'
+                                                        ? 'w-full bg-yellow-500 py-4 text-sm font-bold shadow-md hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90'
+                                                        : 'w-full border-yellow-500 py-4 text-sm font-bold text-yellow-500 shadow-md hover:bg-yellow-500/10 dark:border-highlight dark:text-highlight dark:hover:bg-highlight/10'
                                                 }
                                             >
                                                 Book Now
@@ -209,10 +219,13 @@ export default function LP_Services() {
             </div>
 
             <div className="flex w-full justify-center py-12">
-                <Link href="#" className="block w-full max-w-xs">
+                <Link
+                    href={auth.user ? '/services' : login()}
+                    className="block w-full max-w-xs"
+                >
                     <Button
                         variant="highlight"
-                        className="w-full rounded-2xl bg-yellow-400 py-6 text-base font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90"
+                        className="w-full bg-yellow-500 py-6 text-base font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90"
                     >
                         View All Services
                     </Button>
