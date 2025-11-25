@@ -2,7 +2,7 @@ import { Clock8, Gem, ShieldCheck } from 'lucide-react';
 
 export default function About() {
     return (
-        <section id="about" className="w-full py-20">
+        <section id="about" className="flex h-screen w-full items-center py-20">
             <div className="mx-auto max-w-6xl px-6">
                 <h2 className="mb-10 text-3xl font-bold text-foreground">
                     Why choose{' '}
