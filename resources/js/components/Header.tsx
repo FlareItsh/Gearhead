@@ -15,7 +15,6 @@ const defaultNavLinks: NavLink[] = [
     { href: '#home', label: 'Home', section: 'home' },
     { href: '#about', label: 'About', section: 'about' },
     { href: '#services', label: 'Services', section: 'services' },
-    { href: '#review', label: 'Review', section: 'review' },
     { href: '#contact', label: 'Contact', section: 'contact' },
 ];
 
@@ -27,11 +26,32 @@ export default function Header({ navLinks }: HeaderProps) {
     const { auth } = usePage().props as unknown as SharedData;
     const [isOpen, setIsOpen] = useState(false);
     const [activeSection, setActiveSection] = useState('home');
+    const [isDarkMode, setIsDarkMode] = useState(true);
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const currentPath =
         typeof window !== 'undefined' ? window.location.pathname : '/';
 
     const linksToUse = navLinks ?? defaultNavLinks;
+
+    // Track theme changes
+    useEffect(() => {
+        const checkTheme = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            setIsDarkMode(isDark);
+        };
+
+        // Initial check
+        checkTheme();
+
+        // Watch for theme changes
+        const observer = new MutationObserver(checkTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+
+        return () => observer.disconnect();
+    }, []);
 
     // Track active section based on scroll position
     useEffect(() => {
@@ -82,19 +102,17 @@ export default function Header({ navLinks }: HeaderProps) {
             : 'px-3 py-2 hover:text-highlight';
     };
 
-    const mobileLinkClasses = (isActive: boolean) => {
-        return isActive
-            ? 'w-11/12 rounded-sm bg-tertiary px-3 py-2 text-center font-bold text-highlight'
-            : 'w-11/12 px-3 py-2 text-center hover:text-highlight';
-    };
-
     return (
         <header className="sticky top-0 z-50 w-full bg-background py-3 shadow-sm">
             <nav className="mx-auto flex max-w-[95rem] items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
                 <Link href={home()} className="flex-shrink-0">
                     <img
-                        src="/Gearhead-Logo-DarkMode.png"
+                        src={
+                            isDarkMode
+                                ? '/Gearhead-Logo-DarkMode.png'
+                                : '/Gearhead-Logo.png'
+                        }
                         alt="Gearhead Logo"
                         className="h-10 w-auto"
                     />
@@ -145,52 +163,101 @@ export default function Header({ navLinks }: HeaderProps) {
                 </button>
             </nav>
 
-            {/* Mobile Dropdown Menu */}
-            {isOpen && (
-                <div className="mt-3 flex flex-col items-center gap-3 bg-secondary py-4 text-secondary-foreground shadow-md md:hidden">
-                    {linksToUse.map((link) => (
-                        <Link
-                            key={link.label}
-                            href={link.href}
-                            className={mobileLinkClasses(isActiveLink(link))}
+            {/* Mobile Sidebar */}
+            <div
+                className={`fixed inset-y-0 right-0 z-50 w-64 transform bg-background shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+                    isOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
+            >
+                <div className="flex h-full flex-col">
+                    {/* Sidebar Header */}
+                    <div className="flex items-center justify-between border-b border-border p-4">
+                        <img
+                            src={
+                                isDarkMode
+                                    ? '/Gearhead-Logo-DarkMode.png'
+                                    : '/Gearhead-Logo.png'
+                            }
+                            alt="Gearhead Logo"
+                            className="h-8 w-auto"
+                        />
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="rounded-md p-2 text-foreground transition-all hover:bg-secondary hover:text-highlight"
                         >
-                            {link.label}
-                        </Link>
-                    ))}
+                            <X size={24} />
+                        </button>
+                    </div>
 
-                    {/* Mobile View Button */}
-                    <div className="mt-4 flex w-10/12 flex-col gap-3">
-                        {auth.user ? (
-                            // Authenticated users: admin -> dashboard, customer -> customer-dashboard
-                            <Link href={dashboard()}>
-                                <Button className="w-full" variant="highlight">
-                                    {auth.user.role === 'customer'
-                                        ? 'Book Now'
-                                        : 'Dashboard'}
-                                </Button>
-                            </Link>
-                        ) : (
-                            <>
-                                <Link href={login()}>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
+                    {/* Sidebar Links */}
+                    <nav className="flex-1 overflow-y-auto p-4">
+                        <ul className="flex flex-col gap-2">
+                            {linksToUse.map((link) => (
+                                <li key={link.label}>
+                                    <a
+                                        href={link.href}
+                                        onClick={() => setIsOpen(false)}
+                                        className={
+                                            isActiveLink(link)
+                                                ? 'block rounded-md bg-tertiary px-4 py-3 font-bold text-highlight transition-colors'
+                                                : 'block rounded-md px-4 py-3 text-foreground transition-colors hover:bg-secondary hover:text-highlight'
+                                        }
                                     >
-                                        Log in
-                                    </Button>
-                                </Link>
-                                <Link href={register()}>
+                                        {link.label}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+
+                    {/* Sidebar Action Buttons */}
+                    <div className="border-t border-border p-4">
+                        <div className="flex flex-col gap-3">
+                            {auth.user ? (
+                                <Link href={dashboard()}>
                                     <Button
+                                        className="w-full"
                                         variant="highlight"
-                                        className="w-full"
+                                        onClick={() => setIsOpen(false)}
                                     >
-                                        Register
+                                        {auth.user.role === 'customer'
+                                            ? 'Book Now'
+                                            : 'Dashboard'}
                                     </Button>
                                 </Link>
-                            </>
-                        )}
+                            ) : (
+                                <>
+                                    <Link href={login()}>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Log in
+                                        </Button>
+                                    </Link>
+                                    <Link href={register()}>
+                                        <Button
+                                            variant="highlight"
+                                            className="w-full"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Register
+                                        </Button>
+                                    </Link>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+                    onClick={() => setIsOpen(false)}
+                />
             )}
         </header>
     );
