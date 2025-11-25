@@ -2,7 +2,7 @@ import { FaQuoteRight, FaStar } from 'react-icons/fa'; // Import both
 
 export default function Review() {
     return (
-        <div>
+        <section id = "review">
             {/* Header */}
             <div className="w-full py-10 text-center">
                 <h1 className="mb-4 text-5xl font-bold tracking-tight md:text-6xl">
@@ -42,7 +42,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/566570802_1868417847043126_7186861178944086337_n.jpg"
+                            src="/img/reviewProfile/566570802_1868417847043126_7186861178944086337_n.jpg"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -81,7 +81,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/566570802_1868417847043126_7186861178944086337_n.jpg"
+                            src="/img/reviewProfile/566570802_1868417847043126_7186861178944086337_n.jpg"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -120,7 +120,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/566570802_1868417847043126_7186861178944086337_n.jpg"
+                            src="/img/reviewProfile/566570802_1868417847043126_7186861178944086337_n.jpg"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -159,7 +159,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/566570802_1868417847043126_7186861178944086337_n.jpg"
+                            src="/img/reviewProfile/566570802_1868417847043126_7186861178944086337_n.jpg"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -198,7 +198,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/566570802_1868417847043126_7186861178944086337_n.jpg"
+                            src="/img/reviewProfile/566570802_1868417847043126_7186861178944086337_n.jpg"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -240,7 +240,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/Screenshot 2025-11-21 173533.png"
+                            src="/img/reviewProfile/Screenshot 2025-11-21 173533.png"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -279,7 +279,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/Screenshot 2025-11-21 173533.png"
+                            src="/img/reviewProfile/Screenshot 2025-11-21 173533.png"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -318,7 +318,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/Screenshot 2025-11-21 173533.png"
+                            src="/img/reviewProfile/Screenshot 2025-11-21 173533.png"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -357,7 +357,7 @@ export default function Review() {
                     {/* Author */}
                     <div className="flex items-center gap-4">
                         <img
-                            src="/Screenshot 2025-11-21 173533.png"
+                            src="/img/reviewProfile/Screenshot 2025-11-21 173533.png"
                             alt="James Thomas"
                             className="h-14 w-14 rounded-full object-cover ring-4 ring-gray-100"
                         />
@@ -372,6 +372,6 @@ export default function Review() {
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

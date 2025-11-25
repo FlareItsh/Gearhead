@@ -10,7 +10,7 @@ export default function About() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                     <div className="rounded-xl overflow-hidden">
                         <img
-                            src="/aboutCar.png"
+                            src="/img/aboutCar.png"
                             className="w-full h-[300px] object-cover"
                             alt="Garage"
                         />
