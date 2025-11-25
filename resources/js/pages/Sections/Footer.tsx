@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Twitter, MapPin, Phone, Mail } from 'lucide-react';
+import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
 
 const socialLinks = [
   { href: 'https://www.facebook.com/GearheadCarwash', icon: Facebook },
@@ -14,9 +14,27 @@ const links = {
 export default function Footer() {
     return (
         <footer id="contact" className="w-full bg-black text-white">
-            <div>
-                {/* diri ang Ready to get started */}
+            {/* Get started diri */}
+            <div className="relative w-full max-w-4xl mx-auto rounded-lg overflow-hidden">
+                <img 
+                    src="/footer-Img.png" 
+                    alt="Footer Banner" 
+                    className="w-full h-96 object-cover"
+                />
+
+                <div className="absolute top-1/2 left-8 transform -translate-y-1/2 text-left max-w-md">
+                    <h2 className="text-4xl md:text-5xl font-bold text-white">
+                        Ready to Get Started?
+                    </h2>
+                    <p className="mt-4 text-lg md:text-xl text-gray-200">
+                        Join hundreds of satisfied customers and experience the Gearhead difference.
+                    </p>
+                    <a href="#" className="mt-6 inline-flex text-yellow-400 font-semibold hover:underline">
+                        Book your first wash <ArrowRight className="w-5 h-5 ml-2 transform -rotate-45" />
+                    </a>
+                </div>
             </div>
+
             <div className="mx-auto max-w-6xl px-6 py-12 md:py-16 grid gap-10 sm:gap-12 md:grid-cols-4">
                 <div className="space-y-4">
                     <h3 className="text-2xl font-bold">About Us</h3>
