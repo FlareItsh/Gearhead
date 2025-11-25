@@ -1,7 +1,7 @@
 import { dashboard, home, login, register } from '@/routes';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, X } from 'lucide-react';
+import { Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 
@@ -32,6 +32,20 @@ export default function Header({ navLinks }: HeaderProps) {
         typeof window !== 'undefined' ? window.location.pathname : '/';
 
     const linksToUse = navLinks ?? defaultNavLinks;
+
+    // Toggle theme function
+    const toggleTheme = () => {
+        const html = document.documentElement;
+        const newTheme = html.classList.contains('dark') ? 'light' : 'dark';
+
+        if (newTheme === 'dark') {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    };
 
     // Track theme changes
     useEffect(() => {
@@ -132,7 +146,33 @@ export default function Header({ navLinks }: HeaderProps) {
                 </ul>
 
                 {/* Desktop Buttons */}
-                <div className="hidden gap-5 text-base md:flex">
+                <div className="hidden items-center gap-3 text-base md:flex">
+                    {/* Theme Toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className="rounded-md p-2 text-foreground transition-all duration-300 hover:bg-secondary hover:text-highlight active:scale-95"
+                        aria-label="Toggle theme"
+                    >
+                        <div className="relative h-5 w-5">
+                            <Sun
+                                size={20}
+                                className={`absolute inset-0 transition-all duration-500 ${
+                                    isDarkMode
+                                        ? 'scale-100 opacity-100'
+                                        : 'scale-0 opacity-0'
+                                }`}
+                            />
+                            <Moon
+                                size={20}
+                                className={`absolute inset-0 transition-all duration-500 ${
+                                    !isDarkMode
+                                        ? 'scale-100 opacity-100'
+                                        : 'scale-0 opacity-0'
+                                }`}
+                            />
+                        </div>
+                    </button>
+
                     {auth.user ? (
                         // Authenticated users: admin -> dashboard, customer -> customer-dashboard
                         <Link href={dashboard()}>
@@ -213,6 +253,35 @@ export default function Header({ navLinks }: HeaderProps) {
                     {/* Sidebar Action Buttons */}
                     <div className="border-t border-border p-4">
                         <div className="flex flex-col gap-3">
+                            {/* Theme Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="flex w-full items-center justify-between rounded-md bg-secondary p-3 text-foreground transition-all duration-300 hover:bg-secondary/80 hover:text-highlight active:scale-95"
+                                aria-label="Toggle theme"
+                            >
+                                <span className="text-sm font-medium">
+                                    {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                                </span>
+                                <div className="relative h-5 w-5">
+                                    <Sun
+                                        size={20}
+                                        className={`absolute inset-0 rotate-0 transition-all duration-500 ${
+                                            isDarkMode
+                                                ? 'scale-100 opacity-100'
+                                                : 'scale-0 opacity-0'
+                                        }`}
+                                    />
+                                    <Moon
+                                        size={20}
+                                        className={`absolute inset-0 rotate-180 transition-all duration-500 ${
+                                            !isDarkMode
+                                                ? 'scale-100 opacity-100'
+                                                : 'scale-0 opacity-0'
+                                        }`}
+                                    />
+                                </div>
+                            </button>
+
                             {auth.user ? (
                                 <Link href={dashboard()}>
                                     <Button
