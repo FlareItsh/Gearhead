@@ -7,7 +7,7 @@ function Input({ className, type = "text", ...props }: React.ComponentProps<"inp
       type={type}
       data-slot="input"
       className={cn(
-        "border border-border/20 file:text-foreground placeholder:text-muted-foreground " +
+        "border border-border/50 file:text-foreground placeholder:text-muted-foreground " +
         "selection:bg-blue-400 selection:text-white " +
         "text-[rgb(var(--input-foreground))] bg-[rgb(var(--input-bg))] " +
         "h-9 w-full min-w-0 rounded-md px-3 py-1 text-base shadow-xs outline-none " +
