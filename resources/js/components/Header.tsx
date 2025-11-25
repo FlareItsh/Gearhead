@@ -2,7 +2,7 @@ import { dashboard, home, login, register } from '@/routes';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 
 type NavLink = {
@@ -13,9 +13,9 @@ type NavLink = {
 
 const defaultNavLinks: NavLink[] = [
     { href: '#home', label: 'Home', section: 'home' },
-    { href: '#about', label: 'About', section: 'about'},
+    { href: '#about', label: 'About', section: 'about' },
     { href: '#services', label: 'Services', section: 'services' },
-    { href: '#review', label: 'Review', section: 'review'},
+    { href: '#review', label: 'Review', section: 'review' },
     { href: '#contact', label: 'Contact', section: 'contact' },
 ];
 
@@ -26,13 +26,47 @@ interface HeaderProps {
 export default function Header({ navLinks }: HeaderProps) {
     const { auth } = usePage().props as unknown as SharedData;
     const [isOpen, setIsOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState('home');
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const currentPath =
         typeof window !== 'undefined' ? window.location.pathname : '/';
 
     const linksToUse = navLinks ?? defaultNavLinks;
 
+    // Track active section based on scroll position
+    useEffect(() => {
+        const handleScroll = () => {
+            const sections = linksToUse
+                .filter((link) => link.section)
+                .map((link) => link.section as string);
+
+            // Get current scroll position
+            const scrollPosition = window.scrollY + 100; // Offset for header height
+
+            // Find which section is currently in view
+            for (let i = sections.length - 1; i >= 0; i--) {
+                const section = document.getElementById(sections[i]);
+                if (section && section.offsetTop <= scrollPosition) {
+                    setActiveSection(sections[i]);
+                    break;
+                }
+            }
+        };
+
+        // Add scroll listener
+        window.addEventListener('scroll', handleScroll);
+        // Initial check
+        handleScroll();
+
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [linksToUse]);
+
     const isActiveLink = (link: NavLink) => {
+        // If link has a section, check if it's the active section
+        if (link.section) {
+            return link.section === activeSection;
+        }
+        
         if (link.href === '/') {
             return currentPath === '/' && !hash;
         }
@@ -55,7 +89,7 @@ export default function Header({ navLinks }: HeaderProps) {
     };
 
     return (
-        <header className="w-full bg-background py-3 shadow-sm sticky top-0 z-50">
+        <header className="sticky top-0 z-50 w-full bg-background py-3 shadow-sm">
             <nav className="mx-auto flex max-w-[95rem] items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
                 <Link href={home()} className="flex-shrink-0">
@@ -69,13 +103,13 @@ export default function Header({ navLinks }: HeaderProps) {
                 {/* Desktop Nav */}
                 <ul className="hidden items-center gap-5 rounded-md bg-secondary px-1 py-1 font-medium text-secondary-foreground md:flex">
                     {linksToUse.map((link) => (
-                        <Link
+                        <a
                             key={link.label}
                             href={link.href}
                             className={linkClasses(isActiveLink(link))}
                         >
                             <li>{link.label}</li>
-                        </Link>
+                        </a>
                     ))}
                 </ul>
 
