@@ -66,7 +66,7 @@ export default function Header({ navLinks }: HeaderProps) {
         if (link.section) {
             return link.section === activeSection;
         }
-        
+
         if (link.href === '/') {
             return currentPath === '/' && !hash;
         }
