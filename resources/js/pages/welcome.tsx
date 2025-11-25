@@ -20,7 +20,7 @@ export default function Welcome() {
             <section id="home" className="scroll-mt-18">
                 <Hero></Hero>
             </section>
-            <section id="about" className="scroll-mt-18">
+            <section id="about" className="scroll-mt-10">
                 <About></About>
             </section>
             <section id="services" className="scroll-mt-10">
