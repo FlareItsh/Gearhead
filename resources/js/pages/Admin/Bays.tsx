@@ -267,7 +267,7 @@ export default function Bays() {
                             <DialogHeader>
                                 <DialogTitle>
                                     Add New{' '}
-                                    <span className="font-semibold text-highlight">
+                                    <span className="font-semibold text-yellow-500">
                                         Bay
                                     </span>
                                 </DialogTitle>

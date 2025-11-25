@@ -382,14 +382,14 @@ export default function AdminServices({
                                 {editingService ? (
                                     <>
                                         Edit{' '}
-                                        <span className="text-yellow-400">
+                                        <span className="text-yellow-500">
                                             Service
                                         </span>
                                     </>
                                 ) : (
                                     <>
                                         Add{' '}
-                                        <span className="text-yellow-400">
+                                        <span className="text-yellow-500">
                                             Service
                                         </span>
                                     </>

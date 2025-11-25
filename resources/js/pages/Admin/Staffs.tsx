@@ -248,19 +248,137 @@ export default function Staffs() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Staff Management" />
             <div className="flex flex-col gap-6 p-4">
-                <Heading
-                    title="Staff Management"
-                    description="Manage employees and schedules"
-                />
+                <div className="flex items-center justify-between">
+                    <Heading
+                        title="Staff Management"
+                        description="Manage employees and schedules"
+                    />
 
-                {/*search n add*/}
+                    {/*add modal*/}
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="highlight">
+                                <Plus className="h-4 w-4" /> Add Employee
+                            </Button>
+                        </DialogTrigger>
+
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>
+                                    Add{' '}
+                                    <span className="font-semibold text-yellow-500">
+                                        Employee
+                                    </span>
+                                </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="grid gap-3 py-2">
+                                {/*first name*/}
+                                <div>
+                                    <Label>First Name</Label>
+                                    <Input
+                                        value={addForm.firstName}
+                                        onChange={(e) =>
+                                            setAddForm({
+                                                ...addForm,
+                                                firstName: e.target.value,
+                                            })
+                                        }
+                                        placeholder="First name"
+                                    />
+                                </div>
+
+                                {/*last name*/}
+                                <div>
+                                    <Label>Last Name</Label>
+                                    <Input
+                                        value={addForm.lastName}
+                                        onChange={(e) =>
+                                            setAddForm({
+                                                ...addForm,
+                                                lastName: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Last name"
+                                    />
+                                </div>
+
+                                {/*middle name*/}
+                                <div>
+                                    <Label>Middle Name (optional)</Label>
+                                    <Input
+                                        value={addForm.middleName}
+                                        onChange={(e) =>
+                                            setAddForm({
+                                                ...addForm,
+                                                middleName: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Middle name"
+                                    />
+                                </div>
+
+                                {/*phone*/}
+                                <div>
+                                    <Label>Phone Number</Label>
+                                    <Input
+                                        value={addForm.phone}
+                                        onChange={(e) => {
+                                            const formatted = formatPhone(
+                                                e.target.value,
+                                            );
+                                            setAddForm({
+                                                ...addForm,
+                                                phone: formatted,
+                                            });
+                                        }}
+                                        placeholder="09123456789"
+                                        maxLength={11}
+                                    />
+                                </div>
+
+                                {/*address*/}
+                                <div>
+                                    <Label>Address</Label>
+                                    <Input
+                                        value={addForm.address}
+                                        onChange={(e) =>
+                                            setAddForm({
+                                                ...addForm,
+                                                address: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Address"
+                                    />
+                                </div>
+                            </div>
+
+                            <DialogFooter className="flex justify-end gap-3">
+                                <DialogClose asChild>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={resetAddForm}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </DialogClose>
+                                <DialogClose asChild>
+                                    <Button
+                                        variant="highlight"
+                                        onClick={handleAdd}
+                                    >
+                                        Add Employee
+                                    </Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+
+                {/*search*/}
                 <Card className="border border-border/70 bg-background">
-                    <CardContent className="flex flex-col gap-4 p-4 text-foreground md:flex-row md:items-end md:justify-between">
-                        {/*search*/}
-                        <div
-                            ref={searchRef}
-                            className="relative w-full md:w-2/3"
-                        >
+                    <CardContent className="p-4 text-foreground">
+                        <div ref={searchRef} className="relative w-full">
                             <Label className="mb-1 block text-sm">
                                 Search Employees
                             </Label>
@@ -310,126 +428,6 @@ export default function Staffs() {
                                 )}
                             </div>
                         </div>
-
-                        {/*add modal*/}
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="highlight">
-                                    <Plus className="h-4 w-4" /> Add Employee
-                                </Button>
-                            </DialogTrigger>
-
-                            <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>
-                                        Add{' '}
-                                        <span className="font-semibold text-highlight">
-                                            Employee
-                                        </span>
-                                    </DialogTitle>
-                                </DialogHeader>
-
-                                <div className="grid gap-3 py-2">
-                                    {/*first name*/}
-                                    <div>
-                                        <Label>First Name</Label>
-                                        <Input
-                                            value={addForm.firstName}
-                                            onChange={(e) =>
-                                                setAddForm({
-                                                    ...addForm,
-                                                    firstName: e.target.value,
-                                                })
-                                            }
-                                            placeholder="First name"
-                                        />
-                                    </div>
-
-                                    {/*last name*/}
-                                    <div>
-                                        <Label>Last Name</Label>
-                                        <Input
-                                            value={addForm.lastName}
-                                            onChange={(e) =>
-                                                setAddForm({
-                                                    ...addForm,
-                                                    lastName: e.target.value,
-                                                })
-                                            }
-                                            placeholder="Last name"
-                                        />
-                                    </div>
-
-                                    {/*middle name*/}
-                                    <div>
-                                        <Label>Middle Name (optional)</Label>
-                                        <Input
-                                            value={addForm.middleName}
-                                            onChange={(e) =>
-                                                setAddForm({
-                                                    ...addForm,
-                                                    middleName: e.target.value,
-                                                })
-                                            }
-                                            placeholder="Middle name"
-                                        />
-                                    </div>
-
-                                    {/*phone*/}
-                                    <div>
-                                        <Label>Phone Number</Label>
-                                        <Input
-                                            value={addForm.phone}
-                                            onChange={(e) => {
-                                                const formatted = formatPhone(
-                                                    e.target.value,
-                                                );
-                                                setAddForm({
-                                                    ...addForm,
-                                                    phone: formatted,
-                                                });
-                                            }}
-                                            placeholder="09123456789"
-                                            maxLength={11}
-                                        />
-                                    </div>
-
-                                    {/*address*/}
-                                    <div>
-                                        <Label>Address</Label>
-                                        <Input
-                                            value={addForm.address}
-                                            onChange={(e) =>
-                                                setAddForm({
-                                                    ...addForm,
-                                                    address: e.target.value,
-                                                })
-                                            }
-                                            placeholder="Address"
-                                        />
-                                    </div>
-                                </div>
-
-                                <DialogFooter className="flex justify-end gap-3">
-                                    <DialogClose asChild>
-                                        <Button
-                                            variant="secondary"
-                                            onClick={resetAddForm}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </DialogClose>
-                                    <DialogClose asChild>
-                                        <Button
-                                            variant="highlight"
-                                            onClick={handleAdd}
-                                        >
-                                            Add Employee
-                                        </Button>
-                                    </DialogClose>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
                     </CardContent>
                 </Card>
 
