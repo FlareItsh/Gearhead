@@ -94,6 +94,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.inventory')
         ->middleware('role:admin');
 
+    Route::get('/pullout-requests-page', function () {
+        return Inertia::render('Admin/PulloutRequests');
+    })
+        ->name('admin.pullout-requests')
+        ->middleware('role:admin');
+
     Route::get('/transactions', [AdminController::class, 'transactions'])
         ->name('admin.transactions')
         ->middleware('role:admin');

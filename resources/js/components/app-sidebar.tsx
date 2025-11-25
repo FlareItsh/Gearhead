@@ -23,6 +23,7 @@ import {
     Folder,
     LayoutDashboard,
     Package,
+    PackageOpen,
     TableCellsMerge,
     UserCheck,
     UsersRound,
@@ -72,6 +73,11 @@ const mainNavItems: NavItem[] = [
         title: 'Inventory',
         href: '/inventory',
         icon: Package,
+    },
+    {
+        title: 'Pullout Requests',
+        href: '/pullout-requests-page',
+        icon: PackageOpen,
     },
     {
         title: 'Transactions',

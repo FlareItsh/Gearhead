@@ -18,10 +18,15 @@ class PulloutRequestDetail extends Model
         'supply_id',
         'pullout_request_id',
         'quantity',
+        'is_returned',
+        'returned_at',
+        'returned_by',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:2',
+        'is_returned' => 'boolean',
+        'returned_at' => 'datetime',
     ];
 
     public function pulloutService()

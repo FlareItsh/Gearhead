@@ -1,4 +1,5 @@
 import Heading from '@/components/heading';
+import PulloutRequestModal from '@/components/PulloutRequestModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -852,6 +853,12 @@ export default function InventoryPage() {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+
+                        {/* PULLOUT REQUEST MODAL */}
+                        <PulloutRequestModal
+                            supplies={allSupplies}
+                            onSuccess={loadSupplies}
+                        />
                     </div>
                 </div>
 

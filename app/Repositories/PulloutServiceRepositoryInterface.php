@@ -16,4 +16,14 @@ interface PulloutServiceRepositoryInterface
     public function update(PulloutService $service, array $data): bool;
 
     public function delete(PulloutService $service): bool;
+
+    /**
+     * Get pullout services with related data
+     */
+    public function getAllWithDetails();
+
+    /**
+     * Get active service orders with employee assignments for pullout
+     */
+    public function getActiveServiceOrdersForPullout();
 }

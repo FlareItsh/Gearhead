@@ -7,49 +7,50 @@ use App\Repositories\PulloutServiceRepositoryInterface;
 
 class PulloutServiceController extends Controller
 {
-    protected PulloutServiceRepositoryInterface $repo;
+    protected PulloutServiceRepositoryInterface $pulloutServiceRepository;
 
-    public function __construct(PulloutServiceRepositoryInterface $repo)
+    public function __construct(PulloutServiceRepositoryInterface $pulloutServiceRepository)
     {
-        $this->repo = $repo;
+        $this->pulloutServiceRepository = $pulloutServiceRepository;
     }
 
     public function index()
     {
-        return response()->json($this->repo->all());
+        $pulloutServices = $this->pulloutServiceRepository->getAllWithDetails();
+        return response()->json($pulloutServices);
     }
 
     public function show(int $id)
     {
-        $item = $this->repo->findById($id);
+        $item = $this->pulloutServiceRepository->findById($id);
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
 
     public function store(Request $request)
     {
-        $created = $this->repo->create($request->all());
+        $created = $this->pulloutServiceRepository->create($request->all());
         return response()->json($created, 201);
     }
 
     public function update(Request $request, int $id)
     {
-        $item = $this->repo->findById($id);
+        $item = $this->pulloutServiceRepository->findById($id);
         if (! $item) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $this->repo->update($item, $request->all());
+        $this->pulloutServiceRepository->update($item, $request->all());
         return response()->json($item);
     }
 
     public function destroy(int $id)
     {
-        $item = $this->repo->findById($id);
+        $item = $this->pulloutServiceRepository->findById($id);
         if (! $item) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $this->repo->delete($item);
+        $this->pulloutServiceRepository->delete($item);
         return response()->json(null, 204);
     }
 }

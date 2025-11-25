@@ -4,6 +4,8 @@ use App\Http\Controllers\BayController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PulloutRequestController;
+use App\Http\Controllers\PulloutServiceController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\SupplierController;
@@ -154,6 +156,38 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('/customers/index', [CustomerController::class, 'getCustomers'])
         ->name('admin.customers.index');
+
+    // * Pullout Request routes
+    Route::get('/pullout-requests', [PulloutRequestController::class, 'index'])
+        ->name('pullout-requests.index');
+    Route::post('/pullout-requests', [PulloutRequestController::class, 'store'])
+        ->name('pullout-requests.store');
+    Route::post('/pullout-requests/{id}/approve', [PulloutRequestController::class, 'approve'])
+        ->name('pullout-requests.approve');
+    Route::post('/pullout-requests/{id}/reject', [PulloutRequestController::class, 'reject'])
+        ->name('pullout-requests.reject');
+    Route::get('/pullout-requests/{id}', [PulloutRequestController::class, 'show'])
+        ->name('pullout-requests.show');
+    Route::put('/pullout-requests/{id}', [PulloutRequestController::class, 'update'])
+        ->name('pullout-requests.update');
+    Route::delete('/pullout-requests/{id}', [PulloutRequestController::class, 'destroy'])
+        ->name('pullout-requests.destroy');
+    Route::get('/pullout-requests/returnable/list', [PulloutRequestController::class, 'getReturnableSupplies'])
+        ->name('pullout-requests.returnable');
+    Route::post('/pullout-requests/return/{detailId}', [PulloutRequestController::class, 'returnSupply'])
+        ->name('pullout-requests.return-supply');
+
+    // * Pullout Service routes
+    Route::get('/pullout-services', [PulloutServiceController::class, 'index'])
+        ->name('pullout-services.index');
+    Route::post('/pullout-services', [PulloutServiceController::class, 'store'])
+        ->name('pullout-services.store');
+    Route::get('/pullout-services/{id}', [PulloutServiceController::class, 'show'])
+        ->name('pullout-services.show');
+    Route::put('/pullout-services/{id}', [PulloutServiceController::class, 'update'])
+        ->name('pullout-services.update');
+    Route::delete('/pullout-services/{id}', [PulloutServiceController::class, 'destroy'])
+        ->name('pullout-services.destroy');
 
     // * Registry API: Services and Customers list
     Route::get('/services/list', [ServiceController::class, 'index'])
