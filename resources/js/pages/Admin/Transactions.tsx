@@ -17,7 +17,7 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { CreditCard, Download, PhilippinePeso, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -74,118 +74,120 @@ const formatMoney = (amount: number): string => {
     }).format(amount);
 };
 
-const TransactionRow = ({ item }: { item: Transaction | SupplyPurchase }) => {
-    const isTransaction = 'payment_id' in item;
-    const isIncome = isTransaction;
-    const amount = isTransaction ? item.amount : (item.total_amount ?? 0);
+const TransactionRow = memo(
+    ({ item }: { item: Transaction | SupplyPurchase }) => {
+        const isTransaction = 'payment_id' in item;
+        const isIncome = isTransaction;
+        const amount = isTransaction ? item.amount : (item.total_amount ?? 0);
 
-    const statusVariants: Record<
-        string,
-        'success' | 'warning' | 'info' | 'destructive' | 'default'
-    > = {
-        completed: 'success',
-        pending: 'warning',
-        in_progress: 'info',
-        cancelled: 'destructive',
-    };
+        const statusVariants: Record<
+            string,
+            'success' | 'warning' | 'info' | 'destructive' | 'default'
+        > = {
+            completed: 'success',
+            pending: 'warning',
+            in_progress: 'info',
+            cancelled: 'destructive',
+        };
 
-    const formatDate = (dateString: string) => dateString.split(' ')[0];
+        const formatDate = (dateString: string) => dateString.split(' ')[0];
 
-    const formatStatus = (status: string) =>
-        status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+        const formatStatus = (status: string) =>
+            status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
 
-    const renderSuppliesAsBullets = (suppliesString: string) => {
-        const supplies = suppliesString
-            .split(', ')
-            .map((s) => s.trim())
-            .filter((s) => s && s !== 'N/A');
+        const renderSuppliesAsBullets = (suppliesString: string) => {
+            const supplies = suppliesString
+                .split(', ')
+                .map((s) => s.trim())
+                .filter((s) => s && s !== 'N/A');
 
-        if (supplies.length === 0) {
+            if (supplies.length === 0) {
+                return (
+                    <span className="text-xs text-muted-foreground">
+                        No supplies
+                    </span>
+                );
+            }
+
             return (
-                <span className="text-xs text-muted-foreground">
-                    No supplies
-                </span>
+                <ul className="list-inside list-disc space-y-1 text-sm">
+                    {supplies.map((supply, index) => (
+                        <li key={index} className="text-muted-foreground">
+                            {supply}
+                        </li>
+                    ))}
+                </ul>
             );
-        }
+        };
 
         return (
-            <ul className="list-inside list-disc space-y-1 text-sm">
-                {supplies.map((supply, index) => (
-                    <li key={index} className="text-muted-foreground">
-                        {supply}
-                    </li>
-                ))}
-            </ul>
-        );
-    };
-
-    return (
-        <tr className="border-b border-border transition-colors hover:bg-muted/50">
-            <td className="p-4 text-sm text-foreground">
-                {formatDate(isTransaction ? item.date : item.purchase_date)}
-            </td>
-            <td className="p-4 text-sm text-foreground">
-                {isTransaction ? item.customer : item.supplier_name}
-            </td>
-            <td className="max-w-xs p-4 text-sm">
-                {isTransaction
-                    ? item.services
-                    : renderSuppliesAsBullets(item.supplies)}
-            </td>
-            <td
-                className={`p-4 text-sm font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}
-            >
-                {isIncome ? '+' : '-'}
-                {formatMoney(amount)}
-            </td>
-            <td className="p-4">
-                {isTransaction ? (
-                    <div className="flex flex-col gap-1">
-                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-                            {item.payment_method}
-                        </span>
-                        {item.gcash_reference && (
-                            <span className="text-xs text-muted-foreground">
-                                Ref: {item.gcash_reference}
-                            </span>
-                        )}
-                        {item.gcash_screenshot && (
-                            <button
-                                onClick={() =>
-                                    window.open(
-                                        `/${item.gcash_screenshot}`,
-                                        '_blank',
-                                    )
-                                }
-                                className="text-xs text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                                📷 {item.gcash_screenshot.split('/').pop()}
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-1">
-                        {item.purchase_reference &&
-                        item.purchase_reference !== 'N/A' ? (
+            <tr className="border-b border-border transition-colors hover:bg-muted/50">
+                <td className="p-4 text-sm text-foreground">
+                    {formatDate(isTransaction ? item.date : item.purchase_date)}
+                </td>
+                <td className="p-4 text-sm text-foreground">
+                    {isTransaction ? item.customer : item.supplier_name}
+                </td>
+                <td className="max-w-xs p-4 text-sm">
+                    {isTransaction
+                        ? item.services
+                        : renderSuppliesAsBullets(item.supplies)}
+                </td>
+                <td
+                    className={`p-4 text-sm font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}
+                >
+                    {isIncome ? '+' : '-'}
+                    {formatMoney(amount)}
+                </td>
+                <td className="p-4">
+                    {isTransaction ? (
+                        <div className="flex flex-col gap-1">
                             <span className="inline-flex w-fit items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-                                {item.purchase_reference}
+                                {item.payment_method}
                             </span>
-                        ) : (
-                            <span className="text-xs text-muted-foreground">
-                                N/A
-                            </span>
-                        )}
-                    </div>
-                )}
-            </td>
-            <td className="p-4">
-                <Badge variant={statusVariants[item.status] || 'default'}>
-                    {formatStatus(item.status)}
-                </Badge>
-            </td>
-        </tr>
-    );
-};
+                            {item.gcash_reference && (
+                                <span className="text-xs text-muted-foreground">
+                                    Ref: {item.gcash_reference}
+                                </span>
+                            )}
+                            {item.gcash_screenshot && (
+                                <button
+                                    onClick={() =>
+                                        window.open(
+                                            `/${item.gcash_screenshot}`,
+                                            '_blank',
+                                        )
+                                    }
+                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    📷 {item.gcash_screenshot.split('/').pop()}
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-1">
+                            {item.purchase_reference &&
+                            item.purchase_reference !== 'N/A' ? (
+                                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                                    {item.purchase_reference}
+                                </span>
+                            ) : (
+                                <span className="text-xs text-muted-foreground">
+                                    N/A
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </td>
+                <td className="p-4">
+                    <Badge variant={statusVariants[item.status] || 'default'}>
+                        {formatStatus(item.status)}
+                    </Badge>
+                </td>
+            </tr>
+        );
+    },
+);
 
 export default function Transactions({ transactions }: TransactionsProps) {
     const [searchQuery, setSearchQuery] = useState('');

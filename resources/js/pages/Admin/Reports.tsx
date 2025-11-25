@@ -11,7 +11,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { BarChart3, PhilippinePeso, Repeat2, TrendingUp } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo, memo } from 'react';
 import {
     Area,
     AreaChart,
@@ -395,12 +395,16 @@ export default function Reports() {
         };
     }, [zoomChart, panChart, mouseX, chartContainerWidth]);
 
-    const barChartData = topServices.map((s) => ({
-        label: s.label,
-        value: s.value,
-    }));
+    const barChartData = useMemo(
+        () =>
+            topServices.map((s) => ({
+                label: s.label,
+                value: s.value,
+            })),
+        [topServices],
+    );
 
-    const AreaLegend = (props: {
+    const AreaLegend = memo((props: {
         payload?: Array<{ color?: string; value: string }>;
     }) => (
         <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
@@ -414,7 +418,7 @@ export default function Reports() {
                 </div>
             ))}
         </div>
-    );
+    ));
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -843,6 +847,7 @@ export default function Reports() {
                                         <Bar
                                             dataKey="revenue"
                                             radius={[12, 12, 0, 0]}
+                                            isAnimationActive={false}
                                         >
                                             {monthlyRevenueData.map(
                                                 (entry, index) => {
@@ -933,6 +938,7 @@ export default function Reports() {
                                         <Bar
                                             dataKey="value"
                                             radius={[12, 12, 0, 0]}
+                                            isAnimationActive={false}
                                         >
                                             {barChartData.map((_, i) => {
                                                 const colors = [

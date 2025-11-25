@@ -14,7 +14,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { CalendarDays, PhilippinePeso, Users, Zap } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import {
     Area,
     AreaChart,
@@ -180,13 +180,17 @@ export default function Dashboard() {
         }
     }, [startDate, endDate, role]);
 
-    const barChartData = topServices.map((s, index) => ({
-        service: s.service,
-        value: s.value,
-        fill: `var(--chart-${(index % 5) + 1})`,
-    }));
+    const barChartData = useMemo(
+        () =>
+            topServices.map((s, index) => ({
+                service: s.service,
+                value: s.value,
+                fill: `var(--chart-${(index % 5) + 1})`,
+            })),
+        [topServices],
+    );
 
-    const AreaLegend = (props: any) => (
+    const AreaLegend = memo((props: any) => (
         <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
             {props.payload?.map((entry: any, i: number) => (
                 <div key={i} className="flex items-center gap-2">
@@ -198,7 +202,7 @@ export default function Dashboard() {
                 </div>
             ))}
         </div>
-    );
+    ));
 
     const renderServiceBullets = (serviceNames: string) => {
         if (!serviceNames)
@@ -430,6 +434,7 @@ export default function Dashboard() {
                                         stroke={areaChartConfig.revenue.color}
                                         fill="url(#revenue)"
                                         strokeWidth={2}
+                                        isAnimationActive={false}
                                     />
                                     <Area
                                         dataKey="expenses"
@@ -437,6 +442,7 @@ export default function Dashboard() {
                                         stroke={areaChartConfig.expenses.color}
                                         fill="url(#expenses)"
                                         strokeWidth={2}
+                                        isAnimationActive={false}
                                     />
                                     <Area
                                         dataKey="profit"
@@ -444,6 +450,7 @@ export default function Dashboard() {
                                         stroke={areaChartConfig.profit.color}
                                         fill="url(#profit)"
                                         strokeWidth={2}
+                                        isAnimationActive={false}
                                     />
                                     <Tooltip
                                         content={<ChartTooltipContent />}
@@ -492,7 +499,11 @@ export default function Dashboard() {
                                             ' - Total Bookings',
                                         ]}
                                     />
-                                    <Bar dataKey="value" radius={[4, 4, 4, 4]}>
+                                    <Bar
+                                        dataKey="value"
+                                        radius={[4, 4, 4, 4]}
+                                        isAnimationActive={false}
+                                    >
                                         {barChartData.map((entry, index) => (
                                             <Cell
                                                 key={`cell-${index}`}
