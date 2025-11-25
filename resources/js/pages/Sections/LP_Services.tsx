@@ -1,8 +1,18 @@
 import { Button } from '@/components/ui/button';
-import { Link } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Car, Check, Droplets, Sparkles, Zap } from 'lucide-react';
 
 export default function LP_Services() {
+    const { auth } = usePage().props;
+
+    const handleBookNow = () => {
+        if (!auth?.user) {
+            router.visit('/login?redirect=services-customer');
+        } else {
+            router.visit('/customer/services');
+        }
+    };
+
     return (
         <>
             {/* Header */}
@@ -18,6 +28,7 @@ export default function LP_Services() {
                     needs
                 </p>
             </div>
+
             <div className="w-full text-center">
                 <h3 className="mb-4 text-3xl font-semibold tracking-tight">
                     <span className="text-yellow-500 dark:text-highlight">
@@ -114,9 +125,9 @@ export default function LP_Services() {
                         return (
                             <div key={index} className="w-full max-w-xs">
                                 <div className="hover:shadow-3xl flex h-full flex-col overflow-hidden rounded-3xl border border-transparent shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-3 dark:border-highlight/30">
-                                    {/* Most Popular Badge - Yellow in light, amber in dark */}
+                                    {/* Most Popular Badge */}
                                     {card.popular && (
-                                        <div className="bg-yellow-400 p-3 text-center text-sm font-bold text-black dark:bg-highlight dark:text-highlight-foreground">
+                                        <div className="bg-yellow-400 p-3 text-center text-sm font-bold text-black dark:bg-highlight dark:text-black">
                                             Most Popular
                                         </div>
                                     )}
@@ -161,7 +172,7 @@ export default function LP_Services() {
                                     </div>
 
                                     {/* Features */}
-                                    <div className="flex-1 border-t border-border/30 px-6 py-6">
+                                    <div className="flex-1 px-6 py-6">
                                         <div className="space-y-4">
                                             {card.features.map((feature) => (
                                                 <div
@@ -182,24 +193,23 @@ export default function LP_Services() {
                                         </div>
                                     </div>
 
-                                    {/* Button */}
+                                    {/* BOOK NOW */}
                                     <div className="px-6 pt-4 pb-8">
-                                        <Link href="#" className="block">
-                                            <Button
-                                                variant={
-                                                    card.popular
-                                                        ? 'highlight'
-                                                        : 'outline'
-                                                }
-                                                className={
-                                                    card.popular
-                                                        ? 'w-full rounded-2xl bg-yellow-400 py-6 font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90'
-                                                        : 'w-full rounded-2xl border-yellow-400 py-6 font-bold text-yellow-400 shadow-lg hover:bg-yellow-400/10 dark:border-highlight dark:text-highlight dark:hover:bg-highlight/10'
-                                                }
-                                            >
-                                                Book Now
-                                            </Button>
-                                        </Link>
+                                        <Button
+                                            onClick={handleBookNow}
+                                            variant={
+                                                card.popular
+                                                    ? 'highlight'
+                                                    : 'outline'
+                                            }
+                                            className={
+                                                card.popular
+                                                    ? 'w-full rounded-2xl bg-yellow-400 py-6 font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90'
+                                                    : 'w-full rounded-2xl border-yellow-400 py-6 font-bold text-yellow-400 shadow-lg hover:bg-yellow-400/10 dark:border-highlight dark:text-highlight dark:hover:bg-highlight/10'
+                                            }
+                                        >
+                                            Book Now
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -208,15 +218,15 @@ export default function LP_Services() {
                 </div>
             </div>
 
+            {/* VIEW ALL SERVICES */}
             <div className="flex w-full justify-center py-12">
-                <Link href="#" className="block w-full max-w-xs">
-                    <Button
-                        variant="highlight"
-                        className="w-full rounded-2xl bg-yellow-400 py-6 text-base font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90"
-                    >
-                        View All Services
-                    </Button>
-                </Link>
+                <Button
+                    onClick={() => router.visit('/services')}
+                    variant="highlight"
+                    className="w-full max-w-xs rounded-2xl bg-yellow-400 py-6 text-base font-bold shadow-lg hover:bg-yellow-500 dark:bg-highlight dark:hover:bg-highlight/90"
+                >
+                    View All Services
+                </Button>
             </div>
         </>
     );
