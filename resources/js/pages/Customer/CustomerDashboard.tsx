@@ -21,28 +21,32 @@ const CustomerDashboard: React.FC = () => {
     const totalSpent = pageProps.totalSpent ?? 0;
 
     const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
-
-    useEffect(() => {
-        // Existing payments fetch
-        axios
-            .get(route('payments.user'))
-            .then((res) => setPayments(res.data))
-            .catch((err) => console.error(err));
-
-        // Fetch upcoming bookings
-        axios
-            .get(route('bookings.upcoming'))
-            .then((res) => setUpcomingBookings(res.data))
-            .catch((err) => console.error(err));
-    }, []);
-
     const [payments, setPayments] = useState<any[]>([]);
 
     useEffect(() => {
-        axios
-            .get('/payments/user')
-            .then((res) => setPayments(res.data))
-            .catch((err) => console.error(err));
+        const fetchData = () => {
+            // Fetch payments
+            axios
+                .get(route('payments.user'))
+                .then((res) => setPayments(res.data))
+                .catch((err) => console.error('Payments error:', err));
+
+            // Fetch upcoming bookings
+            axios
+                .get(route('bookings.upcoming'))
+                .then((res) => {
+                    console.log('Upcoming bookings response:', res.data);
+                    setUpcomingBookings(res.data);
+                })
+                .catch((err) => console.error('Upcoming bookings error:', err));
+        };
+
+        // Initial fetch
+        fetchData();
+
+        // Auto-refresh every 30 seconds
+        const interval = setInterval(fetchData, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     // Sort by date (newest first) and get only the 4 most recent

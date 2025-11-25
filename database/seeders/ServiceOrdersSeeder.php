@@ -27,7 +27,7 @@ class ServiceOrdersSeeder extends Seeder
             $userId = rand(2, 51); // Customers from 2 to 51
             $employeeId = rand(1, 10);
             $bayId = rand(1, 6);
-            $status = ['pending', 'in_progress', 'completed', 'cancelled'][rand(0, 3)];
+            $status = 'Completed';
             $orderType = rand(0, 1) ? 'W' : 'R';
             // Check if any detail has underwash (service_id 6-9), adjust bay to 6
             // But since details seeded after, assume some logic: if rand, set bay 6 for some

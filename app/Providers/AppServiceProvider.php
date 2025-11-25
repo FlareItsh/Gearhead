@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\BayRepositoryInterface;
+use App\Repositories\EloquentBayRepository;
 use App\Repositories\EloquentEmployeeRepository;
 use App\Repositories\EloquentLandingPageContentRepository;
 use App\Repositories\EloquentPaymentRepository;
@@ -42,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
         // Employee repository
         $this->app->bind(EmployeeRepositoryInterface::class, EloquentEmployeeRepository::class);
+
+        // Bay repository
+        $this->app->bind(BayRepositoryInterface::class, EloquentBayRepository::class);
 
         // Services / suppliers / supplies
         $this->app->bind(ServiceRepositoryInterface::class, EloquentServiceRepository::class);

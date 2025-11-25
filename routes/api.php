@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BayController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
@@ -20,6 +21,20 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/payments/summary', [PaymentController::class, 'summary'])
         ->name('payments.summary');
 
+    // * Bay CRUD routes - using different endpoint to avoid conflict with web route
+    Route::post('/bays', [BayController::class, 'store'])
+        ->name('bays.store');
+    Route::put('/bays/{id}', [BayController::class, 'update'])
+        ->name('bays.update');
+    Route::delete('/bays/{id}', [BayController::class, 'destroy'])
+        ->name('bays.destroy');
+    Route::get('/bays/list', [BayController::class, 'index'])
+        ->name('bays.index');
+    Route::get('/bays/available', [BayController::class, 'available'])
+        ->name('bays.available');
+    Route::get('/bays/{id}', [BayController::class, 'show'])
+        ->name('bays.show');
+
     Route::get('/payments/monthly-revenue', [PaymentController::class, 'monthlyRevenueByYear'])
         ->name('payments.monthly-revenue');
 
@@ -34,6 +49,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])
         ->name('admin.supply-purchases.financial-summary');
+
+    Route::get('/supply-purchases/detailed', [SupplyPurchaseController::class, 'detailedPurchases'])
+        ->name('supply-purchases.detailed');
 
     // * Service CRUD routes (must come before specific service routes)
     Route::post('/services', [ServiceController::class, 'store'])
@@ -66,12 +84,29 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('admin.staffs.delete');
     Route::get('/staffs/active-count', [EmployeeController::class, 'activeCount'])
         ->name('admin.staffs.active-count');
+    Route::get('/employees/active-available', [EmployeeController::class, 'activeAvailable'])
+        ->name('admin.employees.active-available');
 
     Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
         ->name('api.service-orders.pending');
 
+    Route::get('/service-orders/active', [ServiceOrderController::class, 'active'])
+        ->name('api.service-orders.active');
+
+    Route::get('/service-orders/today-bookings', [ServiceOrderController::class, 'todayBookings'])
+        ->name('api.service-orders.today-bookings');
+
     Route::get('/service-orders/bookings', [ServiceOrderController::class, 'getBookings'])
         ->name('api.service-orders.bookings');
+
+    Route::post('/service-orders/registry', [ServiceOrderController::class, 'createFromRegistry'])
+        ->name('api.service-orders.registry');
+
+    Route::put('/service-orders/{id}', [ServiceOrderController::class, 'update'])
+        ->name('api.service-orders.update');
+
+    Route::put('/service-orders/{id}/assign-employee', [ServiceOrderController::class, 'assignEmployee'])
+        ->name('api.service-orders.assign-employee');
 
     Route::get('/supplies', [SupplyController::class, 'index'])
         ->name('supplies.index');
@@ -119,6 +154,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('/customers/index', [CustomerController::class, 'getCustomers'])
         ->name('admin.customers.index');
+
+    // * Registry API: Services and Customers list
+    Route::get('/services/list', [ServiceController::class, 'index'])
+        ->name('services.list');
+    Route::get('/customers/list', [CustomerController::class, 'index'])
+        ->name('customers.list');
+    Route::post('/customers/create', [CustomerController::class, 'store'])
+        ->name('customers.create');
 });
 
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {

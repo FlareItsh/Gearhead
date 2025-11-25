@@ -132,8 +132,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('users as u', 'u.user_id', '=', 'so.user_id')
             ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
             ->join('services as s', 's.service_id', '=', 'sod.service_id')
-            ->where('so.status', 'pending')
-            // Only today's pending orders
+            ->whereIn('so.status', ['pending', 'in_progress'])
+            // Only today's pending/in-progress orders
             ->whereRaw('DATE(so.order_date) = CURDATE()')
             ->select([
                 'so.service_order_id',

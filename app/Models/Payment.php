@@ -19,6 +19,7 @@ class Payment extends Model
         'payment_method',
         'is_point_redeemed',
         'gcash_reference',
+        'gcash_screenshot',
     ];
 
     protected $casts = [

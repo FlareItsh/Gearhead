@@ -66,4 +66,14 @@ class SupplyPurchaseController extends Controller
 
         return response()->json($summary);
     }
+
+    public function detailedPurchases(Request $request)
+    {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $purchases = $this->repo->getDetailedPurchases($startDate, $endDate);
+
+        return response()->json($purchases);
+    }
 }

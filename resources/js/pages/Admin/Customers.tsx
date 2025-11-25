@@ -67,8 +67,8 @@ export default function Customers() {
         return customers.filter((c) => {
             const name =
                 `${c.first_name} ${c.middle_name ? c.middle_name + ' ' : ''}${c.last_name}`.toLowerCase();
-            const email = c.email.toLowerCase();
-            const phone = c.phone_number.toLowerCase();
+            const email = c.email?.toLowerCase() ?? '';
+            const phone = c.phone_number?.toLowerCase() ?? '';
             const term = searchValue.toLowerCase();
 
             if (filter === 'All')

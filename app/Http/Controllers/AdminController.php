@@ -90,6 +90,7 @@ class AdminController extends Controller
                 'p.amount',
                 'p.payment_method',
                 'p.gcash_reference',
+                'p.gcash_screenshot',
                 'p.is_point_redeemed',
                 'p.created_at as payment_date',
                 'so.order_date',
@@ -103,6 +104,7 @@ class AdminController extends Controller
                 'p.amount',
                 'p.payment_method',
                 'p.gcash_reference',
+                'p.gcash_screenshot',
                 'p.is_point_redeemed',
                 'p.created_at',
                 'so.order_date',
@@ -121,6 +123,7 @@ class AdminController extends Controller
                     'amount' => (float) $transaction->amount,
                     'payment_method' => ucfirst($transaction->payment_method),
                     'gcash_reference' => $transaction->gcash_reference,
+                    'gcash_screenshot' => $transaction->gcash_screenshot,
                     'status' => $transaction->status,
                     'is_point_redeemed' => (bool) $transaction->is_point_redeemed,
                 ];

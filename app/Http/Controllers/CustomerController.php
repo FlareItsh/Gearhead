@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Repositories\BookingRepository;
 use App\Repositories\PaymentRepositoryInterface;
 use App\Repositories\ServiceRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class CustomerController extends Controller
@@ -120,5 +122,56 @@ class CustomerController extends Controller
         $customers = $this->users->getCustomersWithBookings();
 
         return response()->json($customers);
+    }
+
+    /**
+     * Get all customers for the registry API
+     */
+    public function index()
+    {
+        $customers = $this->users->all()->map(function ($customer) {
+            return [
+                'user_id' => $customer->user_id,
+                'first_name' => $customer->first_name,
+                'last_name' => $customer->last_name,
+                'email' => $customer->email,
+                'phone_number' => $customer->phone_number,
+            ];
+        });
+
+        return response()->json($customers);
+    }
+
+    /**
+     * Store a new customer for the registry
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:users,email',
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'password' => 'required|string|min:8',
+        ]);
+
+        $customer = User::create([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'],
+            'address' => $validated['address'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'customer',
+        ]);
+
+        return response()->json([
+            'user_id' => $customer->user_id,
+            'first_name' => $customer->first_name,
+            'last_name' => $customer->last_name,
+            'email' => $customer->email,
+            'phone_number' => $customer->phone_number,
+        ], 201);
     }
 }
