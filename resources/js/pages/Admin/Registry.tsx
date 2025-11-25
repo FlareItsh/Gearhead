@@ -839,7 +839,7 @@ export default function Registry() {
                                         onClick={() =>
                                             handleSelectBooking(booking)
                                         }
-                                        className="w-full rounded-lg border-2 border-border bg-card p-4 text-left transition-all hover:border-highlight hover:bg-accent/5"
+                                        className="w-full rounded-lg border border-border p-4 text-left transition-all hover:border-highlight hover:bg-accent/5"
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
