@@ -1,6 +1,25 @@
 import { Clock8, Gem, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function About() {
+    const [isDarkMode, setIsDarkMode] = useState(true);
+
+    useEffect(() => {
+        const checkTheme = () => {
+            setIsDarkMode(document.documentElement.classList.contains('dark'));
+        };
+
+        checkTheme();
+
+        const observer = new MutationObserver(checkTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <section id="about" className="flex h-screen w-full items-center py-20">
             <div className="mx-auto max-w-6xl px-6">
@@ -11,7 +30,11 @@ export default function About() {
                 <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
                     <div className="overflow-hidden rounded-xl">
                         <img
-                            src="/img/aboutCar.png"
+                            src={
+                                isDarkMode
+                                    ? '/img/aboutCar.png'
+                                    : '/img/aboutCar2.png'
+                            }
                             className="h-[300px] w-full object-cover"
                             alt="Garage"
                         />

@@ -117,7 +117,7 @@ export default function LP_Services() {
                                 <div className="hover:shadow-3xl flex h-full flex-col overflow-hidden rounded-3xl border border-transparent shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-3 dark:border-highlight/30">
                                     {/* Most Popular Badge - Yellow in light, amber in dark */}
                                     {card.popular && (
-                                        <div className="bg-yellow-400 p-3 text-center text-sm font-bold text-black dark:bg-highlight dark:text-highlight-foreground">
+                                        <div className="bg-yellow-400 p-3 text-center text-sm font-bold text-black dark:bg-highlight">
                                             Most Popular
                                         </div>
                                     )}
