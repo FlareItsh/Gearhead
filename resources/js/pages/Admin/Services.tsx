@@ -228,7 +228,7 @@ export default function AdminServices({
                 </div>
 
                 {/* Search Bar */}
-                <div className="flex flex-col gap-4 rounded-lg border border-border bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:bg-black">
+                <div className="flex flex-col gap-4 rounded-lg border border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-1 items-center gap-3">
                         <Search className="h-5 w-5 text-foreground" />
                         <Input

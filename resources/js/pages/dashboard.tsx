@@ -511,7 +511,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Upcoming Appointments Table */}
-                    <div className="space-y-4 rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
+                    <div className="space-y-4 rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
                         <Heading
                             title="Upcoming Appointments"
                             description="Today's scheduled services"

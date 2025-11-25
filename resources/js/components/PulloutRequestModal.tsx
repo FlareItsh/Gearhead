@@ -196,7 +196,10 @@ export default function PulloutRequestModal({
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Create Pullout Request</DialogTitle>
+                    <DialogTitle>
+                        Create{' '}
+                        <span className="text-yellow-400">Pullout Request</span>
+                    </DialogTitle>
                     <DialogDescription>
                         Request supplies for a service order
                     </DialogDescription>

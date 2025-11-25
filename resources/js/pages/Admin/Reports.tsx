@@ -574,9 +574,9 @@ export default function Reports() {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-8 bg-background">
                     {/* Financial Trend - Zoomable, Beautiful Brush */}
-                    <div className="w-full rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
+                    <div className="w-full rounded-xl border border-sidebar-border/70 p-6">
                         <HeadingSmall
                             title="Financial Trend"
                             description="Revenue, expenses, and profit over time • Drag to zoom • Use brush below"
@@ -697,7 +697,7 @@ export default function Reports() {
                                         dataKey="date"
                                         height={48}
                                         stroke="var(--muted-foreground)"
-                                        fill="var(--card)"
+                                        fill="var(--background)"
                                         travellerWidth={16}
                                         gap={8}
                                         startIndex={brushIndices?.[0]}
@@ -762,7 +762,7 @@ export default function Reports() {
                     </div>
 
                     {/* Monthly Revenue by Year */}
-                    <div className="w-full rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
+                    <div className="w-full rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
                         <div className="mb-6 flex items-center justify-between">
                             <div>
                                 <HeadingSmall
@@ -881,7 +881,7 @@ export default function Reports() {
                     </div>
 
                     {/* Service Distribution */}
-                    <div className="w-full rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
+                    <div className="w-full rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
                         <HeadingSmall
                             title="Service Distribution"
                             description="Most booked services with size"

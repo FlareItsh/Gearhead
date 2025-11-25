@@ -121,6 +121,19 @@ export default function InventoryPage() {
     >({});
     const [detailError, setDetailError] = useState('');
 
+    // Supplier states
+    const [showAddSupplier, setShowAddSupplier] = useState(false);
+    const [newSupplier, setNewSupplier] = useState({
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        phone_number: '',
+        email: '',
+    });
+    const [supplierErrors, setSupplierErrors] = useState<
+        Record<string, string>
+    >({});
+
     useEffect(() => {
         loadSupplies();
         loadSuppliers();
@@ -283,6 +296,48 @@ export default function InventoryPage() {
         setConfirmOpen(false);
     };
 
+    const handleAddSupplier = async () => {
+        const errors: Record<string, string> = {};
+
+        if (!newSupplier.first_name.trim()) {
+            errors.first_name = 'First name is required';
+        }
+        if (!newSupplier.last_name.trim()) {
+            errors.last_name = 'Last name is required';
+        }
+        if (!newSupplier.phone_number.trim()) {
+            errors.phone_number = 'Phone number is required';
+        }
+        if (!newSupplier.email.trim()) {
+            errors.email = 'Email is required';
+        }
+
+        setSupplierErrors(errors);
+        if (Object.keys(errors).length > 0) {
+            return;
+        }
+
+        try {
+            const res = await axios.post('/suppliers', newSupplier);
+            setAllSuppliers((prev) => [...prev, res.data]);
+            setShowAddSupplier(false);
+            setNewSupplier({
+                first_name: '',
+                middle_name: '',
+                last_name: '',
+                phone_number: '',
+                email: '',
+            });
+            setSupplierErrors({});
+            setSuccessMessage('Supplier added successfully!');
+            setShowSuccessModal(true);
+            await loadSuppliers();
+        } catch (err) {
+            console.error('Failed to add supplier:', err);
+            alert('Error adding supplier');
+        }
+    };
+
     const handleSaveEdit = async () => {
         if (!editItem) return;
         try {
@@ -373,7 +428,7 @@ export default function InventoryPage() {
                     />
                     <div className="flex gap-3">
                         <Button onClick={downloadPDF} variant="secondary">
-                            <Download className="mr-2 h-4 w-4" /> Download PDF
+                            <Download className="mr-2 h-4 w-4" /> Export PDF
                         </Button>
 
                         <Dialog
@@ -385,7 +440,12 @@ export default function InventoryPage() {
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
-                                    <DialogTitle>Add Item</DialogTitle>
+                                    <DialogTitle>
+                                        Add{' '}
+                                        <span className="text-yellow-400">
+                                            Item
+                                        </span>
+                                    </DialogTitle>
                                     <DialogDescription>
                                         Record a new inventory item.
                                     </DialogDescription>
@@ -497,7 +557,12 @@ export default function InventoryPage() {
                             </DialogTrigger>
                             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                                 <DialogHeader>
-                                    <DialogTitle>Record Purchase</DialogTitle>
+                                    <DialogTitle>
+                                        Record{' '}
+                                        <span className="text-yellow-400">
+                                            Purchase
+                                        </span>
+                                    </DialogTitle>
                                     <DialogDescription>
                                         Add supplies from a supplier
                                     </DialogDescription>
@@ -859,11 +924,163 @@ export default function InventoryPage() {
                             supplies={allSupplies}
                             onSuccess={loadSupplies}
                         />
+
+                        {/* ADD SUPPLIER MODAL */}
+                        <Dialog
+                            open={showAddSupplier}
+                            onOpenChange={setShowAddSupplier}
+                        >
+                            <DialogTrigger asChild>
+                                <Button variant="highlight">
+                                    + Add Supplier
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px]">
+                                <DialogHeader>
+                                    <DialogTitle>
+                                        Add{' '}
+                                        <span className="text-yellow-400">
+                                            Supplier
+                                        </span>
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Add a new supplier to the system
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">
+                                                First Name
+                                            </label>
+                                            <Input
+                                                placeholder="John"
+                                                value={newSupplier.first_name}
+                                                onChange={(e) =>
+                                                    setNewSupplier({
+                                                        ...newSupplier,
+                                                        first_name:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                            />
+                                            {supplierErrors.first_name && (
+                                                <p className="mt-1 text-sm text-red-500">
+                                                    {supplierErrors.first_name}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">
+                                                Middle Name (Optional)
+                                            </label>
+                                            <Input
+                                                placeholder="M."
+                                                value={newSupplier.middle_name}
+                                                onChange={(e) =>
+                                                    setNewSupplier({
+                                                        ...newSupplier,
+                                                        middle_name:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium">
+                                            Last Name
+                                        </label>
+                                        <Input
+                                            placeholder="Doe"
+                                            value={newSupplier.last_name}
+                                            onChange={(e) =>
+                                                setNewSupplier({
+                                                    ...newSupplier,
+                                                    last_name: e.target.value,
+                                                })
+                                            }
+                                        />
+                                        {supplierErrors.last_name && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {supplierErrors.last_name}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium">
+                                            Phone Number
+                                        </label>
+                                        <Input
+                                            placeholder="09123456789"
+                                            value={newSupplier.phone_number}
+                                            onChange={(e) =>
+                                                setNewSupplier({
+                                                    ...newSupplier,
+                                                    phone_number:
+                                                        e.target.value,
+                                                })
+                                            }
+                                        />
+                                        {supplierErrors.phone_number && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {supplierErrors.phone_number}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium">
+                                            Email
+                                        </label>
+                                        <Input
+                                            type="email"
+                                            placeholder="supplier@example.com"
+                                            value={newSupplier.email}
+                                            onChange={(e) =>
+                                                setNewSupplier({
+                                                    ...newSupplier,
+                                                    email: e.target.value,
+                                                })
+                                            }
+                                        />
+                                        {supplierErrors.email && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {supplierErrors.email}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => {
+                                            setShowAddSupplier(false);
+                                            setNewSupplier({
+                                                first_name: '',
+                                                middle_name: '',
+                                                last_name: '',
+                                                phone_number: '',
+                                                email: '',
+                                            });
+                                            setSupplierErrors({});
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="highlight"
+                                        onClick={handleAddSupplier}
+                                    >
+                                        Add Supplier
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
 
                 {/* Search & Filter */}
-                <Card>
+                <Card className="bg-background">
                     <CardContent className="p-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="relative flex-1">
@@ -874,7 +1091,7 @@ export default function InventoryPage() {
                                     onChange={(e) =>
                                         setSearchValue(e.target.value)
                                     }
-                                    className="pl-10"
+                                    className="pl-10 text-foreground"
                                 />
                             </div>
                             <DropdownMenu>
@@ -909,7 +1126,7 @@ export default function InventoryPage() {
                 </Card>
 
                 {/* Supply List Table */}
-                <Card>
+                <Card className="bg-background text-foreground">
                     <CardContent className="p-0">
                         <div className="border-b p-6">
                             <h2 className="text-lg font-semibold">

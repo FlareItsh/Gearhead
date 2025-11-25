@@ -677,7 +677,7 @@ export default function Transactions({ transactions }: TransactionsProps) {
                                     </div>
                                     <Button
                                         onClick={handleExport}
-                                        variant="highlight"
+                                        variant="secondary"
                                         className="gap-2 whitespace-nowrap"
                                     >
                                         <Download className="h-4 w-4" />

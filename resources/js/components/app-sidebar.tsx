@@ -55,19 +55,14 @@ const mainNavItems: NavItem[] = [
         icon: CalendarCog,
     },
     {
-        title: 'Customers',
-        href: '/customers',
-        icon: UsersRound,
+        title: 'Bays',
+        href: '/bays',
+        icon: TableCellsMerge,
     },
     {
         title: 'Services',
         href: '/services',
         icon: Wrench,
-    },
-    {
-        title: 'Staffs',
-        href: '/staffs',
-        icon: UserCheck,
     },
     {
         title: 'Inventory',
@@ -80,6 +75,16 @@ const mainNavItems: NavItem[] = [
         icon: PackageOpen,
     },
     {
+        title: 'Customers',
+        href: '/customers',
+        icon: UsersRound,
+    },
+    {
+        title: 'Staffs',
+        href: '/staffs',
+        icon: UserCheck,
+    },
+    {
         title: 'Transactions',
         href: '/transactions',
         icon: BanknoteArrowUp,
@@ -88,11 +93,6 @@ const mainNavItems: NavItem[] = [
         title: 'Reports',
         href: '/reports',
         icon: ChartColumnBig,
-    },
-    {
-        title: 'Bays',
-        href: '/bays',
-        icon: TableCellsMerge,
     },
 ];
 

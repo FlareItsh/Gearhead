@@ -211,7 +211,7 @@ export default function PulloutRequestsPage() {
 
                 {/* Requests Tab */}
                 {activeTab === 'requests' && (
-                    <Card>
+                    <Card className="border-border/50 bg-background text-foreground">
                         <CardContent className="p-6">
                             {pulloutRequests.length === 0 ? (
                                 <div className="flex h-32 items-center justify-center">
@@ -224,7 +224,7 @@ export default function PulloutRequestsPage() {
                                     {pulloutRequests.map((request) => (
                                         <Card
                                             key={request.pullout_request_id}
-                                            className="overflow-hidden"
+                                            className="overflow-hidden border-border/50 bg-background text-foreground"
                                         >
                                             <CardContent className="p-0">
                                                 <div className="flex items-start justify-between border-b bg-muted/30 p-4">
@@ -379,7 +379,7 @@ export default function PulloutRequestsPage() {
 
                 {/* Returns Tab */}
                 {activeTab === 'returns' && (
-                    <Card>
+                    <Card className="bg-background text-foreground">
                         <CardContent className="p-6">
                             {returnableSupplies.length === 0 ? (
                                 <div className="flex h-32 items-center justify-center">
