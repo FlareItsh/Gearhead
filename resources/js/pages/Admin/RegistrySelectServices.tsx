@@ -440,7 +440,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                 : 'Choose services for this carwash order'}
                         </p>
                         {assignedEmployee && (
-                            <p className="text-sm font-medium text-highlight">
+                            <p className="text-sm font-medium text-yellow-500">
                                 Assigned Employee: {assignedEmployee.first_name}{' '}
                                 {assignedEmployee.last_name}
                             </p>
@@ -497,7 +497,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                                 className={cn(
                                                     'rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
                                                     !selectedCategory
-                                                        ? 'bg-highlight text-white'
+                                                        ? 'bg-yellow-500 text-white'
                                                         : 'border border-border bg-muted hover:border-highlight',
                                                 )}
                                             >
@@ -518,7 +518,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                                         'rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
                                                         selectedCategory ===
                                                             category
-                                                            ? 'bg-highlight text-white'
+                                                            ? 'bg-yellow-500 text-white'
                                                             : 'border border-border bg-muted hover:border-highlight',
                                                     )}
                                                 >
@@ -546,7 +546,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                                     setServiceSearch('');
                                                     setSelectedCategory('');
                                                 }}
-                                                className="text-highlight hover:underline"
+                                                className="text-yellow-500 hover:underline"
                                             >
                                                 Clear filters
                                             </button>
@@ -651,7 +651,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
                         {/* Summary Sidebar */}
                         <div className="sticky top-4 h-fit">
-                            <div className="rounded-lg border border-border bg-card p-6">
+                            <div className="rounded-lg border border-border p-6">
                                 <h3 className="mb-4 text-lg font-semibold">
                                     Order Summary
                                 </h3>
@@ -685,7 +685,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                                         <span className="text-muted-foreground">
                                             Total Amount
                                         </span>
-                                        <p className="text-2xl font-bold text-highlight">
+                                        <p className="text-2xl font-bold text-yellow-500">
                                             ₱{getTotalPrice().toLocaleString()}
                                         </p>
                                     </div>

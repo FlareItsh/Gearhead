@@ -680,7 +680,7 @@ export default function Registry() {
                                                         <div>
                                                             <Label
                                                                 htmlFor={`employee-${bay.bay_id}`}
-                                                                className="mb-2 block text-sm font-medium"
+                                                                className="mb-2 block text-sm font-medium text-foreground"
                                                             >
                                                                 Select Employee
                                                             </Label>
@@ -694,7 +694,7 @@ export default function Registry() {
                                                             >
                                                                 <SelectTrigger
                                                                     id={`employee-${bay.bay_id}`}
-                                                                    className="h-11"
+                                                                    className="h-11 text-foreground"
                                                                 >
                                                                     <SelectValue placeholder="Choose an employee..." />
                                                                 </SelectTrigger>

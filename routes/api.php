@@ -49,6 +49,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/payments/retention-rate', [PaymentController::class, 'customerRetentionRateByDateRange'])
         ->name('payments.retention-rate');
 
+    Route::post('/payment/process', [PaymentController::class, 'process'])
+        ->name('payment.process');
+
+    Route::post('/payment/check-loyalty', [PaymentController::class, 'checkLoyalty'])
+        ->name('payment.check-loyalty');
+
     Route::get('/supply-purchases/financial-summary', [SupplyPurchaseController::class, 'financialSummary'])
         ->name('admin.supply-purchases.financial-summary');
 

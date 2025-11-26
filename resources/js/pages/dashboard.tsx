@@ -1,12 +1,21 @@
 import Heading from '@/components/heading';
 import HeadingSmall from '@/components/heading-small';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     ChartConfig,
     ChartContainer,
     ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import CustomerDashboard from '@/pages/Customer/CustomerDashboard';
 import { dashboard } from '@/routes';
@@ -522,56 +531,61 @@ export default function Dashboard() {
                     </div>
 
                     {/* Upcoming Appointments Table */}
-                    <div className="space-y-4 rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
-                        <Heading
-                            title="Upcoming Appointments"
-                            description="Today's scheduled services"
-                        />
-                        <div className="overflow-hidden rounded-lg border border-border shadow-sm">
-                            <div className="max-h-[60vh] overflow-y-auto">
-                                <table className="w-full table-fixed border-collapse">
-                                    <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                                        <tr className="border-b border-border">
-                                            <th className="w-[22%] px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                                Customer
-                                            </th>
-                                            <th className="w-[38%] px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                                Services
-                                            </th>
-                                            <th className="w-[20%] px-6 py-4 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                                Expected Time
-                                            </th>
-                                            <th className="w-[20%] px-6 py-4 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                                Status
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/50 bg-background">
-                                        {pendingOrders.length > 0 ? (
-                                            pendingOrders.map(
+                    <Card className="border border-sidebar-border/70 bg-background">
+                        <CardContent className="p-4 text-foreground">
+                            <HeadingSmall
+                                title="Upcoming Appointments"
+                                description="Today's scheduled services"
+                            />
+                            {pendingOrders.length === 0 ? (
+                                <div className="py-12 text-center">
+                                    <CalendarDays className="mx-auto mb-3 h-12 w-12 text-muted-foreground opacity-40" />
+                                    <p className="text-lg font-medium text-muted-foreground">
+                                        No appointments today
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Enjoy the quiet moment!
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Customer</TableHead>
+                                                <TableHead>Services</TableHead>
+                                                <TableHead className="text-center">
+                                                    Expected Time
+                                                </TableHead>
+                                                <TableHead className="text-center">
+                                                    Status
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pendingOrders.map(
                                                 (order, index) => (
-                                                    <tr
+                                                    <TableRow
                                                         key={`${order.service_order_id}-${index}`}
-                                                        className="group transition-all duration-150 hover:bg-muted/50"
                                                     >
-                                                        <td className="px-6 py-5 font-medium whitespace-nowrap text-foreground">
+                                                        <TableCell className="font-medium">
                                                             {
                                                                 order.customer_name
                                                             }
-                                                        </td>
-                                                        <td className="px-6 py-5 text-sm text-foreground">
+                                                        </TableCell>
+                                                        <TableCell className="text-sm">
                                                             {renderServiceBullets(
                                                                 order.service_name,
                                                             )}
-                                                        </td>
-                                                        <td className="px-6 py-5 text-center">
+                                                        </TableCell>
+                                                        <TableCell className="text-center">
                                                             <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-foreground">
                                                                 {new Date(
                                                                     order.time,
                                                                 ).toLocaleString()}
                                                             </span>
-                                                        </td>
-                                                        <td className="px-6 py-5 text-center">
+                                                        </TableCell>
+                                                        <TableCell className="text-center">
                                                             <Badge
                                                                 variant={
                                                                     order.status ===
@@ -592,35 +606,16 @@ export default function Dashboard() {
                                                                     ' ',
                                                                 )}
                                                             </Badge>
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ),
-                                            )
-                                        ) : (
-                                            <tr>
-                                                <td
-                                                    colSpan={4}
-                                                    className="py-16 text-center"
-                                                >
-                                                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                                        <CalendarDays className="mb-3 h-12 w-12 opacity-40" />
-                                                        <p className="text-lg font-medium">
-                                                            No appointments
-                                                            today
-                                                        </p>
-                                                        <p className="text-sm">
-                                                            Enjoy the quiet
-                                                            moment!
-                                                        </p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </AppLayout>

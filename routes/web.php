@@ -77,15 +77,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('admin.registry.payment')->middleware('role:admin');
 
-    Route::post('/payment/process', [PaymentController::class, 'process'])
-        ->name('payment.process')
-        ->middleware('role:admin');
-
-    Route::post('/payment/check-loyalty', [PaymentController::class, 'checkLoyalty'])
-        ->name('payment.check-loyalty')
-        ->middleware('role:admin');
-    // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-
     Route::get('/customers', [AdminController::class, 'customers'])
         ->name('admin.customers')
         ->middleware('role:admin');
