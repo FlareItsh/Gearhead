@@ -76,11 +76,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'bayId' => (int) $id,
         ]);
     })->name('admin.registry.payment')->middleware('role:admin');
-    
+
     Route::post('/payment/process', [PaymentController::class, 'process'])
         ->name('payment.process')
         ->middleware('role:admin');
-    
+
     Route::post('/payment/check-loyalty', [PaymentController::class, 'checkLoyalty'])
         ->name('payment.check-loyalty')
         ->middleware('role:admin');
@@ -116,4 +116,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // * Auth routes
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
-require __DIR__.'/api.php';
