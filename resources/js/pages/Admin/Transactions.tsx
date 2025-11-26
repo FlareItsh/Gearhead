@@ -248,10 +248,10 @@ export default function Transactions({ transactions }: TransactionsProps) {
         setIsLoading(true);
 
         Promise.all([
-            axios.get('/payments/summary', {
+            axios.get('/api/payments/summary', {
                 params: { start_date: startDate, end_date: endDate },
             }),
-            axios.get('/supply-purchases/detailed', {
+            axios.get('/api/supply-purchases/detailed', {
                 params: { start_date: startDate, end_date: endDate },
             }),
         ])

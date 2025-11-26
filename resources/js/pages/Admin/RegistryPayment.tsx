@@ -98,7 +98,7 @@ export default function RegistryPayment({ bayId }: Props) {
 
     const checkLoyaltyEligibility = async (userId: number) => {
         try {
-            const res = await axios.post('/payment/check-loyalty', {
+            const res = await axios.post('/api/payment/check-loyalty', {
                 user_id: userId,
             });
             const data = res.data;
@@ -248,7 +248,7 @@ export default function RegistryPayment({ bayId }: Props) {
                 formData.append('amount', '0');
                 formData.append('use_loyalty_points', 'true');
 
-                const res = await axios.post('/payment/process', formData, {
+                const res = await axios.post('/api/payment/process', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
@@ -316,7 +316,7 @@ export default function RegistryPayment({ bayId }: Props) {
                 }
             }
 
-            const res = await axios.post('/payment/process', formData, {
+            const res = await axios.post('/api/payment/process', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

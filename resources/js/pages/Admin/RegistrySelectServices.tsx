@@ -195,7 +195,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
     const loadServices = async () => {
         try {
-            const res = await axios.get('/services/list');
+            const res = await axios.get('/api/services/list');
             setServices(res.data);
         } catch (err) {
             console.error('Failed to fetch services:', err);
@@ -204,7 +204,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
     const loadCustomers = async () => {
         try {
-            const res = await axios.get('/customers/list');
+            const res = await axios.get('/api/customers/list');
             setCustomers(res.data);
         } catch (err) {
             console.error('Failed to fetch customers:', err);
@@ -298,7 +298,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
             );
             const generatedPassword = `${lastNameNoSpaces}${firstNameNoSpaces}${generatedNumber}`;
 
-            const res = await axios.post('/customers/create', {
+            const res = await axios.post('/api/customers/create', {
                 first_name: newCustomerForm.first_name,
                 last_name: newCustomerForm.last_name,
                 phone_number: newCustomerForm.phone_number || null,
@@ -351,12 +351,15 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                 );
 
                 // Create the service order and assign to bay
-                const response = await axios.post('/service-orders/registry', {
-                    customer_id: customer.user_id,
-                    bay_id: bayId,
-                    service_ids: serviceIds,
-                    employee_id: assignedEmployee?.employee_id || null,
-                });
+                const response = await axios.post(
+                    '/api/service-orders/registry',
+                    {
+                        customer_id: customer.user_id,
+                        bay_id: bayId,
+                        service_ids: serviceIds,
+                        employee_id: assignedEmployee?.employee_id || null,
+                    },
+                );
 
                 console.log('Service order created:', response.data);
             }

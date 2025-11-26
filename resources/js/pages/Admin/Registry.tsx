@@ -126,7 +126,7 @@ export default function Registry() {
 
     const loadBays = async () => {
         try {
-            const res = await axios.get('/bays/list');
+            const res = await axios.get('/api/bays/list');
             setBays(res.data);
         } catch (err) {
             console.error('Failed to fetch bays:', err);
@@ -137,7 +137,7 @@ export default function Registry() {
 
     const loadServiceOrders = async () => {
         try {
-            const res = await axios.get('/service-orders/active');
+            const res = await axios.get('/api/service-orders/active');
             console.log('Fetched service orders:', res.data);
             const ordersMap = new Map();
 
@@ -162,7 +162,7 @@ export default function Registry() {
 
     const loadEmployees = async () => {
         try {
-            const res = await axios.get('/employees/active-available');
+            const res = await axios.get('/api/employees/active-available');
             setEmployees(res.data);
             setAvailableEmployees(res.data);
         } catch (err) {
@@ -186,7 +186,7 @@ export default function Registry() {
 
         // Fetch today's pending bookings
         try {
-            const res = await axios.get('/service-orders/today-bookings');
+            const res = await axios.get('/api/service-orders/today-bookings');
             console.log("Today's bookings response:", res.data);
             setTodayBookings(res.data || []);
             // Always show the modal, even if no bookings

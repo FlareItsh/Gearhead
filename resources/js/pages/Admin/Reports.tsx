@@ -11,7 +11,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { BarChart3, PhilippinePeso, Repeat2, TrendingUp } from 'lucide-react';
-import { useCallback, useEffect, useState, useMemo, memo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Area,
     AreaChart,
@@ -125,19 +125,19 @@ export default function Reports() {
 
         const fetchData = () => {
             Promise.allSettled([
-                axios.get('/services/top-with-size', {
+                axios.get('/api/services/top-with-size', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
-                axios.get('/payments/summary', {
+                axios.get('/api/payments/summary', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
-                axios.get('/payments/financial-summary', {
+                axios.get('/api/payments/financial-summary', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
-                axios.get('/payments/average-booking-value', {
+                axios.get('/api/payments/average-booking-value', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
-                axios.get('/payments/retention-rate', {
+                axios.get('/api/payments/retention-rate', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
             ]).finally(() => setIsLoading(false));
@@ -163,10 +163,10 @@ export default function Reports() {
                 });
 
             Promise.all([
-                axios.get('/payments/summary', {
+                axios.get('/api/payments/summary', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
-                axios.get('/supply-purchases/detailed', {
+                axios.get('/api/supply-purchases/detailed', {
                     params: { start_date: startDate, end_date: endDate },
                 }),
             ])
@@ -188,7 +188,7 @@ export default function Reports() {
                 });
 
             axios
-                .get('/payments/financial-summary', {
+                .get('/api/payments/financial-summary', {
                     params: { start_date: startDate, end_date: endDate },
                 })
                 .then((res) => {
@@ -225,7 +225,7 @@ export default function Reports() {
         if (!selectedYear) return;
 
         axios
-            .get('/payments/monthly-revenue', {
+            .get('/api/payments/monthly-revenue', {
                 params: { year: parseInt(selectedYear) },
             })
             .then((res) => {
@@ -404,21 +404,21 @@ export default function Reports() {
         [topServices],
     );
 
-    const AreaLegend = memo((props: {
-        payload?: Array<{ color?: string; value: string }>;
-    }) => (
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
-            {props.payload?.map((entry, i: number) => (
-                <div key={i} className="flex items-center gap-2">
-                    <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                    />
-                    <span>{entry.value}</span>
-                </div>
-            ))}
-        </div>
-    ));
+    const AreaLegend = memo(
+        (props: { payload?: Array<{ color?: string; value: string }> }) => (
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
+                {props.payload?.map((entry, i: number) => (
+                    <div key={i} className="flex items-center gap-2">
+                        <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: entry.color }}
+                        />
+                        <span>{entry.value}</span>
+                    </div>
+                ))}
+            </div>
+        ),
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

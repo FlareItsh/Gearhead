@@ -366,7 +366,7 @@ export default function AdminBookings() {
                                     {filteredBookings.map((b) => (
                                         <div
                                             key={b.service_order_id}
-                                            className="rounded-xl border border-border/60 bg-card p-5 shadow-sm"
+                                            className="rounded-xl border border-border/60 p-5 shadow-sm"
                                         >
                                             <div className="mb-3 flex items-start justify-between">
                                                 <div>

@@ -89,7 +89,7 @@ export default function PulloutRequestModal({
 
     const loadServiceOrders = async () => {
         try {
-            const response = await axios.get('/pullout-requests');
+            const response = await axios.get('/api/pullout-requests');
             setServiceOrders(response.data.activeServiceOrders || []);
         } catch (error) {
             console.error('Failed to load service orders:', error);
@@ -161,7 +161,7 @@ export default function PulloutRequestModal({
                 throw new Error('Service order not found');
             }
 
-            await axios.post('/pullout-requests', {
+            await axios.post('/api/pullout-requests', {
                 employee_id: selectedOrder.employee_id,
                 service_order_detail_id: selectedOrder.service_order_detail_id,
                 supplies: pulloutDetails,

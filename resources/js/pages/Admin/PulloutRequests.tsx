@@ -74,7 +74,7 @@ export default function PulloutRequestsPage() {
 
     const loadPulloutRequests = async () => {
         try {
-            const response = await axios.get('/pullout-requests');
+            const response = await axios.get('/api/pullout-requests');
             setPulloutRequests(response.data.pulloutRequests || []);
         } catch (error) {
             console.error('Failed to load pullout requests:', error);

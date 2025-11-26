@@ -141,7 +141,7 @@ export default function InventoryPage() {
 
     const loadSupplies = async () => {
         try {
-            const res = await axios.get('/supplies');
+            const res = await axios.get('/api/supplies');
             setAllSupplies(res.data);
         } catch (err) {
             console.error('Failed to fetch supplies:', err);
@@ -150,7 +150,7 @@ export default function InventoryPage() {
 
     const loadSuppliers = async () => {
         try {
-            const res = await axios.get('/suppliers');
+            const res = await axios.get('/api/suppliers');
             setAllSuppliers(res.data);
         } catch (err) {
             console.error('Failed to fetch suppliers:', err);
@@ -197,7 +197,7 @@ export default function InventoryPage() {
 
         try {
             const purchaseDate = purchaseDetails[0].purchase_date;
-            const purchaseRes = await axios.post('/supply-purchases', {
+            const purchaseRes = await axios.post('/api/supply-purchases', {
                 supplier_id: parseInt(selectedSupplier),
                 purchase_date: purchaseDate,
                 purchase_reference: purchaseReference,
@@ -206,7 +206,7 @@ export default function InventoryPage() {
             const purchaseId = purchaseRes.data.supply_purchase_id;
 
             for (const detail of purchaseDetails) {
-                await axios.post('/supply-purchase-details', {
+                await axios.post('/api/supply-purchase-details', {
                     supply_purchase_id: purchaseId,
                     supply_id: detail.supply_id,
                     quantity: detail.quantity,
@@ -263,7 +263,7 @@ export default function InventoryPage() {
         setConfirmMessage(`Add "${newItem.supply_name}" to inventory?`);
         setOnConfirmAction(() => async () => {
             try {
-                const res = await axios.post('/supplies', newItem);
+                const res = await axios.post('/api/supplies', newItem);
                 setAllSupplies((prev) => [...prev, res.data]);
                 setShowAddItem(false);
                 setNewItem({
@@ -318,7 +318,7 @@ export default function InventoryPage() {
         }
 
         try {
-            const res = await axios.post('/suppliers', newSupplier);
+            const res = await axios.post('/api/suppliers', newSupplier);
             setAllSuppliers((prev) => [...prev, res.data]);
             setShowAddSupplier(false);
             setNewSupplier({
@@ -1241,7 +1241,7 @@ export default function InventoryPage() {
                                         return (
                                             <div
                                                 key={supply.supply_id}
-                                                className="rounded-xl border border-border/60 bg-card p-5 shadow-sm"
+                                                className="rounded-xl border border-border/60 p-5 shadow-sm"
                                             >
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex-1">

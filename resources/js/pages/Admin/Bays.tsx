@@ -75,7 +75,7 @@ export default function Bays() {
     const loadBays = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('/bays/list');
+            const res = await axios.get('/api/bays/list');
             setBays(res.data);
         } catch (err) {
             console.error('Failed to fetch bays:', err);
@@ -99,7 +99,7 @@ export default function Bays() {
 
         try {
             setSubmitting(true);
-            await axios.post('/bays', {
+            await axios.post('/api/bays', {
                 bay_number: parseInt(addForm.bay_number),
                 bay_type: addForm.bay_type,
                 status: 'available',

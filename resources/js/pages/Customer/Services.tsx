@@ -289,7 +289,7 @@ export default function Services() {
             console.log('Sending booking with order_date:', orderDate);
             console.log('Sending booking with service_ids:', serviceIds);
 
-            const response = await axios.post('/bookings/book', {
+            const response = await axios.post('/api/bookings/book', {
                 order_date: orderDate,
                 service_ids: serviceIds,
             });

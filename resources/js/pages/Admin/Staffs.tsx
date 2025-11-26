@@ -153,7 +153,7 @@ export default function Staffs() {
         if (!addForm.firstName || !addForm.lastName || !addForm.phone) return;
 
         try {
-            await axios.post('/staffs', addForm); // still send to backend
+            await axios.post('/api/staffs', addForm); // still send to backend
 
             // create a staff object locally to update the UI immediately
             const newStaff: Staff = {

@@ -122,7 +122,7 @@ export default function Dashboard() {
             if (role !== 'customer' && startDate && endDate) {
                 // Turn off skeleton after first batch
                 Promise.allSettled([
-                    axios.get('/payments/summary', {
+                    axios.get('/api/payments/summary', {
                         params: { start_date: startDate, end_date: endDate },
                     }),
                     axios.get(route('admin.staffs.active-count')),
@@ -133,7 +133,7 @@ export default function Dashboard() {
 
                 // Individual updates
                 axios
-                    .get('/payments/summary', {
+                    .get('/api/payments/summary', {
                         params: { start_date: startDate, end_date: endDate },
                     })
                     .then((res) => setPaymentsSummary(res.data));
