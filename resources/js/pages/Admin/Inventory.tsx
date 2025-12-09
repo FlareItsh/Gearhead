@@ -214,15 +214,13 @@ export default function InventoryPage() {
                     purchase_date: detail.purchase_date,
                 });
 
-                const supply = allSupplies.find(
-                    (s) => s.supply_id === detail.supply_id,
+                // Use the new increment endpoint instead of updating the entire object
+                await axios.post(
+                    `/api/supplies/${detail.supply_id}/increment-stock`,
+                    {
+                        quantity: detail.quantity,
+                    },
                 );
-                if (supply) {
-                    await axios.put(`/supplies/${detail.supply_id}`, {
-                        ...supply,
-                        quantity_stock: supply.quantity_stock + detail.quantity,
-                    });
-                }
             }
 
             await loadSupplies();

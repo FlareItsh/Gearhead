@@ -1,0 +1,40 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title User Account State Transition
+
+[*] --> Registered : User signs up
+
+Registered --> EmailVerificationPending : Verification email sent
+
+EmailVerificationPending --> Verified : Email confirmed
+EmailVerificationPending --> Registered : Resend verification
+
+Verified --> Active : Account activated
+
+Active --> Suspended : Policy violation\nor admin action
+Active --> Deactivated : User deletes account
+
+Suspended --> Active : Suspension lifted
+Suspended --> Deactivated : Admin permanently bans
+
+Deactivated --> [*] : Account removed
+
+Registered : Account created
+Registered : Email not verified
+Registered : Limited access
+
+Active : Full access
+Active : Can book services
+Active : Can make payments
+
+Suspended : Temporary restriction
+Suspended : Cannot login
+Suspended : Cannot book
+
+Deactivated : Account disabled
+Deactivated : Data may be retained
+Deactivated : Cannot be recovered
+
+@enduml

@@ -12,5 +12,7 @@ interface SupplyRepositoryInterface
 
     public function update(int $id, array $data);
 
+    public function incrementStock(int $id, float $quantity);
+
     public function delete(int $id);
 }

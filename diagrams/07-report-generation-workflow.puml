@@ -1,0 +1,129 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Report Generation Workflow
+
+|Admin|
+start
+:Access Reports Section;
+
+|System|
+:Display Report Dashboard;
+:Show Report Categories;
+
+|Admin|
+:Select Report Type;
+
+if (Report Type?) then (Sales Report)
+  |Admin|
+  :Set Date Range (From - To);
+
+  |System|
+  :Query Payment Records;
+  :Filter by Date Range;
+  :Aggregate Payment Data;
+  :Calculate Total Revenue;
+  :Group by Payment Method;
+  :Group by Service Type;
+  :Calculate Daily/Monthly Totals;
+  :Generate Sales Charts;
+
+else if (Service Report) then
+  |Admin|
+  :Set Date Range;
+  :Select Service Type (Optional);
+
+  |System|
+  :Query Service Orders;
+  :Filter by Date and Type;
+  :Count Total Services;
+  :Calculate Average Duration;
+  :Group by Service Type;
+  :Calculate Completion Rate;
+  :Identify Top Services;
+  :Generate Service Charts;
+
+else if (Inventory Report) then
+  |System|
+  :Query Supply Records;
+  :Calculate Current Stock Levels;
+  :Calculate Stock Value;
+  :Identify Low Stock Items;
+  :Calculate Turnover Rate;
+  :Query Pullout Requests;
+  :Calculate Usage Statistics;
+  :Generate Inventory Charts;
+
+else if (Employee Performance) then
+  |Admin|
+  :Set Date Range;
+  :Select Employee (Optional);
+
+  |System|
+  :Query Service Orders by Employee;
+  :Count Services Completed;
+  :Calculate Average Service Time;
+  :Calculate Revenue Generated;
+  :Generate Performance Charts;
+
+else (Customer Report)
+  |Admin|
+  :Set Date Range;
+
+  |System|
+  :Query Customer Records;
+  :Count New Customers;
+  :Count Repeat Customers;
+  :Calculate Customer Retention;
+  :Identify Top Customers;
+  :Generate Customer Charts;
+endif
+
+|System|
+:Compile Report Data;
+:Format Tables and Charts;
+:Add Report Header/Footer;
+:Add Date Range Info;
+:Add Company Logo;
+:Generate Report Preview;
+
+|Admin|
+:Review Report;
+
+if (Export Format?) then (PDF)
+  |System|
+  :Convert to PDF Format;
+  :Apply PDF Styling;
+  :Generate PDF File;
+
+  |Admin|
+  :Download PDF;
+
+else if (Excel/CSV) then
+  |System|
+  :Convert to Excel Format;
+  :Create Multiple Sheets;
+  :Add Formulas and Charts;
+  :Generate Excel File;
+
+  |Admin|
+  :Download Excel File;
+
+else if (Print) then
+  |System|
+  :Format for Printing;
+  :Apply Print Layout;
+  :Send to Printer;
+
+else (View Only)
+  |Admin|
+  :View Report on Screen;
+  :Analyze Data;
+endif
+
+|System|
+:Log Report Generation;
+:Save Report Metadata;
+
+stop
+@enduml

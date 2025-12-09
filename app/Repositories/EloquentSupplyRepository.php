@@ -31,6 +31,13 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
             ->update($data) > 0;
     }
 
+    public function incrementStock(int $id, float $quantity)
+    {
+        return DB::table('supplies')
+            ->where('supply_id', $id)
+            ->increment('quantity_stock', $quantity);
+    }
+
     public function delete(int $id)
     {
         return DB::table('supplies')

@@ -1,0 +1,40 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Pullout Request State Transition
+
+[*] --> Pending : Employee submits request
+
+Pending --> Approved : Admin approves\n& stock available
+Pending --> Rejected : Admin rejects
+Pending --> OutOfStock : Insufficient stock
+
+OutOfStock --> Pending : Stock replenished
+
+Approved --> InUse : Supplies pulled out
+
+InUse --> PartiallyReturned : Some items returned
+InUse --> FullyReturned : All items returned
+InUse --> Consumed : Supplies fully used
+
+PartiallyReturned --> FullyReturned : Remaining returned
+
+Approved --> [*] : No returns needed
+Rejected --> [*] : Request denied
+FullyReturned --> [*] : Transaction closed
+Consumed --> [*] : Transaction closed
+
+Pending : Awaiting approval
+Pending : Stock validation needed
+
+Approved : Inventory deducted
+Approved : Supplies available
+
+InUse : Supplies being used
+InUse : Can track returns
+
+Rejected : Request denied
+Rejected : Stock not deducted
+
+@enduml

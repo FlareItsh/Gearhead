@@ -1,0 +1,50 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Payment Status State Transition
+
+[*] --> Unpaid : Service order created
+
+Unpaid --> CheckingLoyalty : Customer initiates payment
+
+CheckingLoyalty --> LoyaltyAvailable : Service count = 9
+CheckingLoyalty --> Processing : Service count < 9
+
+LoyaltyAvailable --> LoyaltyRedeemed : Customer redeems\nloyalty points
+LoyaltyAvailable --> Processing : Customer pays normally
+
+LoyaltyRedeemed --> Paid : Free service applied\nCount reset to 0
+
+Processing --> Paid : Payment successful\n(Cash/GCash)
+Processing --> Failed : Payment declined
+
+Failed --> Processing : Customer retries
+Failed --> Unpaid : Payment cancelled
+
+Paid --> [*] : Transaction complete
+Unpaid --> [*] : Order cancelled\n(no payment needed)
+
+Unpaid : Service completed
+Unpaid : Awaiting payment
+
+CheckingLoyalty : Verify service count
+CheckingLoyalty : Check loyalty eligibility
+
+LoyaltyAvailable : 9 services completed
+LoyaltyAvailable : Eligible for free service
+LoyaltyAvailable : Customer can choose
+
+LoyaltyRedeemed : Free service granted
+LoyaltyRedeemed : Count reset to 0
+LoyaltyRedeemed : No payment needed
+
+Processing : Payment method selected
+Processing : Transaction in progress
+
+Paid : Payment confirmed
+Paid : Receipt generated
+Paid : Order completed
+Paid : Loyalty count incremented
+
+@enduml

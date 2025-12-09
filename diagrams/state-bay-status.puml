@@ -1,0 +1,37 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Bay Status State Transition
+
+[*] --> Available : Bay initialized
+
+Available --> Reserved : Service order assigned
+Available --> OutOfService : Bay closed/damaged
+
+Reserved --> Occupied : Service starts
+Reserved --> Available : Reservation cancelled
+
+Occupied --> Cleaning : Service completed
+Occupied --> UnderMaintenance : Bay needs repair
+
+Cleaning --> Available : Cleaning done
+
+UnderMaintenance --> Available : Maintenance completed
+
+OutOfService --> UnderMaintenance : Repair scheduled
+OutOfService --> Available : Reopened
+
+Available --> [*] : Bay decommissioned
+
+Available : Ready for assignment
+Available : No active service
+
+Occupied : Service in progress
+Occupied : Employee working
+Occupied : Cannot be reassigned
+
+Reserved : Assigned but not started
+Reserved : Awaiting service start
+
+@enduml

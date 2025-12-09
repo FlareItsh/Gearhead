@@ -1,0 +1,47 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Supply Inventory State Transition
+
+[*] --> InStock : Supply added
+
+InStock --> Sufficient : Above reorder point
+InStock --> LowStock : At/below reorder point
+InStock --> OutOfStock : Quantity = 0
+
+Sufficient --> LowStock : Stock depleted
+LowStock --> Sufficient : Stock replenished
+LowStock --> OutOfStock : Fully consumed
+
+OutOfStock --> OrderPlaced : Purchase order created
+LowStock --> OrderPlaced : Reorder triggered
+
+OrderPlaced --> InTransit : Order confirmed
+InTransit --> Receiving : Delivery arrived
+Receiving --> InStock : Stock updated
+
+InStock --> Reserved : Pullout approved
+Reserved --> InStock : Pullout returned/cancelled
+Reserved --> Consumed : Supplies used
+
+Consumed --> InStock : Stock level updated
+
+InStock --> Expired : Past expiration date
+Expired --> Disposed : Removed from inventory
+
+Disposed --> [*] : Item discarded
+
+Sufficient : Stock healthy
+Sufficient : No action needed
+
+LowStock : Alert generated
+LowStock : Reorder recommended
+
+OutOfStock : Cannot fulfill pullouts
+OutOfStock : Purchase required
+
+Reserved : Allocated to service
+Reserved : Temporarily unavailable
+
+@enduml

@@ -50,6 +50,21 @@ class SupplyController extends Controller
         return response()->json($updatedItem);
     }
 
+    public function incrementStock(Request $request, int $id)
+    {
+        $item = $this->repo->findById($id);
+
+        if (! $item) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $quantity = (float) $request->input('quantity', 0);
+        $this->repo->incrementStock($id, $quantity);
+        $updatedItem = $this->repo->findById($id);
+
+        return response()->json($updatedItem);
+    }
+
     public function destroy(int $id)
     {
         $item = $this->repo->findById($id);

@@ -1,0 +1,222 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Gearhead Auto Service Database ERD
+
+!define primary_key(x) <b><color:red>PK</color> x</b>
+!define foreign_key(x) <color:blue>FK</color> x
+!define unique(x) <color:green>UK</color> x
+
+entity "users" as users {
+  primary_key(user_id): bigint <<PK>>
+  --
+  first_name: varchar
+  middle_name: varchar (nullable)
+  last_name: varchar
+  unique(email): varchar (nullable)
+  email_verified_at: timestamp (nullable)
+  phone_number: varchar (nullable)
+  address: varchar (nullable)
+  password: varchar
+  role: varchar (default: 'customer')
+  remember_token: varchar (nullable)
+  two_factor_secret: text (nullable)
+  two_factor_recovery_codes: text (nullable)
+  two_factor_confirmed_at: timestamp (nullable)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "employees" as employees {
+  primary_key(employee_id): bigint <<PK>>
+  --
+  first_name: varchar
+  middle_name: varchar (nullable)
+  last_name: varchar
+  phone_number: varchar
+  address: varchar
+  status: enum('active', 'absent', 'inactive')
+  date_hired: date
+  employment_ended_at: timestamp (nullable)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "bays" as bays {
+  primary_key(bay_id): bigint <<PK>>
+  --
+  bay_number: varchar
+  status: varchar
+  bay_type: varchar
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "services" as services {
+  primary_key(service_id): bigint <<PK>>
+  --
+  service_name: varchar
+  description: text
+  size: varchar
+  category: varchar
+  estimated_duration: int (minutes)
+  price: decimal(10,2)
+  status: enum('active', 'inactive')
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "service_orders" as service_orders {
+  primary_key(service_order_id): bigint <<PK>>
+  --
+  foreign_key(user_id): bigint <<FK>>
+  foreign_key(employee_id): bigint (nullable) <<FK>>
+  foreign_key(bay_id): bigint (nullable) <<FK>>
+  status: enum('pending', 'in_progress', 'completed', 'cancelled')
+  order_date: datetime
+  order_type: enum('W', 'R')
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "service_order_details" as service_order_details {
+  primary_key(service_order_detail_id): bigint <<PK>>
+  --
+  foreign_key(service_order_id): bigint <<FK>>
+  foreign_key(service_id): bigint <<FK>>
+  quantity: int (default: 1)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "payments" as payments {
+  primary_key(payment_id): bigint <<PK>>
+  --
+  foreign_key(service_order_id): bigint <<FK>>
+  amount: decimal(10,2)
+  payment_method: enum('cash', 'gcash')
+  is_point_redeemed: boolean
+  gcash_reference: varchar (nullable)
+  gcash_screenshot: varchar (nullable)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "supplies" as supplies {
+  primary_key(supply_id): bigint <<PK>>
+  --
+  supply_name: varchar
+  unit: varchar
+  reorder_point: decimal
+  supply_type: varchar
+  quantity_stock: decimal(10,2)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "suppliers" as suppliers {
+  primary_key(supplier_id): bigint <<PK>>
+  --
+  first_name: varchar
+  middle_name: varchar (nullable)
+  last_name: varchar
+  phone_number: varchar
+  unique(email): varchar (nullable)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "supply_purchases" as supply_purchases {
+  primary_key(supply_purchase_id): bigint <<PK>>
+  --
+  foreign_key(supplier_id): bigint <<FK>>
+  purchase_date: datetime
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "supply_purchase_details" as supply_purchase_details {
+  primary_key(supply_purchase_details_id): bigint <<PK>>
+  --
+  foreign_key(supply_purchase_id): bigint <<FK>>
+  foreign_key(supply_id): bigint <<FK>>
+  quantity: decimal(10,2)
+  unit_price: decimal(10,2)
+  purchase_date: timestamp
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "pullout_requests" as pullout_requests {
+  primary_key(pullout_request_id): bigint <<PK>>
+  --
+  foreign_key(employee_id): bigint <<FK>>
+  date_time: timestamp
+  approve_by: varchar (nullable)
+  approve_date: timestamp (nullable)
+  is_approve: boolean (default: false)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "pullout_services" as pullout_services {
+  primary_key(pullout_service_id): bigint <<PK>>
+  --
+  foreign_key(service_order_detail_id): bigint <<FK>>
+  bay_number: varchar
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "pullout_request_details" as pullout_request_details {
+  primary_key(pullout_request_details_id): bigint <<PK>>
+  --
+  foreign_key(pullout_service_id): bigint <<FK>>
+  foreign_key(supply_id): bigint <<FK>>
+  foreign_key(pullout_request_id): bigint <<FK>>
+  quantity: decimal(10,2)
+  quantity_returned: decimal(10,2) (nullable)
+  return_date: timestamp (nullable)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+entity "landing_page_contents" as landing_page_contents {
+  primary_key(landing_page_id): bigint <<PK>>
+  --
+  foreign_key(last_edited_by): bigint <<FK>>
+  title: varchar
+  texts: text
+  image_path: varchar
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+' Relationships
+users ||--o{ service_orders : "places"
+users ||--o{ landing_page_contents : "edits"
+
+employees ||--o{ service_orders : "assigned to"
+employees ||--o{ pullout_requests : "creates"
+
+bays ||--o{ service_orders : "occupies"
+
+services ||--o{ service_order_details : "includes"
+
+service_orders ||--o{ service_order_details : "contains"
+service_orders ||--|| payments : "has"
+
+service_order_details ||--o{ pullout_services : "uses"
+
+pullout_services ||--o{ pullout_request_details : "requests"
+
+pullout_requests ||--o{ pullout_request_details : "has"
+
+supplies ||--o{ supply_purchase_details : "purchased"
+supplies ||--o{ pullout_request_details : "pulled out"
+
+suppliers ||--o{ supply_purchases : "supplies"
+
+supply_purchases ||--o{ supply_purchase_details : "contains"
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Service Status State Transition
+
+[*] --> Active : Service created
+
+Active --> Inactive : Admin deactivates
+Active --> Archived : Service discontinued
+
+Inactive --> Active : Admin reactivates
+Inactive --> Archived : Permanently removed
+
+Archived --> [*] : Service deleted\n(if no history)
+
+Active : Available for booking
+Active : Displayed to customers
+Active : Can be ordered
+
+Inactive : Hidden from customers
+Inactive : Cannot be booked
+Inactive : Can be reactivated
+
+Archived : No longer offered
+Archived : Historical records only
+Archived : Cannot be reactivated
+
+@enduml

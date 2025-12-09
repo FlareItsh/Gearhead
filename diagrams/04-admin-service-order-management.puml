@@ -1,0 +1,107 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Admin Service Order Management
+
+|Admin|
+start
+:Access Service Order Dashboard;
+
+|System|
+:Load All Service Orders;
+:Display Orders by Status\n(Pending/In Progress/Completed);
+
+|Admin|
+:Filter/Sort Orders;
+:Select Service Order;
+
+|System|
+:Load Order Details;
+:Display Customer Info;
+:Display Service Details;
+:Display Current Status;
+
+|Admin|
+if (Action Type?) then (Assign Employee)
+  :View Available Employees;
+
+  |System|
+  :Query Employee Availability;
+  :Check Employee Schedule;
+  :Display Available Employees;
+
+  |Admin|
+  :Select Employee;
+  :Assign to Service Order;
+
+  |System|
+  :Update Service Order;
+  :Link Employee ID;
+  :Check Bay Availability;
+
+  |Admin|
+  :Assign Bay Number;
+
+  |System|
+  :Update Bay Status = "Occupied";
+  :Update Order Status = "In Progress";
+  :Record Assignment Time;
+
+  fork
+    :Notify Employee (SMS/Email);
+  fork again
+    :Notify Customer (Service Starting);
+  end fork
+
+else if (Update Status) then
+  if (New Status?) then (Complete)
+    |System|
+    :Mark Order as "Completed";
+    :Update Completion Timestamp;
+    :Free Up Bay;
+    :Update Bay Status = "Available";
+    :Calculate Service Duration;
+    :Trigger Payment Process;
+    :Notify Customer (Service Done);
+
+  else if (Cancel) then
+    |Admin|
+    :Enter Cancellation Reason;
+
+    |System|
+    :Mark Order as "Cancelled";
+    :Free Up Bay;
+    :Free Up Employee;
+    :Update Bay Status = "Available";
+
+    if (Payment Made?) then (Yes)
+      :Process Refund;
+      :Notify Finance;
+    else (No)
+      :Skip Refund;
+    endif
+
+    :Notify Customer (Cancellation);
+
+  else (In Progress)
+    |System|
+    :Update Status = "In Progress";
+    :Log Status Change;
+  endif
+
+  |System|
+  :Save All Changes to Database;
+  :Log Admin Activity;
+  :Update Dashboard;
+
+else (View Details Only)
+  |System|
+  :Display Full Order History;
+  :Display Payment Info;
+  :Display Employee Assigned;
+  :Display Timeline;
+  :Log View Activity;
+endif
+
+stop
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Landing Page Content State Transition
+
+[*] --> Draft : Content created
+
+Draft --> UnderReview : Submitted for approval
+Draft --> Archived : Draft discarded
+
+UnderReview --> Approved : Admin approves
+UnderReview --> Draft : Needs revision
+
+Approved --> Published : Content goes live
+
+Published --> UnderReview : Needs update/edit
+Published --> Archived : Content removed
+
+Archived --> Draft : Content restored
+Archived --> [*] : Permanently deleted
+
+Draft : Being edited
+Draft : Not visible to public
+Draft : Can be modified freely
+
+UnderReview : Awaiting approval
+UnderReview : Cannot be edited
+UnderReview : Admin reviewing
+
+Published : Live on website
+Published : Visible to public
+Published : Can be updated
+
+Archived : Removed from site
+Archived : Hidden from public
+Archived : Can be restored
+
+@enduml

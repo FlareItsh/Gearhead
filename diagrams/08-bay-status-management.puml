@@ -1,0 +1,94 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Bay Status Management
+
+|System|
+start
+:Initialize Bay Monitoring;
+:Load All Bay Records;
+
+repeat
+  :Check Bay Status;
+
+  if (Bay Has Active Service Order?) then (Yes)
+    :Update Bay Status = "Occupied";
+    :Load Service Order Details;
+    :Load Assigned Employee;
+    :Calculate Service Duration;
+
+    |Employee|
+    :Start Service Work;
+    :Update Work Progress;
+
+    |System|
+    :Track Service Progress;
+    :Monitor Time Elapsed;
+
+    if (Service Completed?) then (Yes)
+      |Employee|
+      :Complete Service Tasks;
+      :Mark Service as Done;
+      :Clean Bay Area;
+
+      |System|
+      :Update Service Order Status = "Completed";
+      :Record Completion Time;
+      :Calculate Total Service Duration;
+      :Calculate Bay Utilization Time;
+      :Update Bay Status = "Available";
+      :Unlink Employee Assignment;
+      :Unlink Service Order;
+      :Trigger Payment Process;
+
+      fork
+        :Notify Customer (Service Complete);
+      fork again
+        :Notify Admin (Bay Available);
+      end fork
+
+      |Admin|
+      :Review Completed Service;
+
+    else (No - In Progress)
+      :Continue Monitoring;
+      :Update Progress Metrics;
+
+      if (Service Delayed?) then (Yes)
+        :Send Delay Notification to Customer;
+        :Update Expected Completion Time;
+      endif
+    endif
+
+  else (No - Bay Empty)
+    :Update Bay Status = "Available";
+    :Clear Bay Assignment;
+
+    |System|
+    :Check Pending Service Orders;
+
+    if (Pending Orders Exist?) then (Yes)
+      :Display Bay as Available;
+      :Add to Available Bay Queue;
+
+      |Admin|
+      :View Available Bays;
+      :Assign Pending Order to Bay;
+
+    else (No)
+      :Bay Remains Idle;
+      :Track Idle Time;
+    endif
+  endif
+
+  |System|
+  :Update Dashboard Display;
+  :Refresh Bay Status Grid;
+  :Update Real-Time Statistics;
+  :Calculate Bay Utilization Rate;
+
+repeat while (Continue Monitoring?) is (Yes)
+->No;
+
+stop
+@enduml

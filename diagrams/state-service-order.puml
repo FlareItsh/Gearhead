@@ -1,0 +1,34 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Service Order State Transition
+
+[*] --> Pending : Customer creates booking
+
+Pending --> InProgress : Admin assigns\nemployee & bay
+Pending --> Cancelled : Customer/Admin\ncancels
+
+InProgress --> Completed : Employee finishes\nservice
+InProgress --> Cancelled : Admin cancels\n(special cases)
+
+Completed --> [*] : Payment processed
+Cancelled --> [*] : Refund processed\n(if paid)
+
+Pending : Awaiting assignment
+Pending : Customer can cancel
+Pending : No employee/bay assigned
+
+InProgress : Employee working
+InProgress : Bay occupied
+InProgress : Cannot cancel easily
+
+Completed : Service finished
+Completed : Payment required
+Completed : Bay freed
+
+Cancelled : Order terminated
+Cancelled : Bay/Employee freed
+Cancelled : Refund if paid
+
+@enduml

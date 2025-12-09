@@ -1,0 +1,135 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Customer Booking Cancellation
+
+|Customer|
+start
+:Access My Bookings;
+
+|System|
+:Load Customer Service Orders;
+:Filter Active Bookings;
+:Display Booking List;
+
+|Customer|
+:Select Booking to Cancel;
+
+|System|
+:Load Booking Details;
+:Display Service Information;
+:Display Scheduled Date/Time;
+:Display Payment Status;
+:Check Cancellation Policy;
+:Calculate Time Until Appointment;
+
+if (Cancellation Allowed?) then (Yes)
+  |System|
+  :Display Cancellation Terms;
+  :Show Refund Information (if applicable);
+
+  |Customer|
+  :Review Cancellation Details;
+  :Confirm Cancellation Request;
+
+  |System|
+  :Prompt for Cancellation Reason;
+
+  |Customer|
+  :Enter Cancellation Reason (Optional);
+  :Submit Cancellation;
+
+  |System|
+  :Create Cancellation Record;
+  :Update Service Order Status = "Cancelled";
+  :Record Cancellation Timestamp;
+  :Record Cancellation Reason;
+  :Free Up Time Slot;
+
+  if (Bay Already Assigned?) then (Yes)
+    :Update Bay Status = "Available";
+    :Unlink Bay Assignment;
+  endif
+
+  if (Employee Already Assigned?) then (Yes)
+    :Unlink Employee Assignment;
+    :Free Up Employee Schedule;
+  endif
+
+  if (Payment Already Made?) then (Yes)
+    :Calculate Refund Amount;
+    :Check Refund Policy;
+
+    if (Eligible for Refund?) then (Yes)
+      :Process Refund Request;
+      :Create Refund Record;
+      :Update Payment Status = "Refunded";
+
+      if (Payment Method?) then (Cash)
+        :Set Refund Method = "Manual";
+        :Notify Admin for Manual Refund;
+      else (Online/Card)
+        :Initiate Online Refund;
+        :Process Gateway Refund;
+        :Update Refund Status = "Processed";
+      endif
+
+      fork
+        :Send Refund Confirmation to Customer;
+        :Include Refund Amount;
+        :Include Processing Time;
+      fork again
+        :Notify Admin of Refund;
+      end fork
+
+    else (No - No Refund)
+      :Set Refund Amount = 0;
+      :Apply Cancellation Fee;
+    endif
+
+  else (No - No Payment)
+    :No Refund Needed;
+  endif
+
+  |System|
+  :Save All Changes to Database;
+  :Log Cancellation Activity;
+
+  fork
+    :Send Cancellation Confirmation Email;
+    :Include Booking Reference;
+    :Include Refund Details;
+  fork again
+    :Send SMS Notification;
+  fork again
+    :Notify Admin of Cancellation;
+  end fork
+
+  |Customer|
+  :Receive Cancellation Confirmation;
+
+  |Admin|
+  :Review Cancelled Booking;
+  :Update Booking Statistics;
+  :Reassign Time Slot (if needed);
+
+else (No - Cancellation Not Allowed)
+  |System|
+  :Display Error Message;
+  :Show Reason (Too Late, Already Started, etc.);
+  :Suggest Contact Admin;
+
+  |Customer|
+  if (Contact Admin?) then (Yes)
+    :Request Special Cancellation;
+
+    |Admin|
+    :Review Special Request;
+    :Manually Process Cancellation;
+  else (No)
+    :Return to Bookings;
+  endif
+endif
+
+stop
+@enduml

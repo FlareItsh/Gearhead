@@ -1,0 +1,62 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title User Registration & Authentication Flow
+
+|User|
+start
+:Access Registration Page;
+
+if (Has an Account?) then (No)
+  |System|
+  :Display Registration Form;
+  |User|
+  :Enter Username & Password;
+  |System|
+  :Validate Input;
+
+  if (Valid Input?) then (Yes)
+    :Hash Password;
+    :Save User Data to Database;
+    :Create User Session;
+
+    if (User Role is Admin?) then (Yes)
+      :Redirect to Admin Dashboard;
+    else (No)
+      :Redirect to Customer Homepage;
+    endif
+  else (No)
+    :Display Validation Errors;
+    :Return to Registration Form;
+    stop
+  endif
+
+else (Yes)
+  |User|
+  :Click Login;
+  |System|
+  :Display Login Form;
+  |User|
+  :Enter Username & Password;
+  |System|
+  :Validate Credentials;
+
+  if (Credentials Valid?) then (Yes)
+    :Verify Password Hash;
+    :Create User Session;
+    :Log Login Activity;
+
+    if (User Role is Admin?) then (Yes)
+      :Redirect to Admin Dashboard;
+    else (No)
+      :Redirect to Customer Homepage;
+    endif
+  else (No)
+    :Display Error Message;
+    :Return to Login Form;
+    stop
+  endif
+endif
+
+stop
+@enduml

@@ -1,0 +1,89 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Payment Processing Workflow
+
+|Employee|
+start
+:Complete Service Work;
+:Mark Service Order as Done;
+
+|System|
+:Load Service Order Details;
+:Calculate Service Charges;
+:Calculate Parts/Supplies Used;
+:Calculate Total Amount;
+:Generate Invoice;
+
+|Customer|
+:Review Invoice;
+
+if (Payment Method?) then (Cash)
+  |Cashier/Employee|
+  :Accept Cash Payment;
+  :Count Cash;
+  :Provide Change (if any);
+
+  |System|
+  :Record Cash Payment;
+  :Set Payment Method = "Cash";
+  :Set Payment Status = "Paid";
+  :Update Service Order Status = "Completed";
+
+else if (GCash/Online) then
+  |Customer|
+  :Provide GCash Number/Details;
+
+  |System|
+  :Process Online Payment;
+  :Verify Payment Gateway;
+
+  if (Payment Successful?) then (Yes)
+    :Record Payment Details;
+    :Set Payment Method = "GCash";
+    :Set Payment Status = "Paid";
+    :Update Service Order Status = "Completed";
+  else (No)
+    :Record Failed Payment;
+    :Display Payment Error;
+    |Customer|
+    :Retry Payment or Choose Cash;
+    stop
+  endif
+
+else (Card)
+  |System|
+  :Process Card Payment;
+  :Verify Card Details;
+
+  if (Payment Successful?) then (Yes)
+    :Record Payment;
+    :Set Payment Method = "Card";
+    :Set Payment Status = "Paid";
+    :Update Service Order Status = "Completed";
+  else (No)
+    :Display Payment Error;
+    stop
+  endif
+endif
+
+|System|
+:Save Payment Record to Database;
+:Generate Receipt;
+:Create PDF Receipt;
+
+fork
+  :Send Receipt via Email;
+fork again
+  :Print Physical Receipt;
+end fork
+
+|Customer|
+:Receive Receipt;
+
+|System|
+:Log Transaction;
+:Update Financial Reports;
+
+stop
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Service Order Detail State Transition
+
+[*] --> Added : Service added to order
+
+Added --> Confirmed : Order confirmed
+
+Confirmed --> InProgress : Service started
+
+InProgress --> Completed : Service finished
+InProgress --> Cancelled : Service removed\nfrom order
+
+Completed --> [*] : Service delivered
+
+Cancelled --> [*] : Removed from order
+
+Added : In cart/order
+Added : Not yet confirmed
+Added : Can be removed
+
+Confirmed : Order placed
+Confirmed : Awaiting service start
+
+InProgress : Being performed
+InProgress : Supplies may be used
+InProgress : Cannot cancel easily
+
+Completed : Service delivered
+Completed : Ready for payment
+Completed : Part of final invoice
+
+@enduml

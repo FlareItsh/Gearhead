@@ -124,6 +124,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('supplies.store');
     Route::put('/supplies/{id}', [SupplyController::class, 'update'])
         ->name('supplies.update');
+    Route::post('/supplies/{id}/increment-stock', [SupplyController::class, 'incrementStock'])
+        ->name('supplies.increment-stock');
     Route::delete('/supplies/{id}', [SupplyController::class, 'destroy'])
         ->name('supplies.destroy');
 

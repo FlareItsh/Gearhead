@@ -1,0 +1,177 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Service Management (Admin)
+
+|Admin|
+start
+:Access Service Management;
+
+|System|
+:Load All Services;
+:Display Service List;
+:Show Service Details (Name, Price, Duration);
+
+|Admin|
+if (Action Type?) then (Add New Service)
+  |System|
+  :Display Create Service Form;
+
+  |Admin|
+  :Enter Service Name;
+  :Enter Service Description;
+  :Set Service Price;
+  :Set Estimated Duration;
+  :Select Service Category;
+  :Upload Service Image (Optional);
+
+  |System|
+  :Validate Input Fields;
+
+  if (Input Valid?) then (Yes)
+    if (Service Name Exists?) then (Yes)
+      :Display "Duplicate Name" Error;
+      |Admin|
+      :Modify Service Name;
+      stop
+    else (No)
+      :Process Image Upload;
+      :Resize and Optimize Image;
+      :Save Image to Storage;
+      :Create Service Record;
+      :Set Status = "Active";
+      :Save to Database;
+      :Log Service Creation;
+
+      |System|
+      :Refresh Service List;
+      :Display Success Message;
+    endif
+  else (No)
+    :Display Validation Errors;
+    |Admin|
+    :Correct Input;
+    stop
+  endif
+
+else if (Edit Existing Service) then
+  |Admin|
+  :Select Service to Edit;
+
+  |System|
+  :Load Service Details;
+  :Display Edit Form;
+  :Populate Current Values;
+
+  |Admin|
+  :Modify Service Details;
+  :Update Price (if needed);
+  :Update Duration (if needed);
+  :Update Description (if needed);
+  :Upload New Image (if needed);
+
+  |System|
+  :Validate Changes;
+
+  if (Changes Valid?) then (Yes)
+    if (Service Currently in Use?) then (Yes)
+      :Display Warning;
+      :Show Active Orders Count;
+
+      |Admin|
+      if (Confirm Update?) then (Yes)
+        :Proceed with Update;
+      else (No)
+        :Cancel Changes;
+        stop
+      endif
+    endif
+
+    |System|
+    if (Image Changed?) then (Yes)
+      :Delete Old Image;
+      :Upload New Image;
+      :Update Image Path;
+    endif
+
+    :Update Service Record;
+    :Update Modified Timestamp;
+    :Save to Database;
+    :Log Service Modification;
+
+    if (Price Changed?) then (Yes)
+      :Create Price History Record;
+      :Log Price Change;
+    endif
+
+    :Refresh Service List;
+    :Display Success Message;
+
+  else (No)
+    :Display Validation Errors;
+    stop
+  endif
+
+else if (Delete Service) then
+  |Admin|
+  :Select Service to Delete;
+
+  |System|
+  :Load Service Details;
+  :Check Service Usage;
+
+  if (Service Has Orders?) then (Yes)
+    :Display Warning Message;
+    :Show Number of Affected Orders;
+    :Suggest Soft Delete Instead;
+
+    |Admin|
+    if (Force Delete?) then (Yes)
+      :Confirm Deletion;
+
+      |System|
+      :Soft Delete Service;
+      :Set Status = "Inactive";
+      :Keep Historical Records;
+      :Hide from Customer View;
+      :Preserve Order Relationships;
+      :Log Soft Deletion;
+
+    else (No - Cancel)
+      :Cancel Deletion;
+      stop
+    endif
+
+  else (No - No Orders)
+    |Admin|
+    :Confirm Hard Delete;
+
+    |System|
+    :Delete Service Image;
+    :Delete Service Record;
+    :Log Hard Deletion;
+  endif
+
+  |System|
+  :Refresh Service List;
+  :Update Service Statistics;
+  :Display Success Message;
+
+else (View Service Details)
+  |Admin|
+  :Select Service;
+
+  |System|
+  :Display Service Information;
+  :Show Service Statistics;
+  :Show Total Bookings;
+  :Show Revenue Generated;
+  :Show Average Rating (if applicable);
+endif
+
+|System|
+:Update Service Dashboard;
+:Recalculate Statistics;
+
+stop
+@enduml

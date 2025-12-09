@@ -1,0 +1,285 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Gearhead Auto Service - Domain Class Diagram
+
+skinparam class {
+    BackgroundColor<<Entity>> LightBlue
+    BackgroundColor<<ValueObject>> LightYellow
+    BackgroundColor<<Aggregate>> LightGreen
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "User Domain" <<Rectangle>> {
+    class User <<Entity>> {
+        - user_id: int
+        - first_name: string
+        - middle_name: string
+        - last_name: string
+        - email: string
+        - phone_number: string
+        - address: string
+        - password: string
+        - role: string
+        - email_verified_at: DateTime
+        - two_factor_secret: string
+        - two_factor_recovery_codes: string
+        --
+        + hasAnyRole(roles: array): bool
+        + hasRole(role: string): bool
+        + isAdministrator(): bool
+        + getFullName(): string
+        + serviceOrders(): Collection<ServiceOrder>
+    }
+}
+
+package "Employee Domain" <<Rectangle>> {
+    class Employee <<Entity>> {
+        - employee_id: int
+        - first_name: string
+        - middle_name: string
+        - last_name: string
+        - phone_number: string
+        - address: string
+        - status: enum
+        - date_hired: Date
+        - employment_ended_at: DateTime
+        --
+        + getFullName(): string
+        + getName(): string
+        + isActive(): bool
+        + serviceOrders(): Collection<ServiceOrder>
+        + pulloutRequests(): Collection<PulloutRequest>
+    }
+}
+
+package "Service Management Domain" <<Rectangle>> {
+    class Service <<Entity>> {
+        - service_id: int
+        - service_name: string
+        - description: text
+        - size: string
+        - category: string
+        - estimated_duration: int
+        - price: decimal
+        - status: enum
+        --
+        + isActive(): bool
+        + getFormattedPrice(): string
+        + serviceOrderDetails(): Collection<ServiceOrderDetail>
+    }
+
+    class Bay <<Entity>> {
+        - bay_id: int
+        - bay_number: string
+        - status: string
+        - bay_type: string
+        --
+        + isAvailable(): bool
+        + isOccupied(): bool
+        + serviceOrders(): Collection<ServiceOrder>
+    }
+
+    class ServiceOrder <<Aggregate>> {
+        - service_order_id: int
+        - user_id: int
+        - employee_id: int
+        - bay_id: int
+        - status: enum
+        - order_date: DateTime
+        - order_type: enum
+        --
+        + isPending(): bool
+        + isCompleted(): bool
+        + isCancelled(): bool
+        + isWalkIn(): bool
+        + isReservation(): bool
+        + user(): User
+        + employee(): Employee
+        + bay(): Bay
+        + details(): Collection<ServiceOrderDetail>
+        + payments(): Collection<Payment>
+    }
+
+    class ServiceOrderDetail <<Entity>> {
+        - service_order_detail_id: int
+        - service_order_id: int
+        - service_id: int
+        - quantity: int
+        --
+        + serviceOrder(): ServiceOrder
+        + service(): Service
+        + pulloutServices(): Collection<PulloutService>
+        + calculateSubtotal(): decimal
+    }
+}
+
+package "Payment Domain" <<Rectangle>> {
+    class Payment <<Entity>> {
+        - payment_id: int
+        - service_order_id: int
+        - amount: decimal
+        - payment_method: enum
+        - is_point_redeemed: bool
+        - gcash_reference: string
+        - gcash_screenshot: string
+        --
+        + isCash(): bool
+        + isGCash(): bool
+        + serviceOrder(): ServiceOrder
+        + getFormattedAmount(): string
+    }
+}
+
+package "Inventory Domain" <<Rectangle>> {
+    class Supply <<Entity>> {
+        - supply_id: int
+        - supply_name: string
+        - unit: string
+        - reorder_point: decimal
+        - supply_type: string
+        - quantity_stock: decimal
+        --
+        + isLowStock(): bool
+        + needsReorder(): bool
+        + supplyPurchaseDetails(): Collection<SupplyPurchaseDetail>
+        + pulloutRequestDetails(): Collection<PulloutRequestDetail>
+    }
+
+    class Supplier <<Entity>> {
+        - supplier_id: int
+        - first_name: string
+        - middle_name: string
+        - last_name: string
+        - phone_number: string
+        - email: string
+        --
+        + getFullName(): string
+        + supplyPurchases(): Collection<SupplyPurchase>
+    }
+
+    class SupplyPurchase <<Aggregate>> {
+        - supply_purchase_id: int
+        - supplier_id: int
+        - purchase_date: DateTime
+        --
+        + supplier(): Supplier
+        + details(): Collection<SupplyPurchaseDetail>
+        + calculateTotal(): decimal
+    }
+
+    class SupplyPurchaseDetail <<Entity>> {
+        - supply_purchase_details_id: int
+        - supply_purchase_id: int
+        - supply_id: int
+        - quantity: decimal
+        - unit_price: decimal
+        - purchase_date: DateTime
+        --
+        + supplyPurchase(): SupplyPurchase
+        + supply(): Supply
+        + calculateLineTotal(): decimal
+    }
+
+    class PulloutRequest <<Aggregate>> {
+        - pullout_request_id: int
+        - employee_id: int
+        - date_time: DateTime
+        - approve_by: string
+        - approve_date: DateTime
+        - is_approve: bool
+        --
+        + isPending(): bool
+        + isApproved(): bool
+        + isRejected(): bool
+        + employee(): Employee
+        + details(): Collection<PulloutRequestDetail>
+    }
+
+    class PulloutService <<Entity>> {
+        - pullout_service_id: int
+        - service_order_detail_id: int
+        - bay_number: string
+        --
+        + serviceOrderDetail(): ServiceOrderDetail
+        + pulloutRequestDetails(): Collection<PulloutRequestDetail>
+    }
+
+    class PulloutRequestDetail <<Entity>> {
+        - pullout_request_details_id: int
+        - pullout_service_id: int
+        - supply_id: int
+        - pullout_request_id: int
+        - quantity: decimal
+        - quantity_returned: decimal
+        - return_date: DateTime
+        --
+        + pulloutService(): PulloutService
+        + supply(): Supply
+        + pulloutRequest(): PulloutRequest
+        + isReturned(): bool
+    }
+}
+
+package "CMS Domain" <<Rectangle>> {
+    class LandingPageContent <<Entity>> {
+        - landing_page_id: int
+        - last_edited_by: int
+        - title: string
+        - texts: text
+        - image_path: string
+        --
+        + user(): User
+    }
+}
+
+' Relationships - User Domain
+User "1" --> "0..*" ServiceOrder : places
+User "1" --> "0..*" LandingPageContent : edits
+
+' Relationships - Employee Domain
+Employee "1" --> "0..*" ServiceOrder : assigned to
+Employee "1" --> "0..*" PulloutRequest : creates
+
+' Relationships - Service Management Domain
+Bay "1" --> "0..*" ServiceOrder : occupies
+Service "1" --> "0..*" ServiceOrderDetail : included in
+ServiceOrder "1" *-- "1..*" ServiceOrderDetail : contains
+ServiceOrder "1" --> "1" Payment : has payment
+
+' Relationships - Inventory Domain
+Supplier "1" --> "0..*" SupplyPurchase : supplies
+SupplyPurchase "1" *-- "1..*" SupplyPurchaseDetail : contains
+Supply "1" --> "0..*" SupplyPurchaseDetail : purchased as
+Supply "1" --> "0..*" PulloutRequestDetail : pulled out in
+
+' Relationships - Pullout System
+ServiceOrderDetail "1" --> "0..*" PulloutService : uses supplies from
+PulloutService "1" --> "0..*" PulloutRequestDetail : requests
+PulloutRequest "1" *-- "1..*" PulloutRequestDetail : has details
+
+note right of User
+  Represents customers and administrators.
+  Uses HasFullName trait for name handling.
+  Supports two-factor authentication.
+end note
+
+note right of ServiceOrder
+  Aggregate Root for service booking.
+  Can be Walk-in (W) or Reservation (R).
+  Status: pending, in_progress, completed, cancelled
+end note
+
+note right of PulloutRequest
+  Aggregate Root for inventory pullout.
+  Employees request supplies for service jobs.
+  Requires admin approval.
+end note
+
+note right of SupplyPurchase
+  Aggregate Root for supply procurement.
+  Tracks purchases from suppliers.
+end note
+
+@enduml

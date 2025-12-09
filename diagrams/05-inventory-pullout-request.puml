@@ -1,0 +1,129 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Inventory Pullout Request Workflow
+
+|Employee|
+start
+:Access Pullout Request Form;
+
+|System|
+:Display Available Supplies;
+:Show Current Stock Levels;
+
+|Employee|
+:Select Supply Items;
+:Enter Quantity Needed;
+:Enter Purpose/Reason;
+
+|System|
+:Validate Input;
+
+if (Quantities Valid?) then (Yes)
+  :Calculate Total Items;
+
+  |Employee|
+  :Review Pullout Request;
+  :Submit Request;
+
+  |System|
+  :Create Pullout Request Record;
+  :Set Status = "Pending";
+  :Link to Employee ID;
+  :Save to Database;
+
+  repeat
+    |System|
+    :Check Each Supply Item;
+
+    if (Stock Available?) then (Yes)
+      :Mark Item as Available;
+    else (No)
+      :Mark Item as Out of Stock;
+      :Flag for Admin Review;
+    endif
+
+  repeat while (More Items?) is (Yes)
+  ->No;
+
+  if (All Items Available?) then (Yes)
+    |Admin|
+    :Receive Pullout Request Notification;
+    :Review Request Details;
+    :Check Stock Levels;
+    :Verify Employee;
+
+    if (Approve Request?) then (Yes)
+      :Click Approve;
+
+      |System|
+      :Update Request Status = "Approved";
+
+      repeat
+        :Deduct Stock Quantity;
+        :Update Supply Record;
+        :Create Supply Transaction;
+      repeat while (More Items?) is (Yes)
+      ->No;
+
+      :Check Reorder Levels;
+
+      if (Stock Below Threshold?) then (Yes)
+        :Generate Restock Alert;
+        :Notify Admin for Purchase;
+      else (No)
+        :Stock Levels OK;
+      endif
+
+      fork
+        :Notify Employee (Approved);
+      fork again
+        :Send Pullout Slip (Print/Email);
+      end fork
+
+      |System|
+      :Log Pullout Activity;
+      :Update Inventory Reports;
+
+    else (No - Reject)
+      |Admin|
+      :Enter Rejection Reason;
+
+      |System|
+      :Update Request Status = "Rejected";
+      :Save Rejection Reason;
+      :Notify Employee (Rejected);
+      :Log Pullout Activity;
+      :Update Inventory Reports;
+    endif
+
+  else (No - Stock Shortage)
+    |System|
+    :Set Status = "Pending - Out of Stock";
+
+    fork
+      :Notify Employee (Stock Shortage);
+    fork again
+      :Notify Admin (Restock Needed);
+    end fork
+
+    |Admin|
+    :Review Stock Shortage;
+    :Initiate Purchase Order;
+
+    |System|
+    :Log Pullout Activity;
+    :Update Inventory Reports;
+  endif
+
+else (No - Invalid Input)
+  |System|
+  :Display Validation Errors;
+
+  |Employee|
+  :Correct Input;
+  stop
+endif
+
+stop
+@enduml

@@ -1,0 +1,70 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Service Booking Process (Reservation Subsystem)
+
+|Customer|
+start
+:Access Booking Page;
+:View Available Services;
+
+|System|
+:Load Active Services;
+:Display Service Catalog;
+
+|Customer|
+:Select Service/Service Package;
+
+|System|
+:Calculate Service Duration;
+:Check Bay Availability;
+:Display Available Time Slots;
+
+|Customer|
+:Select Preferred Date & Time;
+
+|System|
+:Validate Slot Availability;
+
+if (Time Slot Available?) then (Yes)
+  :Reserve Time Slot Temporarily;
+
+  |Customer|
+  :Review Booking Details;
+  :Confirm Booking;
+
+  |System|
+  :Create Service Order Record;
+  :Assign Bay (if available);
+  :Calculate Estimated Wait Time;
+  :Save to Database;
+
+  |Admin|
+  :Receive New Booking Notification;
+  :Review Booking Queue;
+  :Organize Customer Confirmation;
+  :Optimize Bay Assignment;
+
+  |System|
+  fork
+    :Send Confirmation Email to Customer;
+  fork again
+    :Send SMS Notification;
+  end fork
+
+  :Display Success Message;
+  :Show Booking Reference Number;
+
+  |Customer|
+  :Receive Confirmation;
+  :View Real-Time Wait Time;
+
+else (No)
+  :Display "Slot Unavailable" Message;
+  :Suggest Alternative Time Slots;
+  |Customer|
+  :Select Different Time Slot;
+endif
+
+stop
+@enduml

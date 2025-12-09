@@ -1,0 +1,29 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Employee Status State Transition
+
+[*] --> Active : Employee hired
+
+Active --> Absent : Employee absent
+Active --> Inactive : Terminated/Resigned
+
+Absent --> Active : Returns to work
+Absent --> Inactive : Long-term absence
+
+Inactive --> [*] : Employment ended
+
+Active : Available for assignment
+Active : Can accept orders
+Active : Currently working or idle
+
+Absent : Temporarily unavailable
+Absent : Cannot be assigned
+Absent : Expected to return
+
+Inactive : No longer employed
+Inactive : Cannot be assigned
+Inactive : Employment ended
+
+@enduml

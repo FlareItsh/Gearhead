@@ -1,0 +1,45 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Two-Factor Authentication State Transition
+
+[*] --> Disabled : Default state
+
+Disabled --> Enabling : User initiates 2FA setup
+
+Enabling --> QRCodeDisplayed : QR code generated
+
+QRCodeDisplayed --> Verifying : User scans QR\nand enters code
+
+Verifying --> Enabled : Code verified
+Verifying --> QRCodeDisplayed : Code incorrect\n(retry)
+
+Enabled --> Disabling : User disables 2FA
+
+Disabling --> RecoveryCheck : Verify identity
+
+RecoveryCheck --> Disabled : Verification success
+RecoveryCheck --> Enabled : Verification failed
+
+Enabled --> RecoveryMode : Lost device\nusing recovery codes
+
+RecoveryMode --> Enabled : Recovery successful
+RecoveryMode --> Disabled : Recovery codes used up
+
+Disabled : 2FA not active
+Disabled : Password-only login
+Disabled : Less secure
+
+Enabling : Setup in progress
+Enabling : Secret being generated
+
+Enabled : 2FA active
+Enabled : Code required for login
+Enabled : Enhanced security
+
+RecoveryMode : Using backup codes
+RecoveryMode : Emergency access
+RecoveryMode : Limited attempts
+
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Supplier Status State Transition
+
+[*] --> Active : Supplier registered
+
+Active --> OnHold : Performance issues\nor dispute
+Active --> Blacklisted : Severe violations\nor fraud
+
+OnHold --> Active : Issues resolved
+OnHold --> Blacklisted : Problems persist
+
+Blacklisted --> OnHold : Review and probation
+Blacklisted --> Terminated : Permanently banned
+
+Terminated --> [*] : Supplier removed
+
+Active : Can receive orders
+Active : Good standing
+Active : Normal operations
+
+OnHold : Temporary suspension
+OnHold : Cannot receive new orders
+OnHold : Under review
+
+Blacklisted : Banned from orders
+Blacklisted : Serious violations
+Blacklisted : May appeal
+
+Terminated : Permanently removed
+Terminated : No future business
+Terminated : Cannot be reinstated
+
+@enduml

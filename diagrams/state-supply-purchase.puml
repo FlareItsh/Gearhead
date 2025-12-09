@@ -1,0 +1,46 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam monochrome true
+title Supply Purchase Order State Transition
+
+[*] --> Draft : Purchase order created
+
+Draft --> Submitted : Order finalized
+Draft --> Cancelled : Order not needed
+
+Submitted --> Confirmed : Supplier confirms
+Submitted --> Rejected : Supplier rejects
+
+Rejected --> Draft : Modify and resubmit
+Rejected --> Cancelled : Order cancelled
+
+Confirmed --> InTransit : Items shipped
+
+InTransit --> Receiving : Delivery arrived
+
+Receiving --> PartiallyReceived : Some items delivered
+Receiving --> FullyReceived : All items delivered
+
+PartiallyReceived --> FullyReceived : Remaining items received
+
+FullyReceived --> Completed : Inventory updated\nPayment processed
+
+Completed --> [*] : Transaction closed
+Cancelled --> [*] : Order terminated
+
+Draft : Being prepared
+Draft : Can be edited
+Draft : Not sent to supplier
+
+Submitted : Sent to supplier
+Submitted : Awaiting confirmation
+
+InTransit : Items being shipped
+InTransit : Expected delivery date set
+
+Completed : All items received
+Completed : Stock updated
+Completed : Purchase finalized
+
+@enduml

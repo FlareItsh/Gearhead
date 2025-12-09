@@ -1,0 +1,110 @@
+@startuml
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+title Employee Assignment & Scheduling
+
+|Admin|
+start
+:Access Service Order Queue;
+
+|System|
+:Load Pending Service Orders;
+:Sort by Priority/Date;
+:Display Order List;
+
+|Admin|
+:Select Service Order to Assign;
+
+|System|
+:Load Service Order Details;
+:Display Customer Information;
+:Display Service Type;
+:Display Scheduled Date/Time;
+
+|Admin|
+:Click "Assign Employee";
+
+|System|
+:Query All Employees;
+:Check Employee Schedules;
+:Check Current Assignments;
+:Filter Available Employees;
+:Display Available Employees;
+
+|Admin|
+:Review Employee Availability;
+:Select Employee;
+
+|System|
+:Validate Employee Selection;
+
+if (Employee Available?) then (Yes)
+  |Admin|
+  :Click "Assign Bay";
+
+  |System|
+  :Query All Bays;
+  :Check Bay Status;
+  :Filter Available Bays;
+  :Display Available Bays;
+
+  |Admin|
+  :Select Bay Number;
+
+  |System|
+  :Validate Bay Availability;
+
+  if (Bay Available?) then (Yes)
+    |Admin|
+    :Set Start Time (if different);
+    :Confirm Assignment;
+
+    |System|
+    :Create Assignment Record;
+    :Update Service Order;
+    :Link Employee ID;
+    :Link Bay ID;
+    :Set Status = "In Progress";
+    :Update Bay Status = "Occupied";
+    :Record Assignment Timestamp;
+    :Save to Database;
+
+    fork
+      :Send Notification to Employee;
+      :Include Service Details;
+      :Include Bay Number;
+      :Include Start Time;
+    fork again
+      :Send Notification to Customer;
+      :Include Employee Name;
+      :Include Expected Start Time;
+      :Include Bay Number;
+    end fork
+
+    |System|
+    :Update Dashboard;
+    :Update Bay Utilization;
+    :Log Assignment Activity;
+
+  else (No - Bay Occupied)
+    :Display "Bay Not Available" Error;
+    |Admin|
+    :Select Different Bay;
+    stop
+  endif
+
+else (No - Employee Busy)
+  :Display "Employee Not Available" Warning;
+  :Show Employee Current Assignment;
+  |Admin|
+  if (Override?) then (Yes)
+    :Reassign Employee;
+    :Update Previous Assignment;
+  else (No)
+    :Select Different Employee;
+    stop
+  endif
+endif
+
+stop
+@enduml
