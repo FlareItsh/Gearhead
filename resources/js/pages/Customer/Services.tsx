@@ -2,10 +2,11 @@ import Heading from '@/components/heading';
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AlertCircle, CheckCircle2, ChevronDown, Clock, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }];
 
@@ -28,9 +29,9 @@ export default function Services() {
 
     const services = pageProps.services ?? [];
     const categories = pageProps.categories ?? [];
-    const selectedCategory = pageProps.selectedCategory ?? 'All';
 
     // State
+    const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [selectedServices, setSelectedServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string>('');
@@ -161,6 +162,14 @@ export default function Services() {
             return sizeA - sizeB;
         });
     }, [services]);
+
+    // Filter services by selected category
+    const filteredServices = useMemo(() => {
+        if (selectedCategory === 'All') {
+            return sortedServices;
+        }
+        return sortedServices.filter((s) => s.category === selectedCategory);
+    }, [sortedServices, selectedCategory]);
 
     // ─────────────────────────────────────────────────────────────
     // SMART TIME SLOT GENERATOR (Current time + 1 hour)
@@ -305,6 +314,7 @@ export default function Services() {
                 'Booking confirmed! Your reservation has been created.',
             );
             setShowModal(true);
+            toast.success('Booking confirmed!');
             console.log('Booking response:', response.data);
         } catch (error) {
             console.error('Booking error:', error);
@@ -314,10 +324,12 @@ export default function Services() {
                     `Booking failed: ${error.response.data?.message || 'Unknown error'}`,
                 );
                 setShowModal(true);
+                toast.error('Booking failed');
             } else {
                 setModalType('error');
                 setModalMessage('Booking failed. Please try again.');
                 setShowModal(true);
+                toast.error('Booking failed');
             }
         } finally {
             setIsBooking(false);
@@ -337,30 +349,26 @@ export default function Services() {
 
                 {/* Category Buttons */}
                 <div className="custom-scrollbar flex w-full gap-4 overflow-x-auto">
-                    <Link href="/services">
-                        <Button
-                            variant={
-                                selectedCategory === 'All'
-                                    ? 'highlight'
-                                    : 'default'
-                            }
-                            className="text-lg"
-                        >
-                            All
-                        </Button>
-                    </Link>
+                    <Button
+                        variant={
+                            selectedCategory === 'All' ? 'highlight' : 'default'
+                        }
+                        className="text-lg"
+                        onClick={() => setSelectedCategory('All')}
+                    >
+                        All
+                    </Button>
                     {categories.map((cat) => {
                         const isActive = cat === selectedCategory;
-                        const href = `/services?category=${encodeURIComponent(cat)}`;
                         return (
-                            <Link key={cat} href={href}>
-                                <Button
-                                    variant={isActive ? 'highlight' : 'default'}
-                                    className="text-lg"
-                                >
-                                    {cat}
-                                </Button>
-                            </Link>
+                            <Button
+                                key={cat}
+                                variant={isActive ? 'highlight' : 'default'}
+                                className="text-lg"
+                                onClick={() => setSelectedCategory(cat)}
+                            >
+                                {cat}
+                            </Button>
                         );
                     })}
                 </div>
@@ -371,9 +379,9 @@ export default function Services() {
                         Services - {selectedCategory}
                     </h4>
                     <div className="custom-scrollbar h-[60vh] overflow-y-auto">
-                        {services.length > 0 ? (
+                        {filteredServices.length > 0 ? (
                             <div className="flex flex-wrap justify-center gap-4">
-                                {sortedServices.map((s, i) => {
+                                {filteredServices.map((s, i) => {
                                     const active = isSelected(s);
                                     return (
                                         <div

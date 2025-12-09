@@ -16,6 +16,7 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { CheckCircle, Clock, PackageCheck, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Pullout Requests', href: '/pullout-requests' },
@@ -101,8 +102,10 @@ export default function PulloutRequestsPage() {
                 approved_by: adminName,
             });
             await loadPulloutRequests();
+            toast.success('Request approved successfully!');
         } catch (error) {
             console.error('Failed to approve request:', error);
+            toast.error('Failed to approve request');
             alert('Failed to approve request');
         }
     };
@@ -111,8 +114,10 @@ export default function PulloutRequestsPage() {
         try {
             await axios.post(`/pullout-requests/${id}/reject`);
             await loadPulloutRequests();
+            toast.success('Request rejected successfully!');
         } catch (error) {
             console.error('Failed to reject request:', error);
+            toast.error('Failed to reject request');
             alert('Failed to reject request');
         }
     };
@@ -124,8 +129,10 @@ export default function PulloutRequestsPage() {
                 returned_by: adminName,
             });
             await loadReturnableSupplies();
+            toast.success('Supply returned successfully!');
         } catch (error) {
             console.error('Failed to return supply:', error);
+            toast.error('Failed to return supply');
             alert('Failed to return supply');
         }
     };

@@ -16,6 +16,7 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'My Bookings', href: '/bookings' },
@@ -96,6 +97,7 @@ export default function Bookings() {
             {},
             {
                 onSuccess: () => {
+                    toast.success('Booking cancelled successfully!');
                     closeCancelModal();
                     // optionally close details modal if it was open for the same booking
                     if (
@@ -105,6 +107,9 @@ export default function Bookings() {
                     ) {
                         closeModal();
                     }
+                },
+                onError: () => {
+                    toast.error('Failed to cancel booking');
                 },
             },
         );

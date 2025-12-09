@@ -24,6 +24,7 @@ import { Head, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { Clock, Pencil, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 // Configure axios to send cookies with requests
 axios.defaults.withCredentials = true;
@@ -183,10 +184,12 @@ export default function AdminServices({
                     config,
                 );
                 setSuccessMessage('Service updated successfully!');
+                toast.success('Service updated successfully!');
             } else {
                 console.log('Creating new service');
                 await axios.post('/api/services', data, config);
                 setSuccessMessage('Service created successfully!');
+                toast.success('Service created successfully!');
             }
             setShowModal(false);
             reset();
@@ -201,6 +204,7 @@ export default function AdminServices({
                 console.error('Response status:', error.response?.status);
                 console.error('Response data:', error.response?.data);
             }
+            toast.error('Failed to save service');
             alert(
                 'Error submitting service: ' +
                     (axios.isAxiosError(error)

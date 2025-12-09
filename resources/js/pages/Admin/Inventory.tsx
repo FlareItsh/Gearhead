@@ -42,6 +42,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ChevronDownIcon, Download, Edit2, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 axios.defaults.withCredentials = true;
 
@@ -237,8 +238,10 @@ export default function InventoryPage() {
             });
             setSuccessMessage('Purchase recorded successfully!');
             setShowSuccessModal(true);
+            toast.success('Purchase recorded successfully!');
         } catch (err) {
             console.error('Failed to record purchase:', err);
+            toast.error('Failed to record purchase');
             alert('Error recording purchase');
         }
     };
@@ -272,8 +275,10 @@ export default function InventoryPage() {
                     supply_type: 'supply',
                 });
                 setAddItemErrors({});
+                toast.success('Item added successfully!');
             } catch (err) {
                 console.error(err);
+                toast.error('Failed to add item');
             }
         });
         setConfirmOpen(true);
@@ -329,9 +334,11 @@ export default function InventoryPage() {
             setSupplierErrors({});
             setSuccessMessage('Supplier added successfully!');
             setShowSuccessModal(true);
+            toast.success('Supplier added successfully!');
             await loadSuppliers();
         } catch (err) {
             console.error('Failed to add supplier:', err);
+            toast.error('Failed to add supplier');
             alert('Error adding supplier');
         }
     };
@@ -350,8 +357,10 @@ export default function InventoryPage() {
             );
             setShowEditModal(false);
             setEditItem(null);
+            toast.success('Item updated successfully!');
         } catch (err) {
             console.error(err);
+            toast.error('Failed to update item');
         }
     };
 

@@ -27,6 +27,7 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { Edit2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 axios.defaults.withCredentials = true;
 
@@ -109,6 +110,7 @@ export default function Bays() {
             setAddForm({ bay_number: '', bay_type: 'Normal' });
             setAddErrors({});
             await loadBays();
+            toast.success('Bay added successfully!');
         } catch (err) {
             const error = err as unknown as {
                 response?: { data?: { errors: Record<string, string> } };
@@ -118,6 +120,7 @@ export default function Bays() {
             } else {
                 setAddErrors({ submit: 'Failed to add bay' });
             }
+            toast.error('Failed to add bay');
         } finally {
             setSubmitting(false);
         }
@@ -164,6 +167,7 @@ export default function Bays() {
             setEditForm(null);
             setEditErrors({});
             await loadBays();
+            toast.success('Bay updated successfully!');
         } catch (err) {
             const error = err as unknown as {
                 response?: { data?: { errors: Record<string, string> } };
@@ -173,6 +177,7 @@ export default function Bays() {
             } else {
                 setEditErrors({ submit: 'Failed to update bay' });
             }
+            toast.error('Failed to update bay');
         } finally {
             setSubmitting(false);
         }
@@ -192,8 +197,10 @@ export default function Bays() {
             setShowDeleteModal(false);
             setBayToDelete(null);
             await loadBays();
+            toast.success('Bay deleted successfully!');
         } catch (err) {
             console.error('Failed to delete bay:', err);
+            toast.error('Failed to delete bay');
         } finally {
             setSubmitting(false);
         }

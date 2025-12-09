@@ -15,6 +15,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 axios.defaults.withCredentials = true;
 
@@ -96,6 +97,19 @@ export default function Registry() {
         loadBays();
         loadServiceOrders();
         loadEmployees();
+
+        // Check URL parameters for success messages
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('serviceStarted') === 'true') {
+            toast.success('Service started successfully!');
+            // Clean up URL
+            window.history.replaceState({}, '', '/registry');
+        }
+        if (params.get('paymentCompleted') === 'true') {
+            toast.success('Payment completed successfully!');
+            // Clean up URL
+            window.history.replaceState({}, '', '/registry');
+        }
 
         // Refresh service orders every 3 seconds
         const interval = setInterval(() => {
@@ -193,6 +207,7 @@ export default function Registry() {
             setShowBookingModal(true);
         } catch (err) {
             console.error("Failed to fetch today's bookings:", err);
+            toast.error('Failed to fetch bookings');
             // Still show modal even on error, just with empty bookings
             setTodayBookings([]);
             setShowBookingModal(true);
@@ -267,6 +282,7 @@ export default function Registry() {
                     await loadBays();
                     await loadServiceOrders();
 
+                    toast.success('Service started successfully!');
                     setIsAssigning(false);
                 } catch (error: unknown) {
                     setIsAssigning(false);
@@ -286,6 +302,7 @@ export default function Registry() {
                         (error as { response?: { data?: unknown } })?.response
                             ?.data,
                     );
+                    toast.error('Failed to start service');
                     alert(`Failed to assign reservation: ${errorMessage}`);
                 }
             } else {
@@ -298,7 +315,10 @@ export default function Registry() {
 
                 const url = `/registry/${selectedBayForService.bay_id}/select-services?employee=${encodeURIComponent(employeeData)}`;
 
-                router.visit(url);
+                router.visit(url, {
+                    preserveState: true,
+                    preserveScroll: true,
+                });
                 setSelectedBayForService(null);
                 setSelectedEmployeeId('');
                 setSelectedBooking(null);
@@ -322,6 +342,10 @@ export default function Registry() {
 
             router.visit(
                 `/registry/${bayId}/select-services?order=${encodeURIComponent(orderData)}&editing=true`,
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                },
             );
         }
     };
@@ -341,6 +365,10 @@ export default function Registry() {
 
             router.visit(
                 `/registry/${bayId}/payment?order=${encodeURIComponent(orderData)}`,
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                },
             );
         }
     };
@@ -364,8 +392,10 @@ export default function Registry() {
             setSelectedReassignEmployeeId('');
             await loadServiceOrders();
             await loadEmployees();
+            toast.success('Employee assigned successfully!');
         } catch (err) {
             console.error('Failed to assign employee:', err);
+            toast.error('Failed to assign employee');
         }
     };
 

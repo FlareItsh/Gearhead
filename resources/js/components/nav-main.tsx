@@ -6,7 +6,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
@@ -17,18 +17,26 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
-                            asChild
                             isActive={page.url.startsWith(
                                 typeof item.href === 'string'
                                     ? item.href
                                     : item.href.url,
                             )}
                             tooltip={{ children: item.title }}
+                            onClick={() =>
+                                router.visit(
+                                    typeof item.href === 'string'
+                                        ? item.href
+                                        : item.href.url,
+                                    {
+                                        preserveState: true,
+                                        preserveScroll: false,
+                                    },
+                                )
+                            }
                         >
-                            <Link href={item.href} prefetch>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
-                            </Link>
+                            {item.icon && <item.icon />}
+                            <span>{item.title}</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 ))}

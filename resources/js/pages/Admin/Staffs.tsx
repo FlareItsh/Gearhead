@@ -35,6 +35,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 // ---------- Interfaces ----------
 interface BreadcrumbItem {
@@ -170,8 +171,10 @@ export default function Staffs() {
 
             setStaffList((prev) => [...prev, newStaff]);
             resetAddForm();
+            toast.success('Staff added successfully!');
         } catch (error) {
             console.error(error);
+            toast.error('Failed to add staff');
         }
     };
 
@@ -190,8 +193,10 @@ export default function Staffs() {
                 ),
             );
             resetEditForm();
+            toast.success('Staff updated successfully!');
         } catch (error) {
             console.error(error);
+            toast.error('Failed to update staff');
         }
     };
 
@@ -207,8 +212,10 @@ export default function Staffs() {
             setStaffList((prev) =>
                 prev.filter((s) => s.id !== deletingStaffId),
             );
+            toast.success('Staff deleted successfully!');
         } catch (error) {
             console.error(error);
+            toast.error('Failed to delete staff');
         } finally {
             setShowDeleteModal(false);
             setDeletingStaffId(null);

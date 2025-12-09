@@ -262,7 +262,10 @@ export default function RegistryPayment({ bayId }: Props) {
                     setShowModal(true);
 
                     setTimeout(() => {
-                        router.visit('/registry');
+                        router.visit('/registry?paymentCompleted=true', {
+                            preserveState: false,
+                            preserveScroll: false,
+                        });
                     }, 2000);
                 }
             } catch (err) {
@@ -331,7 +334,10 @@ export default function RegistryPayment({ bayId }: Props) {
 
                 // Redirect after 2 seconds
                 setTimeout(() => {
-                    router.visit('/registry');
+                    router.visit('/registry?paymentCompleted=true', {
+                        preserveState: false,
+                        preserveScroll: false,
+                    });
                 }, 2000);
             }
         } catch (err) {

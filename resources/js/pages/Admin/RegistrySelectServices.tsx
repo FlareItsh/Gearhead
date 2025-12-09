@@ -365,7 +365,10 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
             }
 
             // Navigate to registry after successful creation/update
-            router.visit('/registry');
+            router.visit('/registry?serviceStarted=true', {
+                preserveState: false,
+                preserveScroll: false,
+            });
         } catch (err) {
             console.error('Failed to process service order:', err);
             setError('Failed to process service order. Please try again.');

@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import {
     Banknote,
     BanknoteArrowUp,
@@ -163,11 +163,14 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
                         <SidebarMenuButton
                             size="lg"
                             className="h-fit hover:bg-transparent focus-visible:bg-transparent active:bg-transparent data-[active=true]:bg-transparent"
-                            asChild
+                            onClick={() =>
+                                router.visit('/', {
+                                    preserveState: true,
+                                    preserveScroll: false,
+                                })
+                            }
                         >
-                            <Link href="/" prefetch>
-                                <AppLogo />
-                            </Link>
+                            <AppLogo />
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
