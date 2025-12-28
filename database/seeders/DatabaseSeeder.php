@@ -18,14 +18,14 @@ class DatabaseSeeder extends Seeder
             ServicesSeeder::class,
             BaysSeeder::class,
             SuppliersSeeder::class,
-            ServiceOrdersSeeder::class,
-            ServiceOrderDetailsSeeder::class,
-            PaymentsSeeder::class,
-            PulloutRequestsSeeder::class,
-            PulloutServicesSeeder::class,
-            PulloutRequestDetailsSeeder::class,
-            SupplyPurchasesSeeder::class,
-            SupplyPurchaseDetailsSeeder::class,
+            // ServiceOrdersSeeder::class,
+            // ServiceOrderDetailsSeeder::class,
+            // PaymentsSeeder::class,
+            // PulloutRequestsSeeder::class,
+            // PulloutServicesSeeder::class,
+            // PulloutRequestDetailsSeeder::class,
+            // SupplyPurchasesSeeder::class,
+            // SupplyPurchaseDetailsSeeder::class,
         ]);
     }
 }
