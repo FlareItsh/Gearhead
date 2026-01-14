@@ -1,8 +1,8 @@
-import Heading from '@/components/heading';
-import PulloutRequestModal from '@/components/PulloutRequestModal';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import Heading from '@/components/heading'
+import PulloutRequestModal from '@/components/PulloutRequestModal'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
     Dialog,
     DialogContent,
@@ -11,21 +11,21 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
     Table,
     TableBody,
@@ -33,178 +33,160 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import axios from 'axios';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { ChevronDownIcon, Download, Edit2, Search, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+} from '@/components/ui/table'
+import AppLayout from '@/layouts/app-layout'
+import { type BreadcrumbItem } from '@/types'
+import { Head } from '@inertiajs/react'
+import axios from 'axios'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import { ChevronDownIcon, Download, Edit2, Search, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
-axios.defaults.withCredentials = true;
+axios.defaults.withCredentials = true
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Inventory', href: '/inventory' },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Inventory', href: '/inventory' }]
 
 interface Supply {
-    supply_id: number;
-    supply_name: string;
-    unit: string;
-    quantity_stock: number;
-    reorder_point: number;
-    supply_type: 'consumables' | 'supply';
+    supply_id: number
+    supply_name: string
+    unit: string
+    quantity_stock: number
+    reorder_point: number
+    supply_type: 'consumables' | 'supply'
 }
 
 interface Supplier {
-    supplier_id: number;
-    first_name: string;
-    middle_name: string;
-    last_name: string;
-    phone_number: string;
-    email: string;
+    supplier_id: number
+    first_name: string
+    middle_name: string
+    last_name: string
+    phone_number: string
+    email: string
 }
 
 interface PurchaseDetail {
-    supply_id: number;
-    quantity: number;
-    unit_price: number;
-    purchase_date: string;
+    supply_id: number
+    quantity: number
+    unit_price: number
+    purchase_date: string
 }
 
 export default function InventoryPage() {
-    const [allSupplies, setAllSupplies] = useState<Supply[]>([]);
-    const [searchValue, setSearchValue] = useState('');
-    const [filter, setFilter] = useState<'All' | 'supply' | 'consumables'>(
-        'All',
-    );
-    const [showAddItem, setShowAddItem] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [confirmMessage, setConfirmMessage] = useState('');
-    const [onConfirmAction, setOnConfirmAction] = useState<() => void>(
-        () => {},
-    );
+    const [allSupplies, setAllSupplies] = useState<Supply[]>([])
+    const [searchValue, setSearchValue] = useState('')
+    const [filter, setFilter] = useState<'All' | 'supply' | 'consumables'>('All')
+    const [showAddItem, setShowAddItem] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [confirmMessage, setConfirmMessage] = useState('')
+    const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => {})
     const [newItem, setNewItem] = useState({
         supply_name: '',
         unit: '',
         reorder_point: 0,
         quantity_stock: 0,
         supply_type: 'supply' as const,
-    });
-    const [editItem, setEditItem] = useState<Supply | null>(null);
-    const [showEditModal, setShowEditModal] = useState(false);
+    })
+    const [editItem, setEditItem] = useState<Supply | null>(null)
+    const [showEditModal, setShowEditModal] = useState(false)
 
     // Purchase states
-    const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
-    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-    const [selectedSupplier, setSelectedSupplier] = useState('');
-    const [purchaseReference, setPurchaseReference] = useState('');
-    const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetail[]>(
-        [],
-    );
+    const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([])
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+    const [selectedSupplier, setSelectedSupplier] = useState('')
+    const [purchaseReference, setPurchaseReference] = useState('')
+    const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetail[]>([])
     const [newDetail, setNewDetail] = useState<PurchaseDetail>({
         supply_id: 0,
         quantity: 0,
         unit_price: 0,
         purchase_date: new Date().toISOString().split('T')[0],
-    });
+    })
 
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
-    const [addItemErrors, setAddItemErrors] = useState<Record<string, string>>(
-        {},
-    );
-    const [purchaseErrors, setPurchaseErrors] = useState<
-        Record<string, string>
-    >({});
-    const [detailError, setDetailError] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [successMessage, setSuccessMessage] = useState('')
+    const [addItemErrors, setAddItemErrors] = useState<Record<string, string>>({})
+    const [purchaseErrors, setPurchaseErrors] = useState<Record<string, string>>({})
+    const [detailError, setDetailError] = useState('')
 
     // Supplier states
-    const [showAddSupplier, setShowAddSupplier] = useState(false);
+    const [showAddSupplier, setShowAddSupplier] = useState(false)
     const [newSupplier, setNewSupplier] = useState({
         first_name: '',
         middle_name: '',
         last_name: '',
         phone_number: '',
         email: '',
-    });
-    const [supplierErrors, setSupplierErrors] = useState<
-        Record<string, string>
-    >({});
+    })
+    const [supplierErrors, setSupplierErrors] = useState<Record<string, string>>({})
 
     useEffect(() => {
-        loadSupplies();
-        loadSuppliers();
-    }, []);
+        loadSupplies()
+        loadSuppliers()
+    }, [])
 
     const loadSupplies = async () => {
         try {
-            const res = await axios.get('/api/supplies');
-            setAllSupplies(res.data);
+            const res = await axios.get('/api/supplies')
+            setAllSupplies(res.data)
         } catch (err) {
-            console.error('Failed to fetch supplies:', err);
+            console.error('Failed to fetch supplies:', err)
         }
-    };
+    }
 
     const loadSuppliers = async () => {
         try {
-            const res = await axios.get('/api/suppliers');
-            setAllSuppliers(res.data);
+            const res = await axios.get('/api/suppliers')
+            setAllSuppliers(res.data)
         } catch (err) {
-            console.error('Failed to fetch suppliers:', err);
+            console.error('Failed to fetch suppliers:', err)
         }
-    };
+    }
 
     const handleAddDetail = () => {
-        if (
-            newDetail.supply_id === 0 ||
-            newDetail.quantity === 0 ||
-            newDetail.unit_price === 0
-        ) {
-            setDetailError('Please fill in all fields');
-            return;
+        if (newDetail.supply_id === 0 || newDetail.quantity === 0 || newDetail.unit_price === 0) {
+            setDetailError('Please fill in all fields')
+            return
         }
-        setPurchaseDetails((prev) => [...prev, { ...newDetail }]);
-        setDetailError('');
+        setPurchaseDetails((prev) => [...prev, { ...newDetail }])
+        setDetailError('')
         setNewDetail({
             supply_id: 0,
             quantity: 0,
             unit_price: 0,
             purchase_date: new Date().toISOString().split('T')[0],
-        });
-    };
+        })
+    }
 
     const handleRemoveDetail = (index: number) => {
-        setPurchaseDetails((prev) => prev.filter((_, i) => i !== index));
-    };
+        setPurchaseDetails((prev) => prev.filter((_, i) => i !== index))
+    }
 
     const handleSubmitPurchase = async () => {
-        const errors: Record<string, string> = {};
+        const errors: Record<string, string> = {}
 
         if (!selectedSupplier) {
-            errors.supplier = 'Please select a supplier';
+            errors.supplier = 'Please select a supplier'
         }
         if (purchaseDetails.length === 0) {
-            errors.items = 'Please add at least one item';
+            errors.items = 'Please add at least one item'
         }
 
-        setPurchaseErrors(errors);
+        setPurchaseErrors(errors)
         if (Object.keys(errors).length > 0) {
-            return;
+            return
         }
 
         try {
-            const purchaseDate = purchaseDetails[0].purchase_date;
+            const purchaseDate = purchaseDetails[0].purchase_date
             const purchaseRes = await axios.post('/api/supply-purchases', {
                 supplier_id: parseInt(selectedSupplier),
                 purchase_date: purchaseDate,
                 purchase_reference: purchaseReference,
-            });
+            })
 
-            const purchaseId = purchaseRes.data.supply_purchase_id;
+            const purchaseId = purchaseRes.data.supply_purchase_id
 
             for (const detail of purchaseDetails) {
                 await axios.post('/api/supply-purchase-details', {
@@ -213,197 +195,183 @@ export default function InventoryPage() {
                     quantity: detail.quantity,
                     unit_price: detail.unit_price,
                     purchase_date: detail.purchase_date,
-                });
+                })
 
                 // Use the new increment endpoint instead of updating the entire object
-                await axios.post(
-                    `/api/supplies/${detail.supply_id}/increment-stock`,
-                    {
-                        quantity: detail.quantity,
-                    },
-                );
+                await axios.post(`/api/supplies/${detail.supply_id}/increment-stock`, {
+                    quantity: detail.quantity,
+                })
             }
 
-            await loadSupplies();
-            setShowPurchaseModal(false);
-            setSelectedSupplier('');
-            setPurchaseReference('');
-            setPurchaseDetails([]);
-            setPurchaseErrors({});
+            await loadSupplies()
+            setShowPurchaseModal(false)
+            setSelectedSupplier('')
+            setPurchaseReference('')
+            setPurchaseDetails([])
+            setPurchaseErrors({})
             setNewDetail({
                 supply_id: 0,
                 quantity: 0,
                 unit_price: 0,
                 purchase_date: new Date().toISOString().split('T')[0],
-            });
-            setSuccessMessage('Purchase recorded successfully!');
-            setShowSuccessModal(true);
-            toast.success('Purchase recorded successfully!');
+            })
+            setSuccessMessage('Purchase recorded successfully!')
+            setShowSuccessModal(true)
+            toast.success('Purchase recorded successfully!')
         } catch (err) {
-            console.error('Failed to record purchase:', err);
-            toast.error('Failed to record purchase');
-            alert('Error recording purchase');
+            console.error('Failed to record purchase:', err)
+            toast.error('Failed to record purchase')
+            alert('Error recording purchase')
         }
-    };
+    }
 
     const handleAddItem = () => {
-        const errors: Record<string, string> = {};
+        const errors: Record<string, string> = {}
 
         if (!newItem.supply_name.trim()) {
-            errors.supply_name = 'Item name is required';
+            errors.supply_name = 'Item name is required'
         }
         if (!newItem.unit.trim()) {
-            errors.unit = 'Unit is required';
+            errors.unit = 'Unit is required'
         }
 
-        setAddItemErrors(errors);
+        setAddItemErrors(errors)
         if (Object.keys(errors).length > 0) {
-            return;
+            return
         }
 
-        setConfirmMessage(`Add "${newItem.supply_name}" to inventory?`);
+        setConfirmMessage(`Add "${newItem.supply_name}" to inventory?`)
         setOnConfirmAction(() => async () => {
             try {
-                const res = await axios.post('/api/supplies', newItem);
-                setAllSupplies((prev) => [...prev, res.data]);
-                setShowAddItem(false);
+                const res = await axios.post('/api/supplies', newItem)
+                setAllSupplies((prev) => [...prev, res.data])
+                setShowAddItem(false)
                 setNewItem({
                     supply_name: '',
                     unit: '',
                     reorder_point: 0,
                     quantity_stock: 0,
                     supply_type: 'supply',
-                });
-                setAddItemErrors({});
-                toast.success('Item added successfully!');
+                })
+                setAddItemErrors({})
+                toast.success('Item added successfully!')
             } catch (err) {
-                console.error(err);
-                toast.error('Failed to add item');
+                console.error(err)
+                toast.error('Failed to add item')
             }
-        });
-        setConfirmOpen(true);
-    };
+        })
+        setConfirmOpen(true)
+    }
 
     const handleCancelAddItem = () => {
         if (newItem.supply_name || newItem.unit || newItem.reorder_point > 0) {
-            setConfirmMessage('Cancel? Your changes will be lost.');
-            setOnConfirmAction(() => () => setShowAddItem(false));
-            setConfirmOpen(true);
+            setConfirmMessage('Cancel? Your changes will be lost.')
+            setOnConfirmAction(() => () => setShowAddItem(false))
+            setConfirmOpen(true)
         } else {
-            setShowAddItem(false);
+            setShowAddItem(false)
         }
-    };
+    }
 
     const handleConfirm = async () => {
-        await onConfirmAction();
-        setConfirmOpen(false);
-    };
+        await onConfirmAction()
+        setConfirmOpen(false)
+    }
 
     const handleAddSupplier = async () => {
-        const errors: Record<string, string> = {};
+        const errors: Record<string, string> = {}
 
         if (!newSupplier.first_name.trim()) {
-            errors.first_name = 'First name is required';
+            errors.first_name = 'First name is required'
         }
         if (!newSupplier.last_name.trim()) {
-            errors.last_name = 'Last name is required';
+            errors.last_name = 'Last name is required'
         }
         if (!newSupplier.phone_number.trim()) {
-            errors.phone_number = 'Phone number is required';
+            errors.phone_number = 'Phone number is required'
         }
         if (!newSupplier.email.trim()) {
-            errors.email = 'Email is required';
+            errors.email = 'Email is required'
         }
 
-        setSupplierErrors(errors);
+        setSupplierErrors(errors)
         if (Object.keys(errors).length > 0) {
-            return;
+            return
         }
 
         try {
-            const res = await axios.post('/api/suppliers', newSupplier);
-            setAllSuppliers((prev) => [...prev, res.data]);
-            setShowAddSupplier(false);
+            const res = await axios.post('/api/suppliers', newSupplier)
+            setAllSuppliers((prev) => [...prev, res.data])
+            setShowAddSupplier(false)
             setNewSupplier({
                 first_name: '',
                 middle_name: '',
                 last_name: '',
                 phone_number: '',
                 email: '',
-            });
-            setSupplierErrors({});
-            setSuccessMessage('Supplier added successfully!');
-            setShowSuccessModal(true);
-            toast.success('Supplier added successfully!');
-            await loadSuppliers();
+            })
+            setSupplierErrors({})
+            setSuccessMessage('Supplier added successfully!')
+            setShowSuccessModal(true)
+            toast.success('Supplier added successfully!')
+            await loadSuppliers()
         } catch (err) {
-            console.error('Failed to add supplier:', err);
-            toast.error('Failed to add supplier');
-            alert('Error adding supplier');
+            console.error('Failed to add supplier:', err)
+            toast.error('Failed to add supplier')
+            alert('Error adding supplier')
         }
-    };
+    }
 
     const handleSaveEdit = async () => {
-        if (!editItem) return;
+        if (!editItem) return
         try {
-            const res = await axios.put(
-                `/supplies/${editItem.supply_id}`,
-                editItem,
-            );
+            const res = await axios.put(`/supplies/${editItem.supply_id}`, editItem)
             setAllSupplies((prev) =>
-                prev.map((s) =>
-                    s.supply_id === editItem.supply_id ? res.data : s,
-                ),
-            );
-            setShowEditModal(false);
-            setEditItem(null);
-            toast.success('Item updated successfully!');
+                prev.map((s) => (s.supply_id === editItem.supply_id ? res.data : s)),
+            )
+            setShowEditModal(false)
+            setEditItem(null)
+            toast.success('Item updated successfully!')
         } catch (err) {
-            console.error(err);
-            toast.error('Failed to update item');
+            console.error(err)
+            toast.error('Failed to update item')
         }
-    };
+    }
 
     const filteredSupplies = useMemo(() => {
-        const term = searchValue.toLowerCase().trim();
+        const term = searchValue.toLowerCase().trim()
         return allSupplies.filter((s) => {
-            const matchesSearch = s.supply_name.toLowerCase().includes(term);
-            const matchesFilter = filter === 'All' || s.supply_type === filter;
-            return matchesSearch && matchesFilter;
-        });
-    }, [allSupplies, searchValue, filter]);
+            const matchesSearch = s.supply_name.toLowerCase().includes(term)
+            const matchesFilter = filter === 'All' || s.supply_type === filter
+            return matchesSearch && matchesFilter
+        })
+    }, [allSupplies, searchValue, filter])
 
     const getStatusInfo = (supply: Supply) => {
-        const qty = supply.quantity_stock;
-        const reorder = supply.reorder_point;
-        if (qty === 0)
-            return { status: 'No Stock', variant: 'destructive' as const };
-        if (qty <= reorder)
-            return { status: 'Low Stock', variant: 'warning' as const };
-        return { status: 'In Stock', variant: 'success' as const };
-    };
+        const qty = supply.quantity_stock
+        const reorder = supply.reorder_point
+        if (qty === 0) return { status: 'No Stock', variant: 'destructive' as const }
+        if (qty <= reorder) return { status: 'Low Stock', variant: 'warning' as const }
+        return { status: 'In Stock', variant: 'success' as const }
+    }
 
     const openEditModal = (supply: Supply) => {
-        setEditItem({ ...supply });
-        setShowEditModal(true);
-    };
+        setEditItem({ ...supply })
+        setShowEditModal(true)
+    }
 
     const closeEditModal = () => {
-        setShowEditModal(false);
-        setTimeout(() => setEditItem(null), 300);
-    };
+        setShowEditModal(false)
+        setTimeout(() => setEditItem(null), 300)
+    }
 
     const downloadPDF = () => {
-        const doc = new jsPDF('p', 'mm', 'a4');
-        doc.setFontSize(20);
-        doc.text('Gearhead - Inventory Report', 14, 20);
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(
-            `Generated: ${new Date().toLocaleDateString('en-PH')}`,
-            14,
-            28,
-        );
+        const doc = new jsPDF('p', 'mm', 'a4')
+        doc.setFontSize(20)
+        doc.text('Gearhead - Inventory Report', 14, 20)
+        doc.setFontSize(10)
+        doc.setTextColor(100)
+        doc.text(`Generated: ${new Date().toLocaleDateString('en-PH')}`, 14, 28)
 
         const tableData = filteredSupplies.map((s) => [
             s.supply_name,
@@ -411,7 +379,7 @@ export default function InventoryPage() {
             s.quantity_stock.toString(),
             s.reorder_point.toString(),
             s.supply_type.charAt(0).toUpperCase() + s.supply_type.slice(1),
-        ]);
+        ])
 
         autoTable(doc, {
             head: [['Item', 'Unit', 'Stock', 'Reorder Level', 'Type']],
@@ -419,10 +387,10 @@ export default function InventoryPage() {
             startY: 35,
             theme: 'striped',
             headStyles: { fillColor: [255, 226, 38] },
-        });
+        })
 
-        doc.save(`inventory-${new Date().toISOString().split('T')[0]}.pdf`);
-    };
+        doc.save(`inventory-${new Date().toISOString().split('T')[0]}.pdf`)
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -434,7 +402,10 @@ export default function InventoryPage() {
                         description="Track supplies and materials"
                     />
                     <div className="flex gap-3">
-                        <Button onClick={downloadPDF} variant="secondary">
+                        <Button
+                            onClick={downloadPDF}
+                            variant="secondary"
+                        >
                             <Download className="mr-2 h-4 w-4" /> Export PDF
                         </Button>
 
@@ -448,10 +419,7 @@ export default function InventoryPage() {
                             <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
                                     <DialogTitle>
-                                        Add{' '}
-                                        <span className="text-yellow-400">
-                                            Item
-                                        </span>
+                                        Add <span className="text-yellow-400">Item</span>
                                     </DialogTitle>
                                     <DialogDescription>
                                         Record a new inventory item.
@@ -459,9 +427,7 @@ export default function InventoryPage() {
                                 </DialogHeader>
                                 <div className="flex flex-col gap-4">
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Item Name
-                                        </label>
+                                        <label className="text-sm font-medium">Item Name</label>
                                         <Input
                                             placeholder="e.g., Engine Oil"
                                             value={newItem.supply_name}
@@ -479,9 +445,7 @@ export default function InventoryPage() {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Unit
-                                        </label>
+                                        <label className="text-sm font-medium">Unit</label>
                                         <Input
                                             placeholder="e.g., Liter, Piece"
                                             value={newItem.unit}
@@ -499,9 +463,7 @@ export default function InventoryPage() {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Reorder Level
-                                        </label>
+                                        <label className="text-sm font-medium">Reorder Level</label>
                                         <Input
                                             type="number"
                                             min="0"
@@ -513,24 +475,18 @@ export default function InventoryPage() {
                                                     : newItem.reorder_point
                                             }
                                             onChange={(e) => {
-                                                const val = e.target.value;
-                                                if (
-                                                    val === '' ||
-                                                    parseInt(val) >= 0
-                                                ) {
+                                                const val = e.target.value
+                                                if (val === '' || parseInt(val) >= 0) {
                                                     setNewItem({
                                                         ...newItem,
                                                         reorder_point:
-                                                            val === ''
-                                                                ? 0
-                                                                : parseInt(val),
-                                                    });
+                                                            val === '' ? 0 : parseInt(val),
+                                                    })
                                                 }
                                             }}
                                             onKeyDown={(e) =>
-                                                ['-', 'e', 'E'].includes(
-                                                    e.key,
-                                                ) && e.preventDefault()
+                                                ['-', 'e', 'E'].includes(e.key) &&
+                                                e.preventDefault()
                                             }
                                         />
                                     </div>
@@ -558,17 +514,12 @@ export default function InventoryPage() {
                             onOpenChange={setShowPurchaseModal}
                         >
                             <DialogTrigger asChild>
-                                <Button variant="highlight">
-                                    + Add Purchase
-                                </Button>
+                                <Button variant="highlight">+ Add Purchase</Button>
                             </DialogTrigger>
                             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                                 <DialogHeader>
                                     <DialogTitle>
-                                        Record{' '}
-                                        <span className="text-yellow-400">
-                                            Purchase
-                                        </span>
+                                        Record <span className="text-yellow-400">Purchase</span>
                                     </DialogTitle>
                                     <DialogDescription>
                                         Add supplies from a supplier
@@ -577,9 +528,7 @@ export default function InventoryPage() {
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Supplier
-                                        </label>
+                                        <label className="text-sm font-medium">Supplier</label>
                                         <Select
                                             value={selectedSupplier}
                                             onValueChange={setSelectedSupplier}
@@ -593,8 +542,7 @@ export default function InventoryPage() {
                                                         key={s.supplier_id}
                                                         value={s.supplier_id.toString()}
                                                     >
-                                                        {s.first_name}{' '}
-                                                        {s.last_name}
+                                                        {s.first_name} {s.last_name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -613,18 +561,12 @@ export default function InventoryPage() {
                                         <Input
                                             placeholder="INV-001, PO-2025-001..."
                                             value={purchaseReference}
-                                            onChange={(e) =>
-                                                setPurchaseReference(
-                                                    e.target.value,
-                                                )
-                                            }
+                                            onChange={(e) => setPurchaseReference(e.target.value)}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Add Items
-                                        </label>
+                                        <label className="text-sm font-medium">Add Items</label>
                                         <div className="mt-3 rounded-lg border bg-muted/30 p-4">
                                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                                 {/* SUPPLY - FULL WIDTH FIX */}
@@ -634,16 +576,14 @@ export default function InventoryPage() {
                                                     </label>
                                                     <Select
                                                         value={
-                                                            newDetail.supply_id ===
-                                                            0
+                                                            newDetail.supply_id === 0
                                                                 ? undefined
                                                                 : newDetail.supply_id.toString()
                                                         }
                                                         onValueChange={(v) =>
                                                             setNewDetail({
                                                                 ...newDetail,
-                                                                supply_id:
-                                                                    parseInt(v),
+                                                                supply_id: parseInt(v),
                                                             })
                                                         }
                                                     >
@@ -651,20 +591,14 @@ export default function InventoryPage() {
                                                             <SelectValue placeholder="Select supply..." />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {allSupplies.map(
-                                                                (s) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            s.supply_id
-                                                                        }
-                                                                        value={s.supply_id.toString()}
-                                                                    >
-                                                                        {
-                                                                            s.supply_name
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
+                                                            {allSupplies.map((s) => (
+                                                                <SelectItem
+                                                                    key={s.supply_id}
+                                                                    value={s.supply_id.toString()}
+                                                                >
+                                                                    {s.supply_name}
+                                                                </SelectItem>
+                                                            ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -681,38 +615,27 @@ export default function InventoryPage() {
                                                         placeholder="0"
                                                         className="h-9"
                                                         value={
-                                                            newDetail.quantity ===
-                                                            0
+                                                            newDetail.quantity === 0
                                                                 ? ''
                                                                 : newDetail.quantity
                                                         }
                                                         onChange={(e) => {
-                                                            const val =
-                                                                e.target.value;
+                                                            const val = e.target.value
                                                             if (
                                                                 val === '' ||
-                                                                parseFloat(
-                                                                    val,
-                                                                ) >= 0
+                                                                parseFloat(val) >= 0
                                                             ) {
                                                                 setNewDetail({
                                                                     ...newDetail,
                                                                     quantity:
-                                                                        val ===
-                                                                        ''
+                                                                        val === ''
                                                                             ? 0
-                                                                            : parseFloat(
-                                                                                  val,
-                                                                              ),
-                                                                });
+                                                                            : parseFloat(val),
+                                                                })
                                                             }
                                                         }}
                                                         onKeyDown={(e) =>
-                                                            [
-                                                                '-',
-                                                                'e',
-                                                                'E',
-                                                            ].includes(e.key) &&
+                                                            ['-', 'e', 'E'].includes(e.key) &&
                                                             e.preventDefault()
                                                         }
                                                     />
@@ -730,38 +653,27 @@ export default function InventoryPage() {
                                                         placeholder="0.00"
                                                         className="h-9"
                                                         value={
-                                                            newDetail.unit_price ===
-                                                            0
+                                                            newDetail.unit_price === 0
                                                                 ? ''
                                                                 : newDetail.unit_price
                                                         }
                                                         onChange={(e) => {
-                                                            const val =
-                                                                e.target.value;
+                                                            const val = e.target.value
                                                             if (
                                                                 val === '' ||
-                                                                parseFloat(
-                                                                    val,
-                                                                ) >= 0
+                                                                parseFloat(val) >= 0
                                                             ) {
                                                                 setNewDetail({
                                                                     ...newDetail,
                                                                     unit_price:
-                                                                        val ===
-                                                                        ''
+                                                                        val === ''
                                                                             ? 0
-                                                                            : parseFloat(
-                                                                                  val,
-                                                                              ),
-                                                                });
+                                                                            : parseFloat(val),
+                                                                })
                                                             }
                                                         }}
                                                         onKeyDown={(e) =>
-                                                            [
-                                                                '-',
-                                                                'e',
-                                                                'E',
-                                                            ].includes(e.key) &&
+                                                            ['-', 'e', 'E'].includes(e.key) &&
                                                             e.preventDefault()
                                                         }
                                                     />
@@ -775,15 +687,11 @@ export default function InventoryPage() {
                                                     <Input
                                                         type="date"
                                                         className="h-9"
-                                                        value={
-                                                            newDetail.purchase_date
-                                                        }
+                                                        value={newDetail.purchase_date}
                                                         onChange={(e) =>
                                                             setNewDetail({
                                                                 ...newDetail,
-                                                                purchase_date:
-                                                                    e.target
-                                                                        .value,
+                                                                purchase_date: e.target.value,
                                                             })
                                                         }
                                                     />
@@ -825,59 +733,43 @@ export default function InventoryPage() {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {purchaseDetails.map(
-                                                            (d, i) => {
-                                                                const supply =
-                                                                    allSupplies.find(
-                                                                        (s) =>
-                                                                            s.supply_id ===
-                                                                            d.supply_id,
-                                                                    );
-                                                                const total =
-                                                                    d.quantity *
-                                                                    d.unit_price;
-                                                                return (
-                                                                    <tr
-                                                                        key={i}
-                                                                        className="border-t"
-                                                                    >
-                                                                        <td className="px-3 py-2">
-                                                                            {supply?.supply_name ||
-                                                                                '—'}
-                                                                        </td>
-                                                                        <td className="px-3 py-2 text-center">
-                                                                            {
-                                                                                d.quantity
+                                                        {purchaseDetails.map((d, i) => {
+                                                            const supply = allSupplies.find(
+                                                                (s) => s.supply_id === d.supply_id,
+                                                            )
+                                                            const total = d.quantity * d.unit_price
+                                                            return (
+                                                                <tr
+                                                                    key={i}
+                                                                    className="border-t"
+                                                                >
+                                                                    <td className="px-3 py-2">
+                                                                        {supply?.supply_name || '—'}
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-center">
+                                                                        {d.quantity}
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-right">
+                                                                        ₱{d.unit_price.toFixed(2)}
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-right font-medium">
+                                                                        ₱{total.toFixed(2)}
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-center">
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                handleRemoveDetail(
+                                                                                    i,
+                                                                                )
                                                                             }
-                                                                        </td>
-                                                                        <td className="px-3 py-2 text-right">
-                                                                            ₱
-                                                                            {d.unit_price.toFixed(
-                                                                                2,
-                                                                            )}
-                                                                        </td>
-                                                                        <td className="px-3 py-2 text-right font-medium">
-                                                                            ₱
-                                                                            {total.toFixed(
-                                                                                2,
-                                                                            )}
-                                                                        </td>
-                                                                        <td className="px-3 py-2 text-center">
-                                                                            <button
-                                                                                onClick={() =>
-                                                                                    handleRemoveDetail(
-                                                                                        i,
-                                                                                    )
-                                                                                }
-                                                                                className="text-red-600 hover:text-red-800"
-                                                                            >
-                                                                                <Trash2 className="h-4 w-4" />
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
-                                                                );
-                                                            },
-                                                        )}
+                                                                            className="text-red-600 hover:text-red-800"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        })}
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -890,9 +782,7 @@ export default function InventoryPage() {
                                                     {purchaseDetails
                                                         .reduce(
                                                             (sum, d) =>
-                                                                sum +
-                                                                d.quantity *
-                                                                    d.unit_price,
+                                                                sum + d.quantity * d.unit_price,
                                                             0,
                                                         )
                                                         .toFixed(2)}
@@ -910,9 +800,7 @@ export default function InventoryPage() {
                                 <DialogFooter>
                                     <Button
                                         variant="secondary"
-                                        onClick={() =>
-                                            setShowPurchaseModal(false)
-                                        }
+                                        onClick={() => setShowPurchaseModal(false)}
                                     >
                                         Cancel
                                     </Button>
@@ -938,17 +826,12 @@ export default function InventoryPage() {
                             onOpenChange={setShowAddSupplier}
                         >
                             <DialogTrigger asChild>
-                                <Button variant="highlight">
-                                    + Add Supplier
-                                </Button>
+                                <Button variant="highlight">+ Add Supplier</Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[500px]">
                                 <DialogHeader>
                                     <DialogTitle>
-                                        Add{' '}
-                                        <span className="text-yellow-400">
-                                            Supplier
-                                        </span>
+                                        Add <span className="text-yellow-400">Supplier</span>
                                     </DialogTitle>
                                     <DialogDescription>
                                         Add a new supplier to the system
@@ -966,8 +849,7 @@ export default function InventoryPage() {
                                                 onChange={(e) =>
                                                     setNewSupplier({
                                                         ...newSupplier,
-                                                        first_name:
-                                                            e.target.value,
+                                                        first_name: e.target.value,
                                                     })
                                                 }
                                             />
@@ -987,17 +869,14 @@ export default function InventoryPage() {
                                                 onChange={(e) =>
                                                     setNewSupplier({
                                                         ...newSupplier,
-                                                        middle_name:
-                                                            e.target.value,
+                                                        middle_name: e.target.value,
                                                     })
                                                 }
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Last Name
-                                        </label>
+                                        <label className="text-sm font-medium">Last Name</label>
                                         <Input
                                             placeholder="Doe"
                                             value={newSupplier.last_name}
@@ -1015,17 +894,14 @@ export default function InventoryPage() {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Phone Number
-                                        </label>
+                                        <label className="text-sm font-medium">Phone Number</label>
                                         <Input
                                             placeholder="09123456789"
                                             value={newSupplier.phone_number}
                                             onChange={(e) =>
                                                 setNewSupplier({
                                                     ...newSupplier,
-                                                    phone_number:
-                                                        e.target.value,
+                                                    phone_number: e.target.value,
                                                 })
                                             }
                                         />
@@ -1036,9 +912,7 @@ export default function InventoryPage() {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium">
-                                            Email
-                                        </label>
+                                        <label className="text-sm font-medium">Email</label>
                                         <Input
                                             type="email"
                                             placeholder="supplier@example.com"
@@ -1061,15 +935,15 @@ export default function InventoryPage() {
                                     <Button
                                         variant="secondary"
                                         onClick={() => {
-                                            setShowAddSupplier(false);
+                                            setShowAddSupplier(false)
                                             setNewSupplier({
                                                 first_name: '',
                                                 middle_name: '',
                                                 last_name: '',
                                                 phone_number: '',
                                                 email: '',
-                                            });
-                                            setSupplierErrors({});
+                                            })
+                                            setSupplierErrors({})
                                         }}
                                     >
                                         Cancel
@@ -1095,35 +969,28 @@ export default function InventoryPage() {
                                 <Input
                                     placeholder="Search supplies..."
                                     value={searchValue}
-                                    onChange={(e) =>
-                                        setSearchValue(e.target.value)
-                                    }
+                                    onChange={(e) => setSearchValue(e.target.value)}
                                     className="pl-10 text-foreground"
                                 />
                             </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="gap-2">
-                                        {filter}{' '}
-                                        <ChevronDownIcon className="h-4 w-4" />
+                                    <Button
+                                        variant="outline"
+                                        className="gap-2"
+                                    >
+                                        {filter} <ChevronDownIcon className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    {(
-                                        [
-                                            'All',
-                                            'supply',
-                                            'consumables',
-                                        ] as const
-                                    ).map((f) => (
+                                    {(['All', 'supply', 'consumables'] as const).map((f) => (
                                         <DropdownMenuItem
                                             key={f}
                                             onClick={() => setFilter(f)}
                                         >
                                             {f === 'All'
                                                 ? 'All Items'
-                                                : f.charAt(0).toUpperCase() +
-                                                  f.slice(1)}
+                                                : f.charAt(0).toUpperCase() + f.slice(1)}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuContent>
@@ -1136,9 +1003,7 @@ export default function InventoryPage() {
                 <Card className="bg-background text-foreground">
                     <CardContent className="p-0">
                         <div className="border-b p-6">
-                            <h2 className="text-lg font-semibold">
-                                Supply List
-                            </h2>
+                            <h2 className="text-lg font-semibold">Supply List</h2>
                             <p className="text-sm text-muted-foreground">
                                 {filteredSupplies.length} item
                                 {filteredSupplies.length !== 1 && 's'}
@@ -1174,67 +1039,40 @@ export default function InventoryPage() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {filteredSupplies.map(
-                                                    (supply) => {
-                                                        const {
-                                                            status,
-                                                            variant,
-                                                        } =
-                                                            getStatusInfo(
-                                                                supply,
-                                                            );
-                                                        return (
-                                                            <TableRow
-                                                                key={
-                                                                    supply.supply_id
-                                                                }
-                                                            >
-                                                                <TableCell className="font-medium">
-                                                                    {
-                                                                        supply.supply_name
+                                                {filteredSupplies.map((supply) => {
+                                                    const { status, variant } =
+                                                        getStatusInfo(supply)
+                                                    return (
+                                                        <TableRow key={supply.supply_id}>
+                                                            <TableCell className="font-medium">
+                                                                {supply.supply_name}
+                                                            </TableCell>
+                                                            <TableCell className="text-center font-bold">
+                                                                {supply.quantity_stock}
+                                                            </TableCell>
+                                                            <TableCell>{supply.unit}</TableCell>
+                                                            <TableCell className="text-center">
+                                                                {supply.reorder_point}
+                                                            </TableCell>
+                                                            <TableCell className="text-center">
+                                                                <Badge variant={variant}>
+                                                                    {status}
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-center">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() =>
+                                                                        openEditModal(supply)
                                                                     }
-                                                                </TableCell>
-                                                                <TableCell className="text-center font-bold">
-                                                                    {
-                                                                        supply.quantity_stock
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    {
-                                                                        supply.unit
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell className="text-center">
-                                                                    {
-                                                                        supply.reorder_point
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell className="text-center">
-                                                                    <Badge
-                                                                        variant={
-                                                                            variant
-                                                                        }
-                                                                    >
-                                                                        {status}
-                                                                    </Badge>
-                                                                </TableCell>
-                                                                <TableCell className="text-center">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() =>
-                                                                            openEditModal(
-                                                                                supply,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Edit2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        );
-                                                    },
-                                                )}
+                                                                >
+                                                                    <Edit2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
                                             </TableBody>
                                         </Table>
                                     </div>
@@ -1243,8 +1081,7 @@ export default function InventoryPage() {
                                 {/* Mobile: Responsive Cards */}
                                 <div className="block space-y-4 p-4 lg:hidden">
                                     {filteredSupplies.map((supply) => {
-                                        const { status, variant } =
-                                            getStatusInfo(supply);
+                                        const { status, variant } = getStatusInfo(supply)
                                         return (
                                             <div
                                                 key={supply.supply_id}
@@ -1257,44 +1094,26 @@ export default function InventoryPage() {
                                                         </h3>
                                                         <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                                                             <div className="flex justify-between">
-                                                                <span>
-                                                                    Stock:
-                                                                </span>
+                                                                <span>Stock:</span>
                                                                 <span className="font-bold text-foreground">
-                                                                    {
-                                                                        supply.quantity_stock
-                                                                    }
+                                                                    {supply.quantity_stock}
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between">
-                                                                <span>
-                                                                    Unit:
-                                                                </span>
+                                                                <span>Unit:</span>
                                                                 <span className="text-foreground">
-                                                                    {
-                                                                        supply.unit
-                                                                    }
+                                                                    {supply.unit}
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between">
-                                                                <span>
-                                                                    Reorder:
-                                                                </span>
+                                                                <span>Reorder:</span>
                                                                 <span className="text-foreground">
-                                                                    {
-                                                                        supply.reorder_point
-                                                                    }
+                                                                    {supply.reorder_point}
                                                                 </span>
                                                             </div>
                                                             <div className="flex items-center justify-between pt-2">
-                                                                <span>
-                                                                    Status:
-                                                                </span>
-                                                                <Badge
-                                                                    variant={
-                                                                        variant
-                                                                    }
-                                                                >
+                                                                <span>Status:</span>
+                                                                <Badge variant={variant}>
                                                                     {status}
                                                                 </Badge>
                                                             </div>
@@ -1303,18 +1122,14 @@ export default function InventoryPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() =>
-                                                            openEditModal(
-                                                                supply,
-                                                            )
-                                                        }
+                                                        onClick={() => openEditModal(supply)}
                                                         className="mt-2 shrink-0"
                                                     >
                                                         <Edit2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                             </div>
-                                        );
+                                        )
                                     })}
                                 </div>
                             </>
@@ -1323,7 +1138,10 @@ export default function InventoryPage() {
                 </Card>
 
                 {/* EDIT MODAL */}
-                <Dialog open={showEditModal} onOpenChange={closeEditModal}>
+                <Dialog
+                    open={showEditModal}
+                    onOpenChange={closeEditModal}
+                >
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Edit Item</DialogTitle>
@@ -1331,9 +1149,7 @@ export default function InventoryPage() {
                         {editItem && (
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-sm font-medium">
-                                        Item Name
-                                    </label>
+                                    <label className="text-sm font-medium">Item Name</label>
                                     <Input
                                         value={editItem.supply_name}
                                         onChange={(e) =>
@@ -1345,9 +1161,7 @@ export default function InventoryPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium">
-                                        Unit
-                                    </label>
+                                    <label className="text-sm font-medium">Unit</label>
                                     <Input
                                         value={editItem.unit}
                                         onChange={(e) =>
@@ -1359,62 +1173,44 @@ export default function InventoryPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium">
-                                        Current Stock
-                                    </label>
+                                    <label className="text-sm font-medium">Current Stock</label>
                                     <Input
                                         type="number"
                                         min="0"
                                         step="1"
                                         value={editItem.quantity_stock}
                                         onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (
-                                                val === '' ||
-                                                parseInt(val) >= 0
-                                            ) {
+                                            const val = e.target.value
+                                            if (val === '' || parseInt(val) >= 0) {
                                                 setEditItem({
                                                     ...editItem,
-                                                    quantity_stock:
-                                                        val === ''
-                                                            ? 0
-                                                            : parseInt(val),
-                                                });
+                                                    quantity_stock: val === '' ? 0 : parseInt(val),
+                                                })
                                             }
                                         }}
                                         onKeyDown={(e) =>
-                                            ['-', 'e', 'E'].includes(e.key) &&
-                                            e.preventDefault()
+                                            ['-', 'e', 'E'].includes(e.key) && e.preventDefault()
                                         }
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium">
-                                        Reorder Level
-                                    </label>
+                                    <label className="text-sm font-medium">Reorder Level</label>
                                     <Input
                                         type="number"
                                         min="0"
                                         step="1"
                                         value={editItem.reorder_point}
                                         onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (
-                                                val === '' ||
-                                                parseInt(val) >= 0
-                                            ) {
+                                            const val = e.target.value
+                                            if (val === '' || parseInt(val) >= 0) {
                                                 setEditItem({
                                                     ...editItem,
-                                                    reorder_point:
-                                                        val === ''
-                                                            ? 0
-                                                            : parseInt(val),
-                                                });
+                                                    reorder_point: val === '' ? 0 : parseInt(val),
+                                                })
                                             }
                                         }}
                                         onKeyDown={(e) =>
-                                            ['-', 'e', 'E'].includes(e.key) &&
-                                            e.preventDefault()
+                                            ['-', 'e', 'E'].includes(e.key) && e.preventDefault()
                                         }
                                     />
                                 </div>
@@ -1438,7 +1234,10 @@ export default function InventoryPage() {
                 </Dialog>
 
                 {/* Confirmation & Success Modals */}
-                <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <Dialog
+                    open={confirmOpen}
+                    onOpenChange={setConfirmOpen}
+                >
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Confirm</DialogTitle>
@@ -1451,7 +1250,10 @@ export default function InventoryPage() {
                             >
                                 No
                             </Button>
-                            <Button variant="highlight" onClick={handleConfirm}>
+                            <Button
+                                variant="highlight"
+                                onClick={handleConfirm}
+                            >
                                 Yes
                             </Button>
                         </DialogFooter>
@@ -1464,9 +1266,7 @@ export default function InventoryPage() {
                 >
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle className="text-green-600">
-                                Success
-                            </DialogTitle>
+                            <DialogTitle className="text-green-600">Success</DialogTitle>
                         </DialogHeader>
                         <p className="py-4 text-center">{successMessage}</p>
                         <DialogFooter>
@@ -1481,5 +1281,5 @@ export default function InventoryPage() {
                 </Dialog>
             </div>
         </AppLayout>
-    );
+    )
 }
