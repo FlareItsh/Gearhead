@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\Contracts\ServiceOrderDetailRepositoryInterface;
+
 use Illuminate\Http\Request;
-use App\Repositories\ServiceOrderDetailRepositoryInterface;
+
 
 class ServiceOrderDetailController extends Controller
 {

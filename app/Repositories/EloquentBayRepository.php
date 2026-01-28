@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Bay;
 use Illuminate\Support\Collection;
+use App\Repositories\Contracts\BayRepositoryInterface;
 
 class EloquentBayRepository implements BayRepositoryInterface
 {

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\SupplyPurchaseRepositoryInterface;
+use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 
 class SupplyPurchaseController extends Controller

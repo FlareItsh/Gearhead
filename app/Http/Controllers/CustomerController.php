@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+use App\Repositories\Contracts\ServiceRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+
 use App\Repositories\BookingRepository;
-use App\Repositories\PaymentRepositoryInterface;
-use App\Repositories\ServiceRepositoryInterface;
-use App\Repositories\UserRepositoryInterface;
-use App\Repositories\ServiceOrderRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;

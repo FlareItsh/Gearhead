@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
+
 use App\Models\SupplyPurchase;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

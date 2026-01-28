@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+
 use App\Models\ServiceOrder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

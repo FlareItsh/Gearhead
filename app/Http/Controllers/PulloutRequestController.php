@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\Contracts\PulloutRequestRepositoryInterface;
+use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
+use App\Repositories\Contracts\SupplyRepositoryInterface;
+
 use Illuminate\Http\Request;
-use App\Repositories\PulloutRequestRepositoryInterface;
-use App\Repositories\PulloutServiceRepositoryInterface;
-use App\Repositories\SupplyRepositoryInterface;
+
 
 class PulloutRequestController extends Controller
 {

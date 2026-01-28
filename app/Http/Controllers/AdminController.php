@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\ServiceRepositoryInterface;
-use App\Repositories\UserRepositoryInterface;
-use App\Repositories\PaymentRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\ServiceRepositoryInterface;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\PulloutRequestDetailRepositoryInterface;
+
 use App\Models\PulloutRequestDetail;
 use Illuminate\Database\Eloquent\Collection;
 

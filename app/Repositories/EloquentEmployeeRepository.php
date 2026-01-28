@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
+
 use App\Models\Employee;
 use Illuminate\Support\Collection;
 

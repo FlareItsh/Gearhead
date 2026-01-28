@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
+
 use App\Models\PulloutService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

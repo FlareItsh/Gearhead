@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
+
 use App\Models\LandingPageContent;
 use Illuminate\Database\Eloquent\Collection;
 

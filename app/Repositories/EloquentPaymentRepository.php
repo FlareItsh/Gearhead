@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+
 use App\Models\Payment;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\PaymentRepositoryInterface;
-use App\Repositories\ServiceOrderRepositoryInterface;
-use App\Repositories\EmployeeRepositoryInterface;
-use App\Repositories\BayRepositoryInterface;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
+use App\Repositories\Contracts\BayRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;

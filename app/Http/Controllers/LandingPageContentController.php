@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\LandingPageContentRepositoryInterface;
+use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 
 class LandingPageContentController extends Controller

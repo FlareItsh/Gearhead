@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Contracts\SupplyRepositoryInterface;
+
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 

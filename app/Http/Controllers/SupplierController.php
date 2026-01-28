@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\Contracts\SupplierRepositoryInterface;
+
 use Illuminate\Http\Request;
-use App\Repositories\SupplierRepositoryInterface;
+
 
 class SupplierController extends Controller
 {

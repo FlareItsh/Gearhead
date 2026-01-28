@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\UserRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

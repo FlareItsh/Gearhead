@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\BayRepositoryInterface;
+use App\Repositories\Contracts\BayRepositoryInterface;
+
+
 use Illuminate\Http\Request;
 
 class BayController extends Controller
