@@ -396,7 +396,7 @@ export default function Bays() {
                       <Button
                         onClick={() => openEditModal(bay)}
                         variant="highlight"
-                        className="h-11 flex-1 border-border/70 font-medium hover:bg-accent hover:text-accent-foreground"
+                        className="h-11 flex-1 border-border/70 font-medium"
                       >
                         <Edit2 className="mr-2 h-4 w-4" />
                         Edit Bay
