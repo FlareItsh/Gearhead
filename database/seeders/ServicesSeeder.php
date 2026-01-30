@@ -10,74 +10,160 @@ class ServicesSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-        $services = [
+        
+        $serviceGroups = [
+            [
+                'name' => 'Basic',
+                'description' => 'body wash,vacuum, tire black, blow dry',
+                'category' => 'Basic',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 50, 'price' => 130],
+                    ['size' => 'Medium', 'duration' => 50, 'price' => 150],
+                    ['size' => 'Large', 'duration' => 50, 'price' => 200],
+                    ['size' => 'X-Large', 'duration' => 50, 'price' => 300],
+                    ['size' => 'XX-Large', 'duration' => 50, 'price' => 350],
+                ]
+            ],
+            [
+                'name' => 'Underwash',
+                'description' => 'body wash,vacuum,tire black,blow dry,underwash',
+                'category' => 'Underwash',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 60, 'price' => 310],
+                    ['size' => 'Medium', 'duration' => 60, 'price' => 340],
+                    ['size' => 'Large', 'duration' => 60, 'price' => 390],
+                    ['size' => 'X-Large', 'duration' => 60, 'price' => 500],
+                ]
+            ],
+            [
+                'name' => 'Enginewash',
+                'description' => 'body wash,vacuum,tire black,blow dry,engine wash',
+                'category' => 'Enginewash',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 60, 'price' => 280],
+                    ['size' => 'Medium', 'duration' => 60, 'price' => 330],
+                    ['size' => 'Large', 'duration' => 60, 'price' => 350],
+                    ['size' => 'X-Large', 'duration' => 60, 'price' => 480],
+                    ['size' => 'XX-Large', 'duration' => 60, 'price' => 520],
+                ]
+            ],
+            [
+                'name' => 'Hand Wax',
+                'description' => 'body wash,vacuum,tire black,blow dry,liquid hand wax',
+                'category' => 'Hand Wax',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 50, 'price' => 170],
+                    ['size' => 'Medium', 'duration' => 50, 'price' => 200],
+                    ['size' => 'Large', 'duration' => 50, 'price' => 260],
+                    ['size' => 'X-Large', 'duration' => 50, 'price' => 350],
+                ]
+            ],
+            [
+                'name' => 'Armor All/All Purpose Dressing',
+                'description' => 'Prevent plastic and vinyl from cracking, fading, discoloration, and premature aging',
+                'category' => 'Additional Services',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 40, 'price' => 60],
+                    ['size' => 'Medium', 'duration' => 40, 'price' => 60],
+                    ['size' => 'Large', 'duration' => 40, 'price' => 70],
+                    ['size' => 'X-Large', 'duration' => 40, 'price' => 90],
+                ]
+            ],
+            [
+                'name' => 'Watermarks Removal/Glass Detailing',
+                'description' => 'Prevent plastic and vinyl from cracking, fading, discoloration, and premature aging',
+                'category' => 'Additional Services',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 80, 'price' => 900],
+                    ['size' => 'Medium', 'duration' => 80, 'price' => 1200],
+                    ['size' => 'Large', 'duration' => 80, 'price' => 1400],
+                    ['size' => 'X-Large', 'duration' => 80, 'price' => 1700],
+                ]
+            ],
+            [
+                'name' => 'Hard Shell',
+                'description' => 'body wash,vacuum,tire black,blow dry,turtle wax',
+                'category' => 'Buff Wax',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 50, 'price' => 360],
+                    ['size' => 'Medium', 'duration' => 50, 'price' => 430],
+                    ['size' => 'Large', 'duration' => 50, 'price' => 520],
+                    ['size' => 'X-Large', 'duration' => 50, 'price' => 700],
+                ]
+            ],
+            [
+                'name' => 'Waterproof',
+                'description' => 'body wash,vacuum,tire black,blow dry,botny wax',
+                'category' => 'Buff Wax',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 50, 'price' => 430],
+                    ['size' => 'Medium', 'duration' => 50, 'price' => 520],
+                    ['size' => 'Large', 'duration' => 50, 'price' => 660],
+                    ['size' => 'X-Large', 'duration' => 50, 'price' => 800],
+                ]
+            ],
+            [
+                'name' => 'High Gloss',
+                'description' => 'body wash,vacuum,tire black,blow dry,meguar\'s wax',
+                'category' => 'Buff Wax',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 50, 'price' => 500],
+                    ['size' => 'Medium', 'duration' => 50, 'price' => 580],
+                    ['size' => 'Large', 'duration' => 50, 'price' => 720],
+                    ['size' => 'X-Large', 'duration' => 50, 'price' => 900],
+                ]
+            ],
+            [
+                'name' => 'Complete Package (Hard Shell)',
+                'description' => 'body wash,vacuum,tire black,blow dry,turtle wax, armor all',
+                'category' => 'Complete Package',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 120, 'price' => 660],
+                    ['size' => 'Medium', 'duration' => 120, 'price' => 740],
+                    ['size' => 'Large', 'duration' => 120, 'price' => 930],
+                    ['size' => 'X-Large', 'duration' => 120, 'price' => 1100],
+                ]
+            ],
+            [
+                'name' => 'Complete Package (Waterproof)',
+                'description' => 'body wash,vacuum,tire black,blow dry,botny wax, armor all',
+                'category' => 'Complete Package',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 120, 'price' => 700],
+                    ['size' => 'Medium', 'duration' => 120, 'price' => 790],
+                    ['size' => 'Large', 'duration' => 120, 'price' => 1070],
+                    ['size' => 'X-Large', 'duration' => 120, 'price' => 1250],
+                ]
+            ],
+            [
+                'name' => 'Complete Package (High Gloss)',
+                'description' => 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all',
+                'category' => 'Complete Package',
+                'variants' => [
+                    ['size' => 'Small', 'duration' => 120, 'price' => 800],
+                    ['size' => 'Medium', 'duration' => 120, 'price' => 890],
+                    ['size' => 'Large', 'duration' => 120, 'price' => 1130],
+                    ['size' => 'X-Large', 'duration' => 120, 'price' => 1350],
+                ]
+            ],
         ];
-        $rows = [
-            [1, 'Basic', 'body wash,vacuum, tire black, blow dry', 'Small', 'Basic', 50, 130, 'active'],
-            [2, 'Basic', 'body wash,vacuum, tire black, blow dry', 'Medium', 'Basic', 50, 150, 'active'],
-            [3, 'Basic', 'body wash,vacuum, tire black, blow dry', 'Large', 'Basic', 50, 200, 'active'],
-            [4, 'Basic', 'body wash,vacuum, tire black, blow dry', 'X-Large', 'Basic', 50, 300, 'active'],
-            [5, 'Basic', 'body wash,vacuum, tire black, blow dry', 'XX-Large', 'Basic', 50, 350, 'active'],
-            [6, 'Underwash', 'body wash,vacuum,tire black,blow dry,underwash', 'Small', 'Underwash', 60, 310, 'active'],
-            [7, 'Underwash', 'body wash,vacuum,tire black,blow dry,underwash', 'Medium', 'Underwash', 60, 340, 'active'],
-            [8, 'Underwash', 'body wash,vacuum,tire black,blow dry,underwash', 'Large', 'Underwash', 60, 390, 'active'],
-            [9, 'Underwash', 'body wash,vacuum,tire black,blow dry,underwash', 'X-Large', 'Underwash', 60, 500, 'active'],
-            [10, 'Enginewash', 'body wash,vacuum,tire black,blow dry,engine wash', 'Small', 'Enginewash', 60, 280, 'active'],
-            [11, 'Enginewash', 'body wash,vacuum,tire black,blow dry,engine wash', 'Medium', 'Enginewash', 60, 330, 'active'],
-            [12, 'Enginewash', 'body wash,vacuum,tire black,blow dry,engine wash', 'Large', 'Enginewash', 60, 350, 'active'],
-            [13, 'Enginewash', 'body wash,vacuum,tire black,blow dry,engine wash', 'X-Large', 'Enginewash', 60, 480, 'active'],
-            [14, 'Enginewash', 'body wash,vacuum,tire black,blow dry,engine wash', 'XX-Large', 'Enginewash', 60, 520, 'active'],
-            [15, 'Hand Wax', 'body wash,vacuum,tire black,blow dry,liquid hand wax', 'Small', 'Hand Wax', 50, 170, 'active'],
-            [16, 'Hand Wax', 'body wash,vacuum,tire black,blow dry,liquid hand wax', 'Medium', 'Hand Wax', 50, 200, 'active'],
-            [17, 'Hand Wax', 'body wash,vacuum,tire black,blow dry,liquid hand wax', 'Large', 'Hand Wax', 50, 260, 'active'],
-            [18, 'Hand Wax', 'body wash,vacuum,tire black,blow dry,liquid hand wax', 'X-Large', 'Hand Wax', 50, 350, 'active'],
-            [19, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Small', 'Additonal Services', 40, 60, 'active'],
-        ];
-        $rows = array_merge($rows, [
-            [20, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Medium', 'Additonal Services', 40, 60, 'active'],
-            [21, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Large', 'Additonal Services', 40, 70, 'active'],
-            [22, 'Armor All/All Purpose Dressing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'X-Large', 'Additonal Services', 40, 90, 'active'],
-            [23, 'Watermarks Removal/Glass Detailing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Small', 'Additonal Services', 80, 900, 'active'],
-            [24, 'Watermarks Removal/Glass Detailing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Medium', 'Additonal Services', 80, 1200, 'active'],
-            [25, 'Watermarks Removal/Glass Detailing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'Large', 'Additonal Services', 80, 1400, 'active'],
-            [26, 'Watermarks Removal/Glass Detailing', 'Prevent plastic and vinyl from cracking. fading. disccoloration. and premature aging', 'X-Large', 'Additonal Services', 80, 1700, 'active'],
-            [27, 'Hard Shell ', 'body wash,vacuum,tire black,blow dry,turtle wax', 'Small', 'Buff Wax', 50, 360, 'active'],
-            [28, 'Hard Shell ', 'body wash,vacuum,tire black,blow dry,turtle wax', 'Medium', 'Buff Wax', 50, 430, 'active'],
-            [29, 'Hard Shell ', 'body wash,vacuum,tire black,blow dry,turtle wax', 'Large', 'Buff Wax', 50, 520, 'active'],
-            [30, 'Hard Shell ', 'body wash,vacuum,tire black,blow dry,turtle wax', 'X-Large', 'Buff Wax', 50, 700, 'active'],
-            [31, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax', 'Small', 'Buff Wax', 50, 430, 'active'],
-            [32, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax', 'Medium', 'Buff Wax', 50, 520, 'active'],
-            [33, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax', 'Large', 'Buff Wax', 50, 660, 'active'],
-            [34, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax', 'X-Large', 'Buff Wax', 50, 800, 'active'],
-            [35, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguar;s wax', 'Small', 'Buff Wax', 50, 500, 'active'],
-            [36, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguar;s wax', 'Medium', 'Buff Wax', 50, 580, 'active'],
-            [37, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguar;s wax', 'Large', 'Buff Wax', 50, 720, 'active'],
-            [38, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguar;s wax', 'X-Large', 'Buff Wax', 50, 900, 'active'],
-            [39, 'Hard Shell', 'body wash,vacuum,tire black,blow dry,turtle wax, armor all', 'Small', 'Complete Package', 120, 660, 'active'],
-            [40, 'Hard Shell', 'body wash,vacuum,tire black,blow dry,turtle wax, armor all', 'Medium', 'Complete Package', 120, 740, 'active'],
-            [41, 'Hard Shell', 'body wash,vacuum,tire black,blow dry,turtle wax, armor all', 'Large', 'Complete Package', 120, 930, 'active'],
-            [42, 'Hard Shell', 'body wash,vacuum,tire black,blow dry,turtle wax, armor all', 'X-Large', 'Complete Package', 120, 1100, 'active'],
-            [43, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax, armor all', 'Small', 'Complete Package', 120, 700, 'active'],
-            [44, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax, armor all', 'Medium', 'Complete Package', 120, 790, 'active'],
-            [45, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax, armor all', 'Large', 'Complete Package', 120, 1070, 'active'],
-            [46, 'Waterproof', 'body wash,vacuum,tire black,blow dry,botny wax, armor all', 'X-Large', 'Complete Package', 120, 1250, 'active'],
-            [47, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all', 'Small', 'Complete Package', 120, 800, 'active'],
-            [48, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all', 'Medium', 'Complete Package', 120, 890, 'active'],
-            [49, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all', 'Large', 'Complete Package', 120, 1130, 'active'],
-            [50, 'High Gloss', 'body wash,vacuum,tire black,blow dry,meguir\'s wax, armor all', 'X-Large', 'Complete Package', 120, 1350, 'active'],
-        ]);
-        foreach ($rows as $r) {
-            [$id,$name,$desc,$size,$cat,$duration,$price,$status] = $r;
-            if (! DB::table('services')->where('service_id', $id)->exists()) {
-                DB::table('services')->insert([
-                    'service_id' => $id,
-                    'service_name' => $name,
-                    'description' => $desc,
-                    'size' => $size,
-                    'category' => $cat,
-                    'estimated_duration' => $duration,
-                    'price' => $price,
-                    'status' => $status,
+
+        foreach ($serviceGroups as $group) {
+            $serviceId = DB::table('services')->insertGetId([
+                'service_name' => $group['name'],
+                'description' => $group['description'],
+                'category' => $group['category'],
+                'status' => 'active',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ], 'service_id');
+
+            foreach ($group['variants'] as $variant) {
+                DB::table('service_variants')->insert([
+                    'service_id' => $serviceId,
+                    'size' => $variant['size'],
+                    'estimated_duration' => $variant['duration'],
+                    'price' => $variant['price'],
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);

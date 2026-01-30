@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ServiceOrderDetail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
@@ -17,20 +17,12 @@ class Service extends Model
     protected $fillable = [
         'service_name',
         'description',
-        'size',
         'category',
-        'estimated_duration',
-        'price',
         'status',
     ];
 
-    protected $casts = [
-        'estimated_duration' => 'integer',
-        'price' => 'decimal:2',
-    ];
-
-    public function serviceOrderDetails()
+    public function variants(): HasMany
     {
-        return $this->hasMany(ServiceOrderDetail::class, 'service_id', 'service_id');
+        return $this->hasMany(ServiceVariant::class, 'service_id', 'service_id');
     }
 }

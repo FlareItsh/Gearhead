@@ -78,13 +78,20 @@ class ServiceOrderController extends Controller
         $data = $request->all();
 
         // Handle service_ids update - replace all service details
-        if (array_key_exists('service_ids', $data)) {
+        if (array_key_exists('variant_ids', $data)) {
+            $variantIds = $data['variant_ids'];
+
+            // Use repository to replace service order details using variants
+            $this->repo->replaceServiceOrderDetailsWithVariants($id, $variantIds);
+
+            // Remove variant_ids from data array
+            unset($data['variant_ids']);
+            if (isset($data['service_ids'])) {
+                unset($data['service_ids']);
+            }
+        } elseif (array_key_exists('service_ids', $data)) {
             $serviceIds = $data['service_ids'];
-
-            // Use repository to replace service order details
             $this->repo->replaceServiceOrderDetails($id, $serviceIds);
-
-            // Remove service_ids from data array as it's not a column in service_orders table
             unset($data['service_ids']);
         }
 
@@ -214,8 +221,8 @@ class ServiceOrderController extends Controller
     {
         $validated = $request->validate([
             'order_date' => 'required|date_format:Y-m-d H:i',
-            'service_ids' => 'required|array|min:1',
-            'service_ids.*' => 'required|integer|exists:services,service_id',
+            'variant_ids' => 'required|array|min:1',
+            'variant_ids.*' => 'required|integer|exists:service_variants,service_variant',
         ]);
 
         $user = $request->user();
@@ -232,13 +239,20 @@ class ServiceOrderController extends Controller
             'order_type' => 'R', // Reservation
         ];
 
-        // Map service_ids to details format expected by createWithDetails
-        $details = array_map(function ($service_id) {
-            return [
-                'service_id' => $service_id,
-                'quantity' => 1,
-            ];
-        }, $validated['service_ids']);
+        // Retrieve variants to get their service_id
+        $variants = \App\Models\ServiceVariant::whereIn('service_variant', $validated['variant_ids'])->get()->keyBy('service_variant');
+
+        // Map variant_ids to details format expected by createWithDetails
+        $details = [];
+        foreach ($validated['variant_ids'] as $variant_id) {
+            if ($variant = $variants->get($variant_id)) {
+                $details[] = [
+                    'service_id' => $variant->service_id,
+                    'service_variant' => $variant_id,
+                    'quantity' => 1,
+                ];
+            }
+        }
 
         try {
             $order = $this->repo->createWithDetails($orderData, $details);
@@ -258,8 +272,8 @@ class ServiceOrderController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:users,user_id',
             'bay_id' => 'required|integer|exists:bays,bay_id',
-            'service_ids' => 'required|array|min:1',
-            'service_ids.*' => 'required|integer|exists:services,service_id',
+            'variant_ids' => 'required|array|min:1',
+            'variant_ids.*' => 'required|integer|exists:service_variants,service_variant',
             'employee_id' => 'nullable|integer|exists:employees,employee_id',
         ]);
 
@@ -273,13 +287,20 @@ class ServiceOrderController extends Controller
                 'order_type' => 'W', // Walk-in
             ];
 
-            // Map service_ids to details format
-            $details = array_map(function ($service_id) {
-                return [
-                    'service_id' => $service_id,
-                    'quantity' => 1,
-                ];
-            }, $validated['service_ids']);
+            // Retrieve variants to get their service_id
+            $variants = \App\Models\ServiceVariant::whereIn('service_variant', $validated['variant_ids'])->get()->keyBy('service_variant');
+
+            // Map variant_ids to details format
+            $details = [];
+            foreach ($validated['variant_ids'] as $variant_id) {
+                if ($variant = $variants->get($variant_id)) {
+                    $details[] = [
+                        'service_id' => $variant->service_id,
+                        'service_variant' => $variant_id,
+                        'quantity' => 1,
+                    ];
+                }
+            }
 
             // Create the service order with details
             $order = $this->repo->createWithDetails($orderData, $details);

@@ -52,8 +52,9 @@ class EloquentPulloutServiceRepository implements PulloutServiceRepositoryInterf
     {
         return DB::table('service_orders as so')
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->join('employees as e', 'so.employee_id', '=', 'e.employee_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->join('bays as b', 'so.bay_id', '=', 'b.bay_id')
             ->join('users as u', 'so.user_id', '=', 'u.user_id')
             ->whereIn('so.status', ['in_progress', 'pending'])
@@ -62,8 +63,8 @@ class EloquentPulloutServiceRepository implements PulloutServiceRepositoryInterf
                 'sod.service_order_detail_id',
                 'so.service_order_id',
                 'so.employee_id',
-                DB::raw('CONCAT(e.first_name, " ", e.last_name) as employee_name'),
-                DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
+                DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
+                DB::raw("CONCAT(u.first_name, ' ', u.last_name) as customer_name"),
                 's.service_name',
                 'b.bay_number',
                 'so.order_date'

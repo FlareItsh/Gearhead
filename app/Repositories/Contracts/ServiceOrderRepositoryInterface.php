@@ -59,6 +59,11 @@ interface ServiceOrderRepositoryInterface
     public function replaceServiceOrderDetails(int $serviceOrderId, array $serviceIds): void;
 
     /**
+     * Replace service order details with new variant IDs.
+     */
+    public function replaceServiceOrderDetailsWithVariants(int $serviceOrderId, array $variantIds): void;
+
+    /**
      * Get today's pending reservation bookings with customer and service details.
      */
     public function getTodayBookings();
