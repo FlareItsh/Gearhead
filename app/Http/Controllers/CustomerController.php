@@ -41,7 +41,7 @@ class CustomerController extends Controller
         $user = $request->user();
         $status = $request->query('status', 'all'); // optional filter
 
-        $allBookings = $bookings->getBookingsByUser((int) $user->user_id, $status);
+        $allBookings = $bookings->getBookingsByUser((int) $user->user_id, 'all');
 
         return Inertia::render('Customer/Bookings', [
             'bookings' => $allBookings,
