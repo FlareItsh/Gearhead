@@ -57,7 +57,8 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
         return DB::table('payments as p')
             ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->where('so.user_id', $userId)
             ->select(
                 'p.payment_id',
@@ -221,7 +222,9 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
             ->join('users as u', 'so.user_id', '=', 'u.user_id')
             ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->leftJoin('services as s', 'sod.service_id', '=', 's.service_id')
+            ->leftJoin('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->leftJoin('services as s', 'sv.service_id', '=', 's.service_id')
+            ->leftJoin('employees as e', 'p.employee_id', '=', 'e.employee_id')
             ->select(
                 'p.payment_id',
                 'p.amount',
@@ -234,7 +237,8 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'so.status',
                 'u.first_name',
                 'u.last_name',
-                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services')
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw("CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, '')) as employee_name")
             )
             ->groupBy(
                 'p.payment_id',
@@ -247,7 +251,9 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'so.order_date',
                 'so.status',
                 'u.first_name',
-                'u.last_name'
+                'u.last_name',
+                'e.first_name',
+                'e.last_name'
             )
             ->orderBy('p.created_at', 'desc')
             ->get()
@@ -263,6 +269,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                     'gcash_screenshot' => $transaction->gcash_screenshot,
                     'status' => $transaction->status,
                     'is_point_redeemed' => (bool) $transaction->is_point_redeemed,
+                    'employee' => trim($transaction->employee_name) ?: 'Unassigned',
                 ];
             });
     }

@@ -14,6 +14,7 @@ axios.defaults.withCredentials = true
 interface ServiceVariant {
   service_variant: number
   service_id: number
+  service_name?: string
   size: string
   price: number | string
   estimated_duration: number
@@ -170,6 +171,50 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
     }
   }, [])
 
+  // Load existing service order for this bay (for editing)
+  useEffect(() => {
+    // Only load existing order after services are loaded
+    if (services.length === 0) {
+      console.log('Waiting for services to load before loading existing order')
+      return
+    }
+
+    const loadExistingOrder = async () => {
+      try {
+        console.log('Loading existing order for bay:', bayId)
+        const res = await axios.get('/api/service-orders/active')
+        const orders = res.data
+
+        console.log('All active orders:', orders)
+
+        // Find the order for this bay
+        const existingOrder = orders.find((order: any) => order.bay_id === bayId)
+
+        if (existingOrder) {
+          console.log('Found existing order for bay:', existingOrder)
+          console.log('Order details:', existingOrder.details)
+          setEditingOrder(existingOrder)
+          setIsEditingMode(true)
+
+          // Set the assigned employee if available
+          if (existingOrder.employee) {
+            setAssignedEmployee({
+              employee_id: existingOrder.employee.employee_id,
+              first_name: existingOrder.employee.first_name,
+              last_name: existingOrder.employee.last_name,
+            })
+          }
+        } else {
+          console.log('No existing order found for bay:', bayId)
+        }
+      } catch (err) {
+        console.error('Failed to load existing order:', err)
+      }
+    }
+
+    loadExistingOrder()
+  }, [bayId, services])
+
   useEffect(() => {
     if (customerSearch.trim()) {
       const search = customerSearch.toLowerCase()
@@ -187,11 +232,86 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
   useEffect(() => {
     // Pre-populate services when editing existing order
     if (isEditingMode && editingOrder?.details && services.length > 0) {
-      const existingServiceIds = editingOrder.details.map((d: ServiceOrderDetail) => d.service_id)
-      const selectedSvcs = services.filter((s) => existingServiceIds.includes(s.service_id))
-      setSelectedServices(selectedSvcs)
+      console.log('Pre-populating services for editing:', editingOrder.details)
+
+      // Extract variant IDs from order details
+      const existingVariantIds = editingOrder.details
+        .map((d: any) => {
+          const id = d.service_variant || d.serviceVariant
+          // Handle nested serviceVariant object if it exists (snake_case)
+          if (typeof id === 'object' && id !== null && 'service_variant' in id) {
+            return id.service_variant
+          }
+          // Handle nested serviceVariant object if it exists (camelCase)
+          if (typeof id === 'object' && id !== null && 'serviceVariant' in id) {
+            return id.serviceVariant
+          }
+          // Handle direct object (e.g. from eager load)
+          if (typeof id === 'object' && id !== null && typeof id.service_variant === 'number') {
+            return id.service_variant
+          }
+          return id
+        })
+        .filter(Boolean)
+
+      console.log('Extracted existing variant IDs:', existingVariantIds)
+
+      // Find matching variants from all services
+      const matchingVariants: ServiceVariant[] = []
+      services.forEach((service) => {
+        service.variants.forEach((variant) => {
+          // Compare as numbers to avoid string/number mismatch
+          // Check against the extracted array
+          if (
+            existingVariantIds.some((id: any) => Number(id) === Number(variant.service_variant))
+          ) {
+            matchingVariants.push({
+              ...variant,
+              service_name: service.service_name,
+            })
+          }
+        })
+      })
+
+      console.log('Matching variants found:', matchingVariants)
+
+      if (matchingVariants.length > 0) {
+        setSelectedServices(matchingVariants)
+
+        // Populate activeVariants for UI state (e.g. modal selections)
+        const active: Record<number, number> = {}
+        matchingVariants.forEach((v) => {
+          active[v.service_id] = v.service_variant
+        })
+        setActiveVariants((prev) => ({ ...prev, ...active }))
+        console.log('Updated activeVariants:', active)
+      } else {
+        console.warn('No matching variants found. Services loaded:', services.length)
+      }
+    } else {
+      // Load from localStorage if not editing
+      const saved = localStorage.getItem('registry_selected_services')
+      if (saved && !isEditingMode) {
+        try {
+          // We need to verify if the saved services are still valid variants
+          // For simplicity, we just load them for now, but in a real app we might validate against 'services'
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSelectedServices(parsed)
+          }
+        } catch (e) {
+          console.error('Failed to load saved services from storage', e)
+        }
+      }
     }
   }, [isEditingMode, editingOrder, services])
+
+  // Save to localStorage when changed
+  useEffect(() => {
+    if (!isEditingMode && selectedServices.length > 0) {
+      localStorage.setItem('registry_selected_services', JSON.stringify(selectedServices))
+    }
+  }, [selectedServices, isEditingMode])
 
   const loadServices = async () => {
     try {
@@ -219,7 +339,12 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
       if (exists) {
         return prev.filter((v) => v.service_variant !== variant.service_variant)
       } else {
-        return [...prev, variant]
+        // Enrich variant with service_name if not present
+        const enrichedVariant = {
+          ...variant,
+          service_name: variant.service_name || selectedServiceForModal?.service_name || '',
+        }
+        return [...prev, enrichedVariant]
       }
     })
   }
@@ -337,6 +462,9 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
         console.log('Service order created:', response.data)
       }
+
+      // Clear localStorage on success
+      localStorage.removeItem('registry_selected_services')
 
       // Navigate to registry after successful creation/update
       router.visit('/registry?serviceStarted=true', {

@@ -17,7 +17,6 @@ class ServiceOrderDetail extends Model
 
     protected $fillable = [
         'service_order_id',
-        'service_id',
         'service_variant',
         'quantity',
     ];

@@ -20,6 +20,7 @@ class Payment extends Model
         'is_point_redeemed',
         'gcash_reference',
         'gcash_screenshot',
+        'employee_id',
     ];
 
     protected $casts = [
@@ -30,5 +31,10 @@ class Payment extends Model
     public function serviceOrder()
     {
         return $this->belongsTo(\App\Models\ServiceOrder::class, 'service_order_id', 'service_order_id');
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 }

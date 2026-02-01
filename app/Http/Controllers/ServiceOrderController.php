@@ -247,7 +247,6 @@ class ServiceOrderController extends Controller
         foreach ($validated['variant_ids'] as $variant_id) {
             if ($variant = $variants->get($variant_id)) {
                 $details[] = [
-                    'service_id' => $variant->service_id,
                     'service_variant' => $variant_id,
                     'quantity' => 1,
                 ];
@@ -295,7 +294,6 @@ class ServiceOrderController extends Controller
             foreach ($validated['variant_ids'] as $variant_id) {
                 if ($variant = $variants->get($variant_id)) {
                     $details[] = [
-                        'service_id' => $variant->service_id,
                         'service_variant' => $variant_id,
                         'quantity' => 1,
                     ];
@@ -315,7 +313,7 @@ class ServiceOrderController extends Controller
 
             return response()->json([
                 'message' => 'Service order created successfully',
-                'order' => $order->load('details.service', 'user', 'bay', 'employee'),
+                'order' => $order->load('details.serviceVariant.service', 'user', 'bay', 'employee'),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

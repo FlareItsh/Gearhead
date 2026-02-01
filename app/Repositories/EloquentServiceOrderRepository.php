@@ -33,10 +33,9 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return DB::transaction(function () use ($orderData, $details) {
             $order = ServiceOrder::create($orderData);
 
-            // Ensure details are mapped to expected fields (service_id, quantity)
+            // Ensure details are mapped to expected fields (service_variant, quantity)
             $mapped = array_map(function ($d) {
                 return [
-                    'service_id' => $d['service_id'] ?? null,
                     'service_variant' => $d['service_variant'] ?? null,
                     'quantity' => $d['quantity'] ?? 1,
                 ];
@@ -290,9 +289,9 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return ServiceOrder::whereIn('status', ['pending', 'in_progress'])
             ->with([
                 'user:user_id,first_name,last_name,email,phone_number',
-                'details:service_order_detail_id,service_order_id,service_variant,quantity',
-                'details.serviceVariant:service_variant,service_id,size,price',
-                'details.serviceVariant.service:service_id,service_name',
+                'details',
+                'details.serviceVariant',
+                'details.serviceVariant.service',
                 'bay:bay_id,bay_number,status',
                 'employee:employee_id,first_name,last_name,phone_number,status,assigned_status',
             ])
