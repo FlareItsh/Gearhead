@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/payments/summary', [PaymentController::class, 'summary'])
         ->name('payments.summary');
 
+    Route::get('/payments/list', [PaymentController::class, 'getTransactions'])
+        ->name('payments.list');
+
     // * Bay CRUD routes - using different endpoint to avoid conflict with web route
     Route::post('/bays', [BayController::class, 'store'])
         ->name('bays.store');

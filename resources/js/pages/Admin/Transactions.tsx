@@ -185,6 +185,7 @@ export default function Transactions({ transactions }: TransactionsProps) {
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [supplyPurchases, setSupplyPurchases] = useState<SupplyPurchase[]>([])
+  const [transactionsList, setTransactionsList] = useState<Transaction[]>(transactions)
   const [activeTab, setActiveTab] = useState<'payments' | 'expenses'>('payments')
 
   // Format date range helper function
@@ -222,7 +223,7 @@ export default function Transactions({ transactions }: TransactionsProps) {
     setEndDate(format(today))
   }, [])
 
-  // Fetch financial summary and supply purchases
+  // Fetch financial summary, supply purchases, and transactions list
   useEffect(() => {
     if (!startDate || !endDate) return
 
@@ -235,8 +236,11 @@ export default function Transactions({ transactions }: TransactionsProps) {
       axios.get('/api/supply-purchases/detailed', {
         params: { start_date: startDate, end_date: endDate },
       }),
+      axios.get('/api/payments/list', {
+        params: { start_date: startDate, end_date: endDate },
+      }),
     ])
-      .then(([summaryRes, purchasesRes]) => {
+      .then(([summaryRes, purchasesRes, transactionsRes]) => {
         setFinancialData({
           total_revenue: summaryRes.data.total_amount || 0,
           total_expenses: summaryRes.data.total_expenses || 0,
@@ -264,6 +268,7 @@ export default function Transactions({ transactions }: TransactionsProps) {
           }),
         )
         setSupplyPurchases(purchases)
+        setTransactionsList(transactionsRes.data)
       })
       .catch((err) => {
         console.error('Failed to load data:', err)
@@ -272,8 +277,8 @@ export default function Transactions({ transactions }: TransactionsProps) {
   }, [startDate, endDate])
 
   const completedTransactions = useMemo(
-    () => transactions.filter((t) => t.status === 'completed'),
-    [transactions],
+    () => transactionsList.filter((t) => t.status === 'completed'),
+    [transactionsList],
   )
 
   const allItems = useMemo(() => {

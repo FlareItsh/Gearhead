@@ -323,4 +323,24 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
+
+
+    /**
+     * Get transactions list by date range.
+     */
+    public function getTransactions(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $transactions = $this->repo->getTransactionsByDateRange(
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json($transactions);
+    }
 }
