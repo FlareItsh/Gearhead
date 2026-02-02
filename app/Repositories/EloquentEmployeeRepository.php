@@ -47,7 +47,6 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
     public function findActive(): Collection
     {
         return Employee::where('status', 'active')
-            ->where('assigned_status', 'available')
             ->orderBy('first_name')
             ->get();
     }

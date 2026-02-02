@@ -238,7 +238,6 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->where('so.status', 'pending')
             ->where('so.order_type', 'R')
-            ->whereDate('so.order_date', $today)
             ->select(
                 'so.service_order_id',
                 'so.user_id',

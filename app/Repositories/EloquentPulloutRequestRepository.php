@@ -43,7 +43,8 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             ->join('pullout_request_details as prd', 'pr.pullout_request_id', '=', 'prd.pullout_request_id')
             ->join('pullout_services as ps', 'prd.pullout_service_id', '=', 'ps.pullout_service_id')
             ->join('service_order_details as sod', 'ps.service_order_detail_id', '=', 'sod.service_order_detail_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->join('service_orders as so', 'sod.service_order_id', '=', 'so.service_order_id')
             ->join('supplies as sup', 'prd.supply_id', '=', 'sup.supply_id')
             ->select(
@@ -173,7 +174,8 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             ->join('employees as e', 'pr.employee_id', '=', 'e.employee_id')
             ->join('pullout_services as ps', 'prd.pullout_service_id', '=', 'ps.pullout_service_id')
             ->join('service_order_details as sod', 'ps.service_order_detail_id', '=', 'sod.service_order_detail_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->join('service_orders as so', 'sod.service_order_id', '=', 'so.service_order_id')
             ->where('pr.is_approve', true)
             ->where('sup.supply_type', 'supply') // Only returnable supplies
