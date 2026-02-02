@@ -144,29 +144,30 @@ export default function Bookings() {
         />
 
         {/* Status Filter Buttons - Perfectly Responsive */}
-        <div className="w-full">
-          <div className="inline-flex w-full flex-wrap gap-2 rounded-lg bg-secondary p-1.5 sm:flex-nowrap">
-            {statuses.map((status) => {
-              const href = status === 'all' ? '/bookings' : `/bookings?status=${status}`
-              const isActive = status === selectedStatus
+        <div className="flex w-full rounded-2xl bg-secondary p-1">
+          {(['all', 'pending', 'in_progress', 'completed', 'cancelled'] as const).map((status) => {
+            const isActive = status === selectedStatus
+            const displayLabel =
+              status === 'all'
+                ? 'All'
+                : status === 'in_progress'
+                ? 'In Progress'
+                : status.charAt(0).toUpperCase() + status.slice(1)
 
-              const label = status.replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase())
-
-              return (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  className={`flex-1 rounded-md px-4 py-2 text-center text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                    isActive
-                      ? 'bg-highlight text-black shadow-sm'
-                      : 'bg-tertiary text-foreground hover:bg-tertiary/80'
-                  } `}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
+            return (
+              <button
+                key={status}
+                onClick={() => setSelectedStatus(status)}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all ${
+                  isActive
+                    ? 'bg-highlight text-black shadow-sm'
+                    : 'text-foreground/70'
+                }`}
+              >
+                {displayLabel}
+              </button>
+            )
+          })}
         </div>
 
         {/* Scrollable Bookings */}
