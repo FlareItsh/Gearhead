@@ -33,10 +33,10 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return DB::transaction(function () use ($orderData, $details) {
             $order = ServiceOrder::create($orderData);
 
-            // Ensure details are mapped to expected fields (service_id, quantity)
+            // Ensure details are mapped to expected fields (service_variant, quantity)
             $mapped = array_map(function ($d) {
                 return [
-                    'service_id' => $d['service_id'] ?? null,
+                    'service_variant' => $d['service_variant'] ?? null,
                     'quantity' => $d['quantity'] ?? 1,
                 ];
             }, $details);
@@ -62,7 +62,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
     {
         return DB::table('service_orders as so')
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->where('so.user_id', $userId)
             ->whereIn('so.status', ['pending', 'in_progress'])
             ->select(
@@ -71,7 +72,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'so.order_type',
                 'so.status',
                 DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as service_names'),
-                DB::raw('COALESCE(SUM(s.price * sod.quantity), 0) as total_amount')
+                DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_amount')
             )
             ->groupBy(
                 'so.service_order_id',
@@ -94,7 +95,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
     {
         $query = DB::table('service_orders as so')
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
             ->select(
                 'so.service_order_id',
@@ -129,7 +131,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return DB::table('service_orders as so')
             ->join('users as u', 'u.user_id', '=', 'so.user_id')
             ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
-            ->join('services as s', 's.service_id', '=', 'sod.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->whereIn('so.status', ['pending', 'in_progress'])
             ->whereRaw('DATE(so.order_date) = CURDATE()')
             ->select(
@@ -152,12 +155,13 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         $query = DB::table('service_orders as so')
             ->join('users as u', 'u.user_id', '=', 'so.user_id')
             ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
-            ->join('services as s', 's.service_id', '=', 'sod.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
                 DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
-                DB::raw('COALESCE(SUM(s.price * sod.quantity), 0) as total_price'),
+                DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_price'),
                 'so.order_date',
                 'so.status'
             )
@@ -179,26 +183,48 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
     {
         return DB::table('service_order_details')
             ->where('service_order_id', $serviceOrderId)
-            ->delete() > 0;
+            ->delete() >= 0;
     }
 
     public function replaceServiceOrderDetails(int $serviceOrderId, array $serviceIds): void
     {
-        // Delete existing details
-        DB::table('service_order_details')
-            ->where('service_order_id', $serviceOrderId)
-            ->delete();
+        DB::transaction(function () use ($serviceOrderId, $serviceIds) {
+            $this->deleteServiceOrderDetails($serviceOrderId);
 
-        // Insert new details
-        foreach ($serviceIds as $serviceId) {
-            DB::table('service_order_details')->insert([
-                'service_order_id' => $serviceOrderId,
-                'service_id' => $serviceId,
-                'quantity' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+            foreach ($serviceIds as $serviceId) {
+                // Find a default variant for this service (e.g., the first one)
+                $variant = DB::table('service_variants')
+                    ->where('service_id', $serviceId)
+                    ->first();
+
+                if ($variant) {
+                    DB::table('service_order_details')->insert([
+                        'service_order_id' => $serviceOrderId,
+                        'service_variant' => $variant->service_variant,
+                        'quantity' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        });
+    }
+
+    public function replaceServiceOrderDetailsWithVariants(int $serviceOrderId, array $variantIds): void
+    {
+        DB::transaction(function () use ($serviceOrderId, $variantIds) {
+            $this->deleteServiceOrderDetails($serviceOrderId);
+
+            foreach ($variantIds as $variantId) {
+                DB::table('service_order_details')->insert([
+                    'service_order_id' => $serviceOrderId,
+                    'service_variant' => $variantId,
+                    'quantity' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        });
     }
 
     public function getTodayBookings()
@@ -208,7 +234,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return DB::table('service_orders as so')
             ->join('users as u', 'so.user_id', '=', 'u.user_id')
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('services as s', 'sod.service_id', '=', 's.service_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->where('so.status', 'pending')
             ->where('so.order_type', 'R')
             ->whereDate('so.order_date', $today)
@@ -222,7 +249,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
                 DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services'),
                 DB::raw('GROUP_CONCAT(s.service_id) as service_ids'),
-                DB::raw('COALESCE(SUM(s.price * sod.quantity), 0) as total')
+                DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total')
             )
             ->groupBy('so.service_order_id', 'so.user_id', 'so.order_date', 'u.first_name', 'u.last_name', 'u.phone_number')
             ->orderBy('so.order_date')
@@ -262,8 +289,9 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return ServiceOrder::whereIn('status', ['pending', 'in_progress'])
             ->with([
                 'user:user_id,first_name,last_name,email,phone_number',
-                'details:service_order_detail_id,service_order_id,service_id,quantity',
-                'details.service:service_id,service_name,price',
+                'details',
+                'details.serviceVariant',
+                'details.serviceVariant.service',
                 'bay:bay_id,bay_number,status',
                 'employee:employee_id,first_name,last_name,phone_number,status,assigned_status',
             ])

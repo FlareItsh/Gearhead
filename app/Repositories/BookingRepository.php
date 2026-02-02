@@ -13,7 +13,8 @@ class BookingRepository
     {
         $query = DB::table('service_orders')
             ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
-            ->join('services', 'service_order_details.service_id', '=', 'services.service_id')
+            ->join('service_variants', 'service_order_details.service_variant', '=', 'service_variants.service_variant')
+            ->join('services', 'service_variants.service_id', '=', 'services.service_id')
             ->leftJoin('payments', 'service_orders.service_order_id', '=', 'payments.service_order_id')
             ->where('service_orders.user_id', $userId)
             ->select(
@@ -22,7 +23,7 @@ class BookingRepository
                 'service_orders.order_date',
                 'service_orders.order_type',
                 DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'),
-                DB::raw('SUM(service_order_details.quantity * services.price) as total_amount'),
+                DB::raw('SUM(service_order_details.quantity * service_variants.price) as total_amount'),
                 DB::raw('MAX(payments.payment_method) as payment_method')
             )
             ->groupBy(

@@ -161,7 +161,7 @@ export default function Dashboard() {
 
     if (startDate && endDate) {
       fetchData()
-      const interval = setInterval(fetchData, 30000) // Refresh every 30 seconds
+      const interval = setInterval(fetchData, 180000) // Refresh every 3 minutes
       return () => clearInterval(interval)
     }
   }, [startDate, endDate, role])

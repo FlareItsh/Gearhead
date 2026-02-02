@@ -23,9 +23,9 @@ class PaymentsSeeder extends Seeder
 
         foreach ($orderIds as $index => $orderId) {
             $details = DB::table('service_order_details as sod')
-                ->join('services as s', 'sod.service_id', '=', 's.service_id')
+                ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
                 ->where('sod.service_order_id', $orderId)
-                ->select(DB::raw('SUM(s.price * sod.quantity) as total'))
+                ->select(DB::raw('SUM(sv.price * sod.quantity) as total'))
                 ->first();
 
             $amount = $details->total ?? rand(300, 2000);

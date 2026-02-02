@@ -30,22 +30,62 @@ class ServiceController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->all();
-        $created = $this->repo->create($data);
+        $validated = $request->validate([
+            'service_name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'category' => 'required|string',
+            'status' => 'required|in:active,inactive',
+            'variants' => 'required|array|min:1',
+            'variants.*.size' => 'required|string',
+            'variants.*.enabled' => 'required|boolean',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.estimated_duration' => 'nullable|integer|min:0',
+        ]);
+
+        // Filter to only enabled variants for creation
+        $validated['variants'] = array_filter($validated['variants'], fn($v) => $v['enabled']);
+
+        $created = $this->repo->create($validated);
 
         return response()->json($created, 201);
     }
 
     public function update(Request $request, int $id)
     {
-        $item = $this->repo->findById($id);
-        if (! $item) {
+        $service = $this->repo->findById($id);
+        if (! $service) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $this->repo->update($item, $request->all());
+        $validated = $request->validate([
+            'service_name' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+            'category' => 'sometimes|required|string',
+            'status' => 'sometimes|required|in:active,inactive',
+            'variants' => 'sometimes|required|array|min:1',
+            'variants.*.size' => 'required|string',
+            'variants.*.enabled' => 'required|boolean',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.estimated_duration' => 'nullable|integer|min:0',
+        ]);
 
-        return response()->json($item);
+        \Log::info('Service Update Request', [
+            'service_id' => $id,
+            'validated_data' => $validated,
+        ]);
+
+        $this->repo->update($service, $validated);
+
+        // Reload the service with fresh variants
+        $updated = $this->repo->findById($id);
+
+        \Log::info('Service After Update', [
+            'service_id' => $id,
+            'variants_count' => $updated->variants->count(),
+            'variants' => $updated->variants->toArray(),
+        ]);
+
+        return response()->json($updated);
     }
 
     public function destroy(int $id)

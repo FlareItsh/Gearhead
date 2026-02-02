@@ -19,12 +19,18 @@ class ServiceOrdersSeeder extends Seeder
             }
         }
         shuffle($monthTimeline); // Randomize for variety
+
+        $userIds = DB::table('users')->where('role', 'customer')->pluck('user_id')->toArray();
+        if (empty($userIds)) {
+            $userIds = [1]; // Fallback to admin if no customers
+        }
+
         $orders = [];
         for ($i = 1; $i <= 200; $i++) {
             $orderDate = $monthTimeline[$i % count($monthTimeline)];
             $created = date('Y-m-d H:i:s', strtotime($orderDate.' -'.rand(1, 48).' hours'));
             $updated = date('Y-m-d H:i:s', strtotime($created.' +'.rand(1, 24).' hours'));
-            $userId = rand(2, 51); // Customers from 2 to 51
+            $userId = $userIds[array_rand($userIds)];
             $employeeId = rand(1, 10);
             $bayId = rand(1, 6);
             $status = 'Completed';

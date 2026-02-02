@@ -241,6 +241,7 @@ class PaymentController extends Controller
                 'gcash_reference' => 'nullable|string',
                 'gcash_screenshot' => 'nullable|image|max:5120', // 5MB max
                 'use_loyalty_points' => 'nullable',
+                'employee_id' => 'nullable|exists:employees,employee_id',
             ]);
 
             // Get service order to check user
@@ -276,14 +277,27 @@ class PaymentController extends Controller
                 'gcash_reference' => $validated['gcash_reference'] ?? null,
                 'gcash_screenshot' => $screenshotPath,
                 'is_point_redeemed' => $isLoyaltyRedemption,
+                'employee_id' => $validated['employee_id'] ?? $serviceOrder->employee_id,
             ]);
 
-            // Update service order status to completed
-            $this->serviceOrders->update($serviceOrder, ['status' => 'completed']);
+            // Update service order status to completed and update employee if changed
+            $updateData = ['status' => 'completed'];
+            $oldEmployeeId = $serviceOrder->employee_id;
+            
+            if (isset($validated['employee_id'])) {
+                $updateData['employee_id'] = $validated['employee_id'];
+            }
+            
+            $this->serviceOrders->update($serviceOrder, $updateData);
 
-            // Mark the employee as available if one was assigned
-            if ($serviceOrder->employee_id) {
-                $this->employees->updateAssignedStatus($serviceOrder->employee_id, 'available');
+            // Mark the new employee as available
+            if (isset($validated['employee_id'])) {
+                $this->employees->updateAssignedStatus($validated['employee_id'], 'available');
+            }
+
+            // Mark the old employee as available if one was assigned
+            if ($oldEmployeeId) {
+                $this->employees->updateAssignedStatus($oldEmployeeId, 'available');
             }
 
             // Update bay status back to available
@@ -308,5 +322,25 @@ class PaymentController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+
+    /**
+     * Get transactions list by date range.
+     */
+    public function getTransactions(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $transactions = $this->repo->getTransactionsByDateRange(
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json($transactions);
     }
 }

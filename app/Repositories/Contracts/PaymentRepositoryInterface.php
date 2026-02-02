@@ -63,4 +63,9 @@ interface PaymentRepositoryInterface
      * Get all transactions with customer and service details.
      */
     public function getAllTransactions();
+
+    /**
+     * Get transactions within a specified date range.
+     */
+    public function getTransactionsByDateRange(string $startDate, string $endDate);
 }

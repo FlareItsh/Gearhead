@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceOrderDetail extends Model
 {
@@ -15,21 +17,21 @@ class ServiceOrderDetail extends Model
 
     protected $fillable = [
         'service_order_id',
-        'service_id',
+        'service_variant',
         'quantity',
     ];
 
-    public function serviceOrder()
+    public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class, 'service_order_id', 'service_order_id');
     }
 
-    public function service()
+    public function serviceVariant(): BelongsTo
     {
-        return $this->belongsTo(Service::class, 'service_id', 'service_id');
+        return $this->belongsTo(ServiceVariant::class, 'service_variant', 'service_variant');
     }
 
-    public function pulloutServices()
+    public function pulloutServices(): HasMany
     {
         return $this->hasMany(PulloutService::class, 'service_order_detail_id', 'service_order_detail_id');
     }
