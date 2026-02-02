@@ -144,6 +144,8 @@ export default function Bays() {
 
     if (!editBayForm.bay_number) {
       errors.bay_number = 'Bay number is required'
+    } else if (parseInt(editBayForm.bay_number) < 0) {
+      errors.bay_number = 'Bay number cannot be negative'
     }
     if (!editBayForm.bay_type) {
       errors.bay_type = 'Bay type is required'
@@ -287,6 +289,7 @@ export default function Bays() {
                     placeholder="e.g., 1"
                     value={addForm.bay_number}
                     readOnly
+                    min={0}
                   />
                   {addErrors.bay_number && (
                     <p className="text-sm text-red-500">{addErrors.bay_number}</p>
