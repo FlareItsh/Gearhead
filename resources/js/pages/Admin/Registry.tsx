@@ -80,40 +80,60 @@ interface Employee {
   assigned_status?: string
 }
 
-export default function Registry() {
-  const [bays, setBays] = useState<Bay[]>([])
+// Props from AdminController
+interface RegistryProps {
+  initialBays: Bay[]
+  initialActiveOrders: ServiceOrder[]
+  initialEmployees: Employee[]
+}
+
+export default function Registry({
+  initialBays,
+  initialActiveOrders,
+  initialEmployees,
+}: RegistryProps) {
+  const [bays, setBays] = useState<Bay[]>(initialBays)
   const [serviceOrders, setServiceOrders] = useState<Map<number, ServiceOrder>>(new Map())
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [availableEmployees, setAvailableEmployees] = useState<Employee[]>([])
-  const [loading, setLoading] = useState(true)
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
+  const [availableEmployees, setAvailableEmployees] = useState<Employee[]>(initialEmployees)
+  const [loading, setLoading] = useState(false)
+
+  // Dialog State
   const [selectedBayForService, setSelectedBayForService] = useState<Bay | null>(null)
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('')
-  const [selectedBayForReassignment, setSelectedBayForReassignment] = useState<number | null>(null)
-  const [selectedReassignEmployeeId, setSelectedReassignEmployeeId] = useState<string>('')
-  const [showBookingModal, setShowBookingModal] = useState(false)
+  const [showStartServiceDialog, setShowStartServiceDialog] = useState(false)
+  const [startServiceStep, setStartServiceStep] = useState<
+    'initial' | 'booking' | 'walk-in' | 'assign'
+  >('initial')
   const [todayBookings, setTodayBookings] = useState<any[]>([])
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null)
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('')
+
+  const [selectedBayForReassignment, setSelectedBayForReassignment] = useState<number | null>(null)
+  const [selectedReassignEmployeeId, setSelectedReassignEmployeeId] = useState<string>('')
   const [isAssigning, setIsAssigning] = useState(false)
 
   useEffect(() => {
-    loadBays()
-    loadServiceOrders()
-    loadEmployees()
+    // Map initial orders
+    const ordersMap = new Map()
+    initialActiveOrders.forEach((order) => {
+      if (order.bay_id) {
+        ordersMap.set(order.bay_id, order)
+      }
+    })
+    setServiceOrders(ordersMap)
 
     // Check URL parameters for success messages
     const params = new URLSearchParams(window.location.search)
     if (params.get('serviceStarted') === 'true') {
       toast.success('Service started successfully!')
-      // Clean up URL
       window.history.replaceState({}, '', '/registry')
     }
     if (params.get('paymentCompleted') === 'true') {
       toast.success('Payment completed successfully!')
-      // Clean up URL
       window.history.replaceState({}, '', '/registry')
     }
 
-    // Refresh service orders every 3 minutes
+    // Refresh service orders every 3 minutes (Polling)
     const interval = setInterval(() => {
       loadServiceOrders()
     }, 180000)
@@ -121,53 +141,37 @@ export default function Registry() {
     return () => clearInterval(interval)
   }, [])
 
-  // Filter employees to exclude those already assigned to active service orders
+  // Filter employees logic...
   useEffect(() => {
     const assignedEmployeeIds = new Set<number>()
-
-    // Collect all employee IDs that are already assigned to active service orders
     serviceOrders.forEach((order) => {
       if (order.employee_id) {
         assignedEmployeeIds.add(order.employee_id)
       }
     })
-
-    // Filter employees to only show those not assigned to any active service
     const filtered = employees.filter((employee) => !assignedEmployeeIds.has(employee.employee_id))
-
     setAvailableEmployees(filtered)
   }, [employees, serviceOrders])
 
   const loadBays = async () => {
+    // Keep for manual refresh if needed, but not on mount
     try {
       const res = await axios.get('/api/bays/list')
       setBays(res.data)
     } catch (err) {
       console.error('Failed to fetch bays:', err)
-    } finally {
-      setLoading(false)
     }
   }
 
   const loadServiceOrders = async () => {
     try {
       const res = await axios.get('/api/service-orders/active')
-      console.log('Fetched service orders:', res.data)
       const ordersMap = new Map()
-
-      // Create a map of bay_id to service order for quick lookup
       res.data.forEach((order: ServiceOrder) => {
         if (order.bay_id) {
           ordersMap.set(order.bay_id, order)
-          console.log(
-            `Mapped order ${order.service_order_id} to bay ${order.bay_id}`,
-            'Order data:',
-            order,
-          )
         }
       })
-
-      console.log('Service orders map:', ordersMap)
       setServiceOrders(ordersMap)
     } catch (err) {
       console.error('Failed to fetch service orders:', err)
@@ -175,10 +179,10 @@ export default function Registry() {
   }
 
   const loadEmployees = async () => {
+    // Keep for refresh
     try {
       const res = await axios.get('/api/employees/active-available')
       setEmployees(res.data)
-      setAvailableEmployees(res.data)
     } catch (err) {
       console.error('Failed to fetch employees:', err)
     }
@@ -198,123 +202,82 @@ export default function Registry() {
       return sum + price
     }, 0)
   }
-  const handleStartService = async (bay: Bay) => {
+  const handleStartService = (bay: Bay) => {
     setSelectedBayForService(bay)
     setSelectedEmployeeId('')
-
-    // Fetch today's pending bookings
-    try {
-      const res = await axios.get('/api/service-orders/today-bookings')
-      console.log("Today's bookings response:", res.data)
-      setTodayBookings(res.data || [])
-      // Always show the modal, even if no bookings
-      setShowBookingModal(true)
-    } catch (err) {
-      console.error("Failed to fetch today's bookings:", err)
-      toast.error('Failed to fetch bookings')
-      // Still show modal even on error, just with empty bookings
-      setTodayBookings([])
-      setShowBookingModal(true)
-    }
+    setStartServiceStep('initial')
+    setShowStartServiceDialog(true)
+    // Pre-fetch bookings silently
+    axios
+      .get('/api/service-orders/today-bookings')
+      .then((res) => setTodayBookings(res.data || []))
+      .catch((err) => console.error('Failed to fetch bookings:', err))
   }
 
   const handleSelectBooking = (booking: any) => {
     setSelectedBooking(booking)
-    setShowBookingModal(false)
+    setStartServiceStep('assign')
+    setSelectedEmployeeId('') // Reset selection
   }
 
-  const handleProceedWithoutBooking = () => {
-    setShowBookingModal(false)
+  const handleWalkIn = () => {
+    setStartServiceStep('walk-in')
     setSelectedBooking(null)
+    setSelectedEmployeeId('') // Reset selection
   }
 
   const handleProceedWithEmployee = async () => {
-    if (!selectedBayForService || !selectedEmployeeId) {
+    if (!selectedBayForService || !selectedEmployeeId) return
+    if (!selectedBayForService.bay_id) return // Safety check
+
+    const employee = employees.find((e) => e.employee_id === parseInt(selectedEmployeeId))
+    if (!employee) return
+
+    // Walk-in Flow: Go to Select Services
+    if (startServiceStep === 'walk-in') {
+      const employeeData = JSON.stringify({
+        employee_id: employee.employee_id,
+        first_name: employee.first_name,
+        last_name: employee.last_name,
+      })
+
+      const url = `/registry/${selectedBayForService.bay_id}/select-services?employee=${encodeURIComponent(employeeData)}`
+
+      router.visit(url)
       return
     }
 
-    const employee = employees.find((e) => e.employee_id === parseInt(selectedEmployeeId))
-
-    if (employee) {
-      // If a booking was selected, update it directly and assign to bay
-      if (selectedBooking) {
-        setIsAssigning(true)
-        try {
-          // Convert service_ids string to array of numbers
-          let serviceIds: number[] = []
-          if (typeof selectedBooking.service_ids === 'string') {
-            serviceIds = selectedBooking.service_ids.split(',').map(Number)
-          } else if (Array.isArray(selectedBooking.service_ids)) {
-            serviceIds = selectedBooking.service_ids.map(Number)
-          }
-
-          console.log('Assigning reservation:', {
-            service_order_id: selectedBooking.service_order_id,
-            bay_id: selectedBayForService.bay_id,
-            employee_id: employee.employee_id,
-            service_ids: serviceIds,
-          })
-
-          // Update the service order with bay and employee assignment
-          const response = await axios.put(`/service-orders/${selectedBooking.service_order_id}`, {
-            bay_id: selectedBayForService.bay_id,
-            employee_id: employee.employee_id,
-            status: 'in_progress',
-            service_ids: serviceIds,
-          })
-
-          console.log('Reservation assigned successfully:', response.data)
-
-          // Reset state immediately - BEFORE refreshing data
-          setSelectedBayForService(null)
-          setSelectedEmployeeId('')
-          setSelectedBooking(null)
-          setShowBookingModal(false)
-          setTodayBookings([])
-
-          // Then refresh the registry data
-          await loadBays()
-          await loadServiceOrders()
-
-          toast.success('Service started successfully!')
-          setIsAssigning(false)
-        } catch (error: unknown) {
-          setIsAssigning(false)
-          console.error('Failed to assign reservation:', error)
-          const errorMessage =
-            error instanceof Error
-              ? error.message
-              : (
-                  error as {
-                    response?: {
-                      data?: { message?: string }
-                    }
-                  }
-                )?.response?.data?.message || 'Unknown error'
-          console.error(
-            'Error response:',
-            (error as { response?: { data?: unknown } })?.response?.data,
-          )
-          toast.error('Failed to start service')
-          alert(`Failed to assign reservation: ${errorMessage}`)
+    // Booking Flow: Assign and Start
+    if (selectedBooking) {
+      setIsAssigning(true)
+      try {
+        let serviceIds: number[] = []
+        if (typeof selectedBooking.service_ids === 'string') {
+          serviceIds = selectedBooking.service_ids.split(',').map(Number)
+        } else if (Array.isArray(selectedBooking.service_ids)) {
+          serviceIds = selectedBooking.service_ids.map(Number)
         }
-      } else {
-        // No booking selected - proceed to service selection for walk-in
-        const employeeData = JSON.stringify({
+
+        await axios.put(`/service-orders/${selectedBooking.service_order_id}`, {
+          bay_id: selectedBayForService.bay_id,
           employee_id: employee.employee_id,
-          first_name: employee.first_name,
-          last_name: employee.last_name,
+          status: 'in_progress',
+          service_ids: serviceIds,
         })
 
-        const url = `/registry/${selectedBayForService.bay_id}/select-services?employee=${encodeURIComponent(employeeData)}`
-
-        router.visit(url, {
-          preserveState: true,
-          preserveScroll: true,
-        })
+        // Reset and Refresh
+        setShowStartServiceDialog(false)
         setSelectedBayForService(null)
         setSelectedEmployeeId('')
         setSelectedBooking(null)
+
+        await Promise.all([loadBays(), loadServiceOrders()])
+        toast.success('Service started successfully!')
+      } catch (error) {
+        console.error('Failed to start service:', error)
+        toast.error('Failed to start service')
+      } finally {
+        setIsAssigning(false)
       }
     }
   }
@@ -657,74 +620,16 @@ export default function Registry() {
                     {/* Action Buttons */}
                     {isAvailable && (
                       <>
-                        {selectedBayForService?.bay_id === bay.bay_id ? (
-                          <div className="mt-6 space-y-3">
-                            <div>
-                              <Label
-                                htmlFor={`employee-${bay.bay_id}`}
-                                className="mb-2 block text-sm font-medium text-foreground"
-                              >
-                                Select Employee
-                              </Label>
-                              <Select
-                                value={selectedEmployeeId}
-                                onValueChange={setSelectedEmployeeId}
-                              >
-                                <SelectTrigger
-                                  id={`employee-${bay.bay_id}`}
-                                  className="h-11 text-foreground"
-                                >
-                                  <SelectValue placeholder="Choose an employee..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {availableEmployees.map((employee) => (
-                                    <SelectItem
-                                      key={employee.employee_id}
-                                      value={employee.employee_id.toString()}
-                                    >
-                                      {employee.first_name} {employee.last_name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleProceedWithEmployee()
-                                }}
-                                disabled={!selectedEmployeeId || isAssigning}
-                                variant="highlight"
-                                className="flex-1 font-medium"
-                              >
-                                {isAssigning ? 'Assigning...' : 'Continue'}
-                              </Button>
-                              <Button
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setSelectedBayForService(null)
-                                  setSelectedEmployeeId('')
-                                }}
-                                type="button"
-                                variant="outline"
-                                className="flex-1 font-medium"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="mt-6">
-                            <Button
-                              onClick={() => handleStartService(bay)}
-                              variant="highlight"
-                              className="h-11 w-full font-medium"
-                            >
-                              Start Service
-                            </Button>
-                          </div>
-                        )}
+                        {/* Old Inline Select Employee Logic Removed */}
+                        <div className="mt-6">
+                          <Button
+                            onClick={() => handleStartService(bay)}
+                            variant="highlight"
+                            className="h-11 w-full font-medium"
+                          >
+                            Start Service
+                          </Button>
+                        </div>
                       </>
                     )}
                     {isOccupied && (
@@ -753,72 +658,167 @@ export default function Registry() {
         )}
       </div>
 
-      {/* Booking Selection Modal */}
-      {showBookingModal && (
+      {/* Start Service Dialog */}
+      {showStartServiceDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="relative mx-4 w-full max-w-2xl transform rounded-xl border border-border bg-background p-6 shadow-2xl">
-            <h2 className="mb-4 text-2xl font-bold">Today's Reservations</h2>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Select a reservation to start, or proceed without selecting to create a walk-in
-              service.
-            </p>
+            <button
+              onClick={() => setShowStartServiceDialog(false)}
+              className="absolute top-4 right-4 rounded-full p-2 hover:bg-muted/50"
+            >
+              ✕
+            </button>
 
-            <div className="custom-scrollbar mb-6 max-h-96 space-y-3 overflow-y-auto">
-              {todayBookings.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="text-muted-foreground">No reservations for today</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Click "Walk-in Service" to create a new order
-                  </p>
-                </div>
-              ) : (
-                todayBookings.map((booking) => (
-                  <button
-                    key={booking.service_order_id}
-                    onClick={() => handleSelectBooking(booking)}
-                    className="w-full rounded-lg border border-border p-4 text-left transition-all hover:border-highlight hover:bg-accent/5"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-semibold text-foreground">{booking.customer_name}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{booking.services}</p>
-                        {booking.phone && (
-                          <p className="mt-1 text-xs text-muted-foreground">{booking.phone}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-highlight">
-                          ₱{parseFloat(booking.total).toLocaleString()}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {new Date(booking.order_date).toLocaleString()}
-                        </p>
-                      </div>
+            <h2 className="mb-6 text-2xl font-bold">
+              {startServiceStep === 'initial' && 'Start Service'}
+              {startServiceStep === 'walk-in' && 'Walk-in Service'}
+              {startServiceStep === 'booking' && 'Select Reservation'}
+              {startServiceStep === 'assign' && 'Assign Staff'}
+            </h2>
+
+            {startServiceStep === 'initial' && (
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => {
+                    setStartServiceStep('booking')
+                    // Refresh bookings just in case
+                    axios
+                      .get('/api/service-orders/today-bookings')
+                      .then((res) => setTodayBookings(res.data || []))
+                  }}
+                  className="flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-border p-8 transition-all hover:border-highlight hover:bg-muted/30"
+                >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                    📅
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold">Existing Reservation</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      For clients with prior booking
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={handleWalkIn}
+                  className="flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-border p-8 transition-all hover:border-highlight hover:bg-muted/30"
+                >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                    🚶
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold">Walk-in Service</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Create new order now</p>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {startServiceStep === 'booking' && (
+              <div className="space-y-4">
+                <div className="custom-scrollbar max-h-96 space-y-3 overflow-y-auto">
+                  {todayBookings.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <p className="text-muted-foreground">No reservations found.</p>
                     </div>
-                  </button>
-                ))
-              )}
-            </div>
+                  ) : (
+                    todayBookings.map((booking) => (
+                      <button
+                        key={booking.service_order_id}
+                        onClick={() => handleSelectBooking(booking)}
+                        className="w-full rounded-lg border border-border p-4 text-left transition-all hover:border-highlight hover:bg-accent/5"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground">{booking.customer_name}</p>
+                            <p className="mt-1 text-sm text-muted-foreground">{booking.services}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-highlight">
+                              ₱{parseFloat(booking.total).toLocaleString()}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {new Date(booking.order_date).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
 
-            <div className="flex gap-3">
-              <Button
-                onClick={handleProceedWithoutBooking}
-                variant="outline"
-                className="flex-1"
-              >
-                Walk-in Service
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowBookingModal(false)
-                  setSelectedBayForService(null)
-                }}
-                variant="ghost"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-            </div>
+            {(startServiceStep === 'walk-in' || startServiceStep === 'assign') && (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">Select Available Staff</Label>
+                  <div className="grid max-h-[50vh] grid-cols-2 gap-3 overflow-y-auto p-1 sm:grid-cols-3">
+                    {availableEmployees.map((employee) => {
+                      const isSelected = selectedEmployeeId === employee.employee_id.toString()
+                      return (
+                        <button
+                          key={employee.employee_id}
+                          onClick={() => setSelectedEmployeeId(employee.employee_id.toString())}
+                          className={cn(
+                            'flex flex-col items-center justify-center rounded-xl border-2 p-4 transition-all duration-200',
+                            isSelected
+                              ? 'border-highlight bg-highlight/10'
+                              : 'border-border hover:border-highlight/50 hover:bg-muted/50',
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              'mb-3 flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold transition-colors',
+                              isSelected
+                                ? 'bg-highlight text-white'
+                                : 'bg-muted text-muted-foreground',
+                            )}
+                          >
+                            {employee.first_name[0]}
+                            {employee.last_name[0]}
+                          </div>
+                          <p className="w-full truncate text-center text-sm font-semibold">
+                            {employee.first_name} {employee.last_name}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">Available</p>
+                        </button>
+                      )
+                    })}
+                    {availableEmployees.length === 0 && (
+                      <div className="col-span-full py-8 text-center text-muted-foreground">
+                        No employees available.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      if (startServiceStep === 'assign') setStartServiceStep('booking')
+                      else setStartServiceStep('initial')
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant="highlight"
+                    className="flex-1"
+                    disabled={!selectedEmployeeId || isAssigning}
+                    onClick={handleProceedWithEmployee}
+                  >
+                    {isAssigning
+                      ? 'Starting...'
+                      : startServiceStep === 'walk-in'
+                        ? 'Continue'
+                        : 'Start Service'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
