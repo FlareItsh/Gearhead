@@ -144,6 +144,8 @@ export default function Bays() {
 
     if (!editBayForm.bay_number) {
       errors.bay_number = 'Bay number is required'
+    } else if (parseInt(editBayForm.bay_number) < 0) {
+      errors.bay_number = 'Bay number cannot be negative'
     }
     if (!editBayForm.bay_type) {
       errors.bay_type = 'Bay type is required'
@@ -287,6 +289,7 @@ export default function Bays() {
                     placeholder="e.g., 1"
                     value={addForm.bay_number}
                     readOnly
+                    min={0}
                   />
                   {addErrors.bay_number && (
                     <p className="text-sm text-red-500">{addErrors.bay_number}</p>
@@ -396,7 +399,7 @@ export default function Bays() {
                       <Button
                         onClick={() => openEditModal(bay)}
                         variant="highlight"
-                        className="h-11 flex-1 border-border/70 font-medium hover:bg-accent hover:text-accent-foreground"
+                        className="h-11 flex-1 border-border/70 font-medium"
                       >
                         <Edit2 className="mr-2 h-4 w-4" />
                         Edit Bay

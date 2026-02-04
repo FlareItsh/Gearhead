@@ -606,6 +606,7 @@ export default function Registry({
                                       onClick={() => setSelectedBayForReassignment(bay.bay_id)}
                                       size="sm"
                                       variant="ghost"
+                                      className="text-foreground"
                                     >
                                       Change
                                     </Button>
