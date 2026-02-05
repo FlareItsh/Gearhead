@@ -35,7 +35,7 @@ return new class extends Migration
             $table->dateTime('order_date');
 
             $table->enum('order_type', ['W', 'R'])->comment('W = Walk-in, R = Reservation');
-
+            $table->string('idempotency_key')->nullable()->unique(); // Prevent duplicate orders
             $table->timestamps();
         });
     }

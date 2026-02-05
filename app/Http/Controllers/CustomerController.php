@@ -178,4 +178,39 @@ class CustomerController extends Controller
             'phone_number' => $customer->phone_number,
         ], 201);
     }
+    public function update(Request $request, int $id)
+    {
+        $user = $this->users->findById($id);
+
+        if (! $user) {
+            return back()->with('error', 'User not found.');
+        }
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,'.$id.',user_id',
+            'phone_number' => 'nullable|string|max:20',
+            'role' => 'required|string|in:admin,customer',
+            'password' => 'nullable|string|min:8',
+            'admin_password' => 'required|string',
+        ]);
+
+        // Verify admin password
+        if (!Hash::check($validated['admin_password'], $request->user()->password)) {
+            return response()->json([
+                'message' => 'Incorrect admin password provided.'
+            ], 403);
+        }
+
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
+        unset($validated['admin_password']); // Don't try to update user with this
+
+        $this->users->update($user, $validated);
+
+        return response()->json(['message' => 'Customer updated successfully.']);
+    }
 }

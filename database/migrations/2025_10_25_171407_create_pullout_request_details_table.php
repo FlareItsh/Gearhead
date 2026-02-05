@@ -23,6 +23,9 @@ return new class extends Migration
                 ->constrained('pullout_requests', 'pullout_request_id')
                 ->onDelete('cascade');
             $table->decimal('quantity', 10, 2);
+            $table->boolean('is_returned')->default(false);
+            $table->dateTime('returned_at')->nullable();
+            $table->string('returned_by')->nullable();
             $table->timestamps();
         });
     }

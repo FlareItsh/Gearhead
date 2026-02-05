@@ -101,6 +101,9 @@ export default function RegistryPayment({ bayId }: Props) {
       })
       const data = res.data
       setIsLoyaltyEligible(data.is_eligible)
+      if (data.is_eligible) {
+        setUseLoyaltyPoints(true)
+      }
       setLoyaltyInfo({
         completed_bookings: data.completed_bookings,
         points_earned: data.points_earned,
@@ -401,25 +404,20 @@ export default function RegistryPayment({ bayId }: Props) {
                       </div>
                       <div>
                         <h3 className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                          🎉 Loyalty Reward Available!
+                          🎉 Loyalty Reward Applied!
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           This customer has completed {loyaltyInfo?.completed_bookings} services.
-                          This is their free 9th service!
+                          Their 9th service is <strong>automatically free</strong>.
                         </p>
                       </div>
                     </div>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border-2 border-yellow-400 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:bg-black">
-                      <input
-                        type="checkbox"
-                        checked={useLoyaltyPoints}
-                        onChange={(e) => setUseLoyaltyPoints(e.target.checked)}
-                        className="h-5 w-5 accent-yellow-400"
-                      />
+                    <div className="flex items-center gap-3 rounded-lg border-2 border-yellow-400 bg-white px-4 py-3 shadow-sm dark:bg-black">
+                      <CheckCircle2 className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                       <span className="font-bold text-yellow-600 dark:text-yellow-400">
-                        Use Loyalty Points
+                        Automatically Applied
                       </span>
-                    </label>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -462,141 +460,135 @@ export default function RegistryPayment({ bayId }: Props) {
             )}
 
             {/* Payment Method */}
-            <Card className="bg-background">
-              <CardContent className="pt-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <h3 className="font-semibold text-yellow-400">Payment Method</h3>
-                  <div className="flex gap-8 text-lg">
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={method === 'cash'}
-                        onChange={() => {
-                          setMethod('cash')
-                          setUseLoyaltyPoints(false)
-                        }}
-                        disabled={useLoyaltyPoints}
-                      />
-                      <span className={`font-medium ${useLoyaltyPoints ? 'opacity-50' : ''}`}>
-                        Cash
-                      </span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={method === 'gcash'}
-                        onChange={() => {
-                          setMethod('gcash')
-                          setUseLoyaltyPoints(false)
-                        }}
-                        disabled={useLoyaltyPoints}
-                      />
-                      <span className={`font-medium ${useLoyaltyPoints ? 'opacity-50' : ''}`}>
-                        GCash
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                {!useLoyaltyPoints && method === 'cash' && (
-                  <div className="grid grid-cols-1 items-end gap-5 md:grid-cols-3">
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium">Amount Received</label>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={paidAmount || ''}
-                        onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
-                        className="mt-2 h-16 text-3xl font-bold"
-                        autoFocus
-                      />
-                    </div>
-                    {paidAmount > 0 && (
-                      <div className="space-y-3">
-                        <div className="rounded-lg bg-muted p-4 text-center">
-                          <p className="text-xs text-muted-foreground">Change</p>
-                          <p className="text-3xl font-bold text-green-600">
-                            ₱{change.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {!useLoyaltyPoints && method === 'gcash' && (
-                  <div className="space-y-5">
-                    <div>
-                      <label className="text-sm font-medium">
-                        Reference Number{' '}
-                        <span className="text-muted-foreground">(required if no screenshot)</span>
+            {!useLoyaltyPoints && (
+              <Card className="bg-background">
+                <CardContent className="pt-5">
+                  <div className="mb-5 flex items-center justify-between">
+                    <h3 className="font-semibold text-yellow-400">Payment Method</h3>
+                    <div className="flex gap-8 text-lg">
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="radio"
+                          checked={method === 'cash'}
+                          onChange={() => {
+                            setMethod('cash')
+                          }}
+                        />
+                        <span className="font-medium">Cash</span>
                       </label>
-                      <Input
-                        placeholder="GCR123456789"
-                        value={reference}
-                        onChange={(e) => setReference(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-border/50" />
-                      </div>
-                      <div className="relative flex justify-center text-xs">
-                        <span className="bg-background px-2 text-muted-foreground">OR</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium">
-                        Screenshot{' '}
-                        <span className="text-muted-foreground">(required if no reference)</span>
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="radio"
+                          checked={method === 'gcash'}
+                          onChange={() => {
+                            setMethod('gcash')
+                          }}
+                        />
+                        <span className="font-medium">GCash</span>
                       </label>
-                      <div className="mt-2 grid grid-cols-2 gap-3">
-                        <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center hover:bg-accent/5">
-                          <Upload className="mb-2 h-6 w-6" />
-                          <p className="text-xs font-medium">Upload File</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleFile}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={startCamera}
-                          className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center hover:bg-accent/5"
-                        >
-                          <Camera className="mb-2 h-6 w-6" />
-                          <p className="text-xs font-medium">Take Photo</p>
-                        </button>
+                    </div>
+                  </div>
+
+                  {method === 'cash' && (
+                    <div className="grid grid-cols-1 items-end gap-5 md:grid-cols-3">
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium">Amount Received</label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={paidAmount || ''}
+                          onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
+                          className="mt-2 h-16 text-3xl font-bold"
+                          autoFocus
+                        />
                       </div>
-                      {screenshot && (
-                        <div className="mt-3 rounded-lg border bg-muted/50 p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
-                              <p className="text-sm font-medium">{screenshot.name}</p>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault()
-                                setScreenshot(null)
-                              }}
-                              className="rounded p-1 hover:bg-muted"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
+                      {paidAmount > 0 && (
+                        <div className="space-y-3">
+                          <div className="rounded-lg bg-muted p-4 text-center">
+                            <p className="text-xs text-muted-foreground">Change</p>
+                            <p className="text-3xl font-bold text-green-600">
+                              ₱{change.toLocaleString()}
+                            </p>
                           </div>
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+
+                  {method === 'gcash' && (
+                    <div className="space-y-5">
+                      <div>
+                        <label className="text-sm font-medium">
+                          Reference Number{' '}
+                          <span className="text-muted-foreground">(required if no screenshot)</span>
+                        </label>
+                        <Input
+                          placeholder="GCR123456789"
+                          value={reference}
+                          onChange={(e) => setReference(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-border/50" />
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="bg-background px-2 text-muted-foreground">OR</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium">
+                          Screenshot{' '}
+                          <span className="text-muted-foreground">(required if no reference)</span>
+                        </label>
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                          <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center hover:bg-accent/5">
+                            <Upload className="mb-2 h-6 w-6" />
+                            <p className="text-xs font-medium">Upload File</p>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleFile}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center hover:bg-accent/5"
+                          >
+                            <Camera className="mb-2 h-6 w-6" />
+                            <p className="text-xs font-medium">Take Photo</p>
+                          </button>
+                        </div>
+                        {screenshot && (
+                          <div className="mt-3 rounded-lg border bg-muted/50 p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <p className="text-sm font-medium">{screenshot.name}</p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  setScreenshot(null)
+                                }}
+                                className="rounded p-1 hover:bg-muted"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right: Sticky Total + Pay Button - Takes 4/12 */}

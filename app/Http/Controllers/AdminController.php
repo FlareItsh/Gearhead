@@ -136,4 +136,26 @@ class AdminController extends Controller
             'users' => $this->users->all(),
         ]);
     }
+    public function dashboard(Request $request, CustomerController $customer)
+    {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('customer')) {
+            return $customer->dashboard($request);
+        }
+
+        // Fetch low stock supplies
+        // Logic: quantity_stock <= reorder_point (fallback to 10 if null, though usually handled via valid reorder points)
+        $lowStockSupplies = \App\Models\Supply::query()
+            ->whereColumn('quantity_stock', '<=', 'reorder_point')
+            ->orWhere(function ($query) {
+                 $query->whereNull('reorder_point')->where('quantity_stock', '<=', 10);
+            })
+            ->orderBy('quantity_stock', 'asc')
+            ->take(5)
+            ->get();
+
+        return Inertia::render('dashboard', [
+            'lowStockSupplies' => $lowStockSupplies,
+        ]);
+    }
 }

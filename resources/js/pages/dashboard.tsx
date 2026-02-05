@@ -1,3 +1,4 @@
+import { LowStockTable } from '@/components/dashboard/low-stock-table'
 import Heading from '@/components/heading'
 import HeadingSmall from '@/components/heading-small'
 import { Badge } from '@/components/ui/badge'
@@ -43,7 +44,19 @@ interface PendingOrder {
   status: string
 }
 
-export default function Dashboard() {
+interface Supply {
+  supply_id: number
+  supply_name: string
+  quantity_stock: string | number
+  unit: string
+  reorder_point: number | null
+}
+
+interface DashboardProps {
+  lowStockSupplies?: Supply[]
+}
+
+export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
   const page = usePage()
   const role = (page.props as { auth?: { user?: { role?: string } } })?.auth?.user?.role
 
@@ -301,6 +314,7 @@ export default function Dashboard() {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
+                      year: 'numeric',
                     })
                   : 'Today'}
               </p>
@@ -327,7 +341,84 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Charts */}
+          {/* Middle Row: Upcoming Appointments & Low Stock */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Upcoming Appointments Table */}
+            <Card className="border border-sidebar-border/70 bg-background">
+              <CardContent className="p-4 text-foreground">
+                <HeadingSmall
+                  title="Upcoming Appointments"
+                  description="Today's scheduled services"
+                />
+                {pendingOrders.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <CalendarDays className="mx-auto mb-3 h-12 w-12 text-muted-foreground opacity-40" />
+                    <p className="text-lg font-medium text-muted-foreground">
+                      No appointments today
+                    </p>
+                    <p className="text-sm text-muted-foreground">Enjoy the quiet moment!</p>
+                  </div>
+                ) : (
+                  <div className="custom-scrollbar overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Services</TableHead>
+                          <TableHead className="text-center">Expected Time</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingOrders.map((order, index) => (
+                          <TableRow key={`${order.service_order_id}-${index}`}>
+                            <TableCell className="font-medium">{order.customer_name}</TableCell>
+                            <TableCell className="text-sm">
+                              {renderServiceBullets(order.service_name)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-foreground">
+                                {new Date(order.time).toLocaleString()}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge
+                                variant={
+                                  order.status === 'pending'
+                                    ? 'warning'
+                                    : order.status === 'in_progress'
+                                      ? 'default'
+                                      : order.status === 'completed'
+                                        ? 'success'
+                                        : 'secondary'
+                                }
+                                className="font-medium capitalize shadow-sm"
+                              >
+                                {order.status.replace(/_/g, ' ')}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Low Stock Items */}
+            <Card className="border border-sidebar-border/70 bg-background">
+              <CardContent className="p-4 text-foreground">
+                <HeadingSmall
+                  title="Low Stock Items"
+                  description="Supplies running low"
+                />
+                <LowStockTable supplies={lowStockSupplies} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Bottom Row: Charts */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Area Chart */}
             <div className="space-y-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
@@ -471,67 +562,6 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-
-          {/* Upcoming Appointments Table */}
-          <Card className="border border-sidebar-border/70 bg-background">
-            <CardContent className="p-4 text-foreground">
-              <HeadingSmall
-                title="Upcoming Appointments"
-                description="Today's scheduled services"
-              />
-              {pendingOrders.length === 0 ? (
-                <div className="py-12 text-center">
-                  <CalendarDays className="mx-auto mb-3 h-12 w-12 text-muted-foreground opacity-40" />
-                  <p className="text-lg font-medium text-muted-foreground">No appointments today</p>
-                  <p className="text-sm text-muted-foreground">Enjoy the quiet moment!</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Services</TableHead>
-                        <TableHead className="text-center">Expected Time</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingOrders.map((order, index) => (
-                        <TableRow key={`${order.service_order_id}-${index}`}>
-                          <TableCell className="font-medium">{order.customer_name}</TableCell>
-                          <TableCell className="text-sm">
-                            {renderServiceBullets(order.service_name)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-foreground">
-                              {new Date(order.time).toLocaleString()}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge
-                              variant={
-                                order.status === 'pending'
-                                  ? 'warning'
-                                  : order.status === 'in_progress'
-                                    ? 'default'
-                                    : order.status === 'completed'
-                                      ? 'success'
-                                      : 'secondary'
-                              }
-                              className="font-medium capitalize shadow-sm"
-                            >
-                              {order.status.replace(/_/g, ' ')}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       )}
     </AppLayout>

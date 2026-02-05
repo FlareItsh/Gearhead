@@ -16,11 +16,14 @@ return new class extends Migration
             $table->foreignId('service_order_id')
                 ->constrained('service_orders', 'service_order_id')
                 ->onDelete('cascade');
-            $table->foreignId('service_id')
-                ->constrained('services', 'service_id')
+            $table->foreignId('service_variant')
+                ->constrained('service_variants', 'service_variant')
                 ->onDelete('cascade');
             $table->integer('quantity')->default(1);
             $table->timestamps();
+
+            // Prevent duplicate variants in same order
+            $table->unique(['service_order_id', 'service_variant']);
         });
     }
 

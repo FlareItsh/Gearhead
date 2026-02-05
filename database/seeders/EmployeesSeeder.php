@@ -15,7 +15,7 @@ class EmployeesSeeder extends Seeder
             ['employee_id' => 2, 'first_name' => 'Kit', 'middle_name' => 'R.', 'last_name' => 'Azer', 'phone_number' => '9102030405', 'status' => 'active', 'address' => 'Ilya', 'date_hired' => '2025-09-15', 'employment_ended_at' => null],
             ['employee_id' => 3, 'first_name' => 'Paedyn', 'middle_name' => null, 'last_name' => 'Gray', 'phone_number' => '9908070605', 'status' => 'active', 'address' => 'Loot Alley', 'date_hired' => '2025-09-20', 'employment_ended_at' => null],
             ['employee_id' => 4, 'first_name' => 'ding', 'middle_name' => null, 'last_name' => 'castro', 'phone_number' => '9987654432', 'status' => 'active', 'address' => 'Loot Alley', 'date_hired' => '2024-12-05', 'employment_ended_at' => null],
-            ['employee_id' => 5, 'first_name' => 'Adena', 'middle_name' => null, 'last_name' => 'Khitan', 'phone_number' => '9987654432', 'status' => 'active', 'address' => 'Loot Alley', 'date_hired' => '2024-12-05', 'employment_ended_at' => null],
+            ['employee_id' => 5, 'first_name' => 'Adena', 'middle_name' => null, 'last_name' => 'Khitan', 'phone_number' => '9987654433', 'status' => 'active', 'address' => 'Loot Alley', 'date_hired' => '2024-12-05', 'employment_ended_at' => null],
         ];
         // Add a few more, up to 10
         for ($i = 6; $i <= 10; $i++) {

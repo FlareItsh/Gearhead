@@ -451,6 +451,14 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
         console.log('Customer ID:', customer.user_id)
         console.log('Customer Name:', `${customer.first_name} ${customer.last_name}`)
 
+        // Generate an idempotency key
+        const idempotencyKey =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+
+        console.log('Using Idempotency Key:', idempotencyKey)
+
         // Create the service order and assign to bay
         const response = await axios.post('/api/service-orders/registry', {
           customer_id: customer.user_id,
@@ -458,6 +466,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
           service_ids: serviceIds,
           variant_ids: variantIds, // Pass variant IDs too
           employee_id: assignedEmployee?.employee_id || null,
+          idempotency_key: idempotencyKey,
         })
 
         console.log('Service order created:', response.data)

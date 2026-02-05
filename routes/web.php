@@ -15,14 +15,7 @@ Route::get('/', fn () => Inertia::render('welcome'))->name('home');
 // * Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('dashboard', function (Request $request, AdminController $admin, CustomerController $customer) {
-        $user = $request->user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('customer')) {
-            return $customer->dashboard($request);
-        }
-
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
     Route::get('customer-dashboard', [CustomerController::class, 'dashboard'])
         ->name('customer.dashboard');
@@ -51,6 +44,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/payments', [CustomerController::class, 'payments'])
         ->name('customer.payments')
         ->middleware('auth', 'role:customer');
+
+    Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::get('/api/customers', [CustomerController::class, 'index'])->name('customers.index');
 
     // * Admin Specific routes
     Route::get('/registry', [AdminController::class, 'registry'])

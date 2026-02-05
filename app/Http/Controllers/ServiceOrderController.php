@@ -220,7 +220,19 @@ class ServiceOrderController extends Controller
     public function book(Request $request)
     {
         $validated = $request->validate([
-            'order_date' => 'required|date_format:Y-m-d H:i',
+            'order_date' => [
+                'required',
+                'date_format:Y-m-d H:i',
+                'after_or_equal:now',
+                function ($attribute, $value, $fail) {
+                    $date = \Carbon\Carbon::parse($value);
+                    $time = $date->format('H:i');
+                    // Opening: 06:30, Closing: 22:00
+                    if ($time < '06:30' || $time > '22:00') {
+                        $fail('The selected time must be between 6:30 AM and 10:00 PM.');
+                    }
+                },
+            ],
             'variant_ids' => 'required|array|min:1',
             'variant_ids.*' => 'required|integer|exists:service_variants,service_variant',
         ]);
@@ -274,9 +286,21 @@ class ServiceOrderController extends Controller
             'variant_ids' => 'required|array|min:1',
             'variant_ids.*' => 'required|integer|exists:service_variants,service_variant',
             'employee_id' => 'nullable|integer|exists:employees,employee_id',
+            'idempotency_key' => 'nullable|string',
         ]);
 
         try {
+            // Idempotency check
+            if ($request->has('idempotency_key')) {
+                $existingOrder = \App\Models\ServiceOrder::where('idempotency_key', $request->input('idempotency_key'))->first();
+                if ($existingOrder) {
+                    return response()->json([
+                        'message' => 'Service order already created',
+                        'order' => $existingOrder->load('details.serviceVariant.service', 'user', 'bay', 'employee'),
+                    ], 200);
+                }
+            }
+
             $orderData = [
                 'user_id' => $validated['customer_id'],
                 'employee_id' => $validated['employee_id'] ?? null,
@@ -284,6 +308,7 @@ class ServiceOrderController extends Controller
                 'status' => 'in_progress',
                 'order_date' => now(),
                 'order_type' => 'W', // Walk-in
+                'idempotency_key' => $request->input('idempotency_key'),
             ];
 
             // Retrieve variants to get their service_id

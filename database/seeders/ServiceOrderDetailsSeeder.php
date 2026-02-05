@@ -19,10 +19,17 @@ class ServiceOrderDetailsSeeder extends Seeder
 
         $details = [];
         for ($orderId = 1; $orderId <= 200; $orderId++) {
-            $numDetails = rand(1, 3); // Reduced for realistic data
+            $numDetails = rand(1, min(3, count($variantIds))); // Reduced for realistic data, capped by total variants
+            $selectedVariants = [];
+            // Pick unique random keys
+            $randomKeys = array_rand($variantIds, $numDetails);
+            if (!is_array($randomKeys)) {
+                $randomKeys = [$randomKeys];
+            }
+            
             for ($j = 0; $j < $numDetails; $j++) {
                 $detailId = (($orderId - 1) * 3) + $j + 1;
-                $serviceVariant = $variantIds[array_rand($variantIds)];
+                $serviceVariant = $variantIds[$randomKeys[$j]];
                 $details[] = [
                     'service_order_detail_id' => $detailId,
                     'service_order_id' => $orderId,

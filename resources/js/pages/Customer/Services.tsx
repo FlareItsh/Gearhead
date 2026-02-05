@@ -1,6 +1,7 @@
 import Heading from '@/components/heading'
 import HeadingSmall from '@/components/heading-small'
 import { Button } from '@/components/ui/button'
+import Calendar from '@/components/ui/calendar'
 import AppLayout from '@/layouts/app-layout'
 import { Head, usePage } from '@inertiajs/react'
 import axios from 'axios'
@@ -45,6 +46,7 @@ export default function Services() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [isBooking, setIsBooking] = useState(false)
   const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false)
@@ -166,29 +168,33 @@ export default function Services() {
   // ─────────────────────────────────────────────
   const availableTimeSlots = useMemo(() => {
     const now = new Date()
-    let hour = now.getHours()
-    let minute = now.getMinutes()
+    const isToday = selectedDate === now.toISOString().split('T')[0]
 
-    // Start at 6:30 AM earliest
-    const startHour = 6
-    const startMinute = 30
+    let hour = 6
+    let minute = 30
 
-    // If current time is before 6:30 AM, start at 6:30 AM
-    if (hour < startHour || (hour === startHour && minute < startMinute)) {
-      hour = startHour
-      minute = startMinute
-    } else {
-      // Round up to next 30-min slot
-      if (minute > 0) {
-        minute = minute < 30 ? 30 : 60
-      }
-      if (minute === 60) {
+    // If today, adjust start time based on current time
+    if (isToday) {
+      const currentHour = now.getHours()
+      const currentMinute = now.getMinutes()
+
+      // If current time is past 6:30 AM
+      if (currentHour > 6 || (currentHour === 6 && currentMinute >= 30)) {
+        hour = currentHour
+        minute = currentMinute
+
+        // Round up to next 30-min slot
+        if (minute > 0) {
+          minute = minute < 30 ? 30 : 60
+        }
+        if (minute === 60) {
+          hour += 1
+          minute = 0
+        }
+
+        // Add 1-hour buffer
         hour += 1
-        minute = 0
       }
-
-      // Add 1-hour buffer
-      hour += 1
     }
 
     const slots: string[] = []
@@ -200,7 +206,10 @@ export default function Services() {
       const period = isPM ? 'PM' : 'AM'
       const timeStr = `${displayHour}:${minute === 0 ? '00' : '30'} ${period}`
 
-      slots.push(timeStr)
+      // Only add if it's 6:30 AM or later (double check for safety)
+      if (hour > 6 || (hour === 6 && minute >= 30)) {
+        slots.push(timeStr)
+      }
 
       // Next 30-min
       minute += 30
@@ -209,12 +218,12 @@ export default function Services() {
         hour += 1
       }
 
-      // Stop at 10:00 PM
+      // Stop at 10:00 PM (22:00)
       if (hour > 22) break
     }
 
     return slots
-  }, [])
+  }, [selectedDate])
 
   const handleBook = async () => {
     if (!selectedTime || selectedServices.length === 0) {
@@ -246,9 +255,9 @@ export default function Services() {
         )
       }
 
-      // Convert time to proper format with today's date
+      // Convert time to proper format with selected date
       // selectedTime is like "3:00 PM"
-      const today = new Date()
+      const [yearStr, monthStr, dayStr] = selectedDate.split('-')
       const [timeStr, period] = selectedTime.split(' ')
       const [hourStr, minuteStr] = timeStr.split(':')
       let hour = parseInt(hourStr)
@@ -260,13 +269,10 @@ export default function Services() {
         hour = 0
       }
 
-      // Format as YYYY-MM-DD HH:MM using today's date
-      const year = today.getFullYear()
-      const month = String(today.getMonth() + 1).padStart(2, '0')
-      const date = String(today.getDate()).padStart(2, '0')
+      // Format as YYYY-MM-DD HH:MM
       const hours = String(hour).padStart(2, '0')
       const minutes = String(minute).padStart(2, '0')
-      const orderDate = `${year}-${month}-${date} ${hours}:${minutes}`
+      const orderDate = `${selectedDate} ${hours}:${minutes}`
 
       console.log('Sending booking with order_date:', orderDate)
       console.log('Sending booking with variant_ids:', variantIds)
@@ -429,161 +435,187 @@ export default function Services() {
 
           <div className="pointer-events-none fixed inset-0 z-[9999] flex items-end justify-center p-4 pb-8 sm:items-center">
             <div
-              className="pointer-events-auto w-full max-w-lg rounded-2xl border border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl duration-300 animate-in fade-in slide-in-from-bottom-12 zoom-in-95"
+              className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl duration-300 animate-in fade-in slide-in-from-bottom-12 zoom-in-95"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-border/30 px-5 py-4">
-                <h2 className="text-xl font-bold">
-                  Selected Services{' '}
-                  <span className="text-yellow-600">({selectedServices.length})</span>
-                </h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="rounded-lg p-1.5 transition hover:bg-muted/70"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
+              {/* Modal Content Grid */}
+              <div className="grid gap-0 md:grid-cols-2">
+                {/* Left Column: Services List */}
+                <div className="flex flex-col border-b border-border/30 md:border-b-0">
+                  <div className="flex items-center justify-between border-b border-border/30 px-5 py-4">
+                    <h2 className="text-xl font-bold">
+                      Selected Services{' '}
+                      <span className="text-yellow-600">({selectedServices.length})</span>
+                    </h2>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="rounded-lg p-1.5 transition hover:bg-muted/70 md:hidden"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
 
-              {/* Services List */}
-              <div className="custom-scrollbar max-h-[40vh] space-y-3 overflow-y-auto px-5 py-4">
-                {selectedServices.map((s) => (
                   <div
-                    key={`${s.service_name}-${s.selectedVariant.size}`}
-                    className="flex items-center justify-between rounded-xl border border-border/40 p-4 shadow-sm"
+                    className="custom-scrollbar flex-1 overflow-y-auto p-5"
+                    style={{ maxHeight: 'calc(100vh - 300px)' }}
                   >
-                    <div className="flex-1 pr-3">
-                      <p className="font-semibold text-foreground">
-                        {s.service_name}{' '}
-                        <span className="text-sm text-muted-foreground">
-                          ({s.selectedVariant.size})
-                        </span>
-                      </p>
-                      <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        {s.selectedVariant.estimated_duration} mins
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold">
-                        ₱{Number(s.selectedVariant.price).toLocaleString()}
-                      </span>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeService(s)}
-                        className="h-8 px-3 text-xs"
-                      >
-                        Remove
-                      </Button>
+                    <div className="space-y-3">
+                      {selectedServices.map((s) => (
+                        <div
+                          key={`${s.service_name}-${s.selectedVariant.size}`}
+                          className="flex items-center justify-between rounded-xl border border-border/40 p-4 shadow-sm"
+                        >
+                          <div className="flex-1 pr-3">
+                            <p className="font-semibold text-foreground">
+                              {s.service_name}{' '}
+                              <span className="text-sm text-muted-foreground">
+                                ({s.selectedVariant.size})
+                              </span>
+                            </p>
+                            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5" />
+                              {s.selectedVariant.estimated_duration} mins
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg font-bold">
+                              ₱{Number(s.selectedVariant.price).toLocaleString()}
+                            </span>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeService(s)}
+                              className="h-8 px-3 text-xs"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Time Picker + Total */}
-              <div className="space-y-5 border-t border-border/30 bg-muted/20 px-5 py-5">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">
-                    Preferred Time <span className="text-muted-foreground">(Today Only)</span>
-                  </label>
-                  <div
-                    className="relative"
-                    ref={dropdownRef}
-                  >
+                  {/* Total (Mobile only, or kept here if prefered, but usually better at bottom) */}
+                  <div className="flex min-h-[80px] items-center justify-between border-t border-border/30 bg-muted/20 px-5 py-4">
+                    <span className="text-base font-medium text-foreground">Total</span>
+                    <span className="text-2xl font-bold text-foreground">
+                      ₱{totalPrice.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right Column: Date & Time */}
+                <div className="flex flex-col bg-muted/10 p-5">
+                  {/* Mobile close button is in left col, desktop close can be here or omitted if clicking outside works */}
+                  <div className="mb-2 hidden justify-end md:flex">
                     <button
-                      type="button"
-                      onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
-                      className={`w-full rounded-lg border bg-background px-4 py-4 pr-12 text-base font-medium transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none ${
-                        selectedTime
-                          ? 'border-primary/70 bg-primary/5'
-                          : 'border-border hover:border-primary/40'
-                      }`}
+                      onClick={() => setIsModalOpen(false)}
+                      className="rounded-lg p-1.5 transition hover:bg-muted/70"
                     >
-                      {selectedTime ? selectedTime : 'Choose available time...'}
+                      <X className="h-5 w-5" />
                     </button>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                      <ChevronDown
-                        className={`h-5 w-5 text-muted-foreground transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
-                      />
-                    </div>
+                  </div>
 
-                    {isTimeDropdownOpen && (
+                  <div className="space-y-5">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-foreground">
+                        Select Date
+                      </label>
+                      <div className="mb-6 flex justify-center">
+                        <Calendar
+                          selectedDate={selectedDate}
+                          onSelect={(date: string) => {
+                            setSelectedDate(date)
+                            setSelectedTime('') // Reset time when date changes
+                          }}
+                          minDate={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+
+                      <label className="mb-2 block text-sm font-medium text-foreground">
+                        Preferred Time
+                      </label>
                       <div
-                        className={`custom-scrollbar absolute right-0 left-0 z-50 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-lg ${
-                          dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
-                        }`}
+                        className="relative"
+                        ref={dropdownRef}
                       >
-                        {availableTimeSlots.length > 0 ? (
-                          availableTimeSlots.map((time) => (
-                            <button
-                              key={time}
-                              type="button"
-                              onClick={() => {
-                                setSelectedTime(time)
-                                setIsTimeDropdownOpen(false)
-                              }}
-                              className={`block w-full px-4 py-3 text-left transition-colors hover:bg-primary/10 ${
-                                selectedTime === time
-                                  ? 'bg-primary/20 font-semibold text-primary'
-                                  : 'text-foreground'
-                              }`}
-                            >
-                              {time} {time === availableTimeSlots[0] && '(Earliest available)'}
-                            </button>
-                          ))
-                        ) : (
-                          <div className="px-4 py-3 text-center text-sm text-muted-foreground">
-                            No available times
+                        <button
+                          type="button"
+                          onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                          className={`w-full rounded-lg border bg-background px-4 py-4 pr-12 text-base font-medium transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none ${
+                            selectedTime
+                              ? 'border-primary/70 bg-primary/5'
+                              : 'border-border hover:border-primary/40'
+                          }`}
+                        >
+                          {selectedTime ? selectedTime : 'Choose available time...'}
+                        </button>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                          <ChevronDown
+                            className={`h-5 w-5 text-muted-foreground transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                          />
+                        </div>
+
+                        {isTimeDropdownOpen && (
+                          <div
+                            className={`custom-scrollbar absolute right-0 left-0 z-50 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-lg ${
+                              dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+                            }`}
+                          >
+                            {availableTimeSlots.length > 0 ? (
+                              availableTimeSlots.map((time) => (
+                                <button
+                                  key={time}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTime(time)
+                                    setIsTimeDropdownOpen(false)
+                                  }}
+                                  className={`block w-full px-4 py-3 text-left transition-colors hover:bg-primary/10 ${
+                                    selectedTime === time
+                                      ? 'bg-primary/20 font-semibold text-primary'
+                                      : 'text-foreground'
+                                  }`}
+                                >
+                                  {time} {time === availableTimeSlots[0] && '(Earliest available)'}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-3 text-center text-sm text-muted-foreground">
+                                No available times
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
+                      {selectedTime && (
+                        <p className="mt-3 flex items-center gap-2 text-sm font-medium text-emerald-600">
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          Booking scheduled for{' '}
+                          <strong>
+                            {selectedDate} at {selectedTime}
+                          </strong>
+                        </p>
+                      )}
+                      {availableTimeSlots.length === 0 && (
+                        <p className="mt-3 text-sm font-medium text-orange-600">
+                          Gearhead is closed for this date. Please select another date!
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  {selectedTime && (
-                    <p className="mt-3 flex items-center gap-2 text-sm font-medium text-emerald-600">
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Booking scheduled for <strong>{selectedTime}</strong>
-                    </p>
-                  )}
-                  {availableTimeSlots.length === 0 && (
-                    <p className="mt-3 text-sm font-medium text-orange-600">
-                      Gearhead is closed. Please come back tomorrow!
-                    </p>
-                  )}
-                </div>
-
-                {/* Total */}
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-medium text-muted-foreground">Total</span>
-                  <span className="text-2xl font-bold text-primary">
-                    ₱{totalPrice.toLocaleString()}
-                  </span>
                 </div>
               </div>
 
@@ -706,7 +738,7 @@ export default function Services() {
                   return (
                     <div
                       key={variant.service_variant}
-                      className="flex items-center justify-between rounded-lg border border-border/60 bg-card p-3 shadow-sm transition-all hover:border-primary/50"
+                      className="flex items-center justify-between rounded-lg border border-border/60 bg-background p-3 shadow-sm transition-all hover:border-primary/50"
                     >
                       <div>
                         <p className="text-base font-bold">{variant.size}</p>

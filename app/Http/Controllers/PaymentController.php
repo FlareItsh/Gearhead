@@ -251,13 +251,18 @@ class PaymentController extends Controller
                 return response()->json(['message' => 'Service order not found'], 404);
             }
             
-            // If loyalty redemption, verify eligibility
-            if ($isLoyaltyRedemption) {
-                if (!$this->checkLoyaltyEligibility($serviceOrder->user_id)) {
-                    return response()->json([
-                        'message' => 'Customer is not eligible for loyalty point redemption',
-                    ], 422);
-                }
+            // Check loyalty eligibility and automatically apply it if eligible
+            $isEligibleForLoyalty = $this->checkLoyaltyEligibility($serviceOrder->user_id);
+            
+            if ($isEligibleForLoyalty) {
+                $isLoyaltyRedemption = true;
+            }
+            
+            // If loyalty redemption was requested but NOT eligible (shouldn't happen with auto-apply but for safety)
+            if ($useLoyalty === 'true' && !$isEligibleForLoyalty) {
+                return response()->json([
+                    'message' => 'Customer is not eligible for loyalty point redemption',
+                ], 422);
             }
 
             // Handle file upload

@@ -15,11 +15,17 @@ return new class extends Migration
             $table->id('payment_id');
             $table->foreignId('service_order_id')
                 ->constrained('service_orders', 'service_order_id')
-                ->onDelete('cascade');
+                ->onDelete('cascade')
+                ->unique(); // One payment per order to prevent double charging
+            $table->foreignId('employee_id')
+                ->nullable()
+                ->constrained('employees', 'employee_id')
+                ->nullOnDelete();
             $table->decimal('amount', 10, 2);
-            $table->enum('payment_method', ['cash', 'gcash']);
+            $table->enum('payment_method', ['cash', 'gcash', 'loyalty']);
             $table->boolean('is_point_redeemed')->default(false);
             $table->string('gcash_reference')->nullable();
+            $table->string('gcash_screenshot')->nullable();
             $table->timestamps();
         });
     }

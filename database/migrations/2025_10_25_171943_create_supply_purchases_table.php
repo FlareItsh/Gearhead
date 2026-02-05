@@ -17,6 +17,7 @@ return new class extends Migration
                 ->constrained('suppliers', 'supplier_id')
                 ->onDelete('cascade');
             $table->datetime('purchase_date');
+            $table->string('purchase_reference')->nullable()->unique();
             $table->timestamps();
         });
     }

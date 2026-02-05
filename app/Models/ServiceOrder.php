@@ -20,6 +20,7 @@ class ServiceOrder extends Model
         'status',
         'order_date',
         'order_type',
+        'idempotency_key',
     ];
 
     protected $casts = [
