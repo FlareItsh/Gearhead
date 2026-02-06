@@ -883,7 +883,7 @@ export default function InventoryPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {(['All', 'supply', 'consumables'] as const).map((f) => (
+                  {(['All', 'Supply', 'Consumables'] as const).map((f) => (
                     <DropdownMenuItem
                       key={f}
                       onClick={() => setFilter(f)}
