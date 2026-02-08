@@ -16,9 +16,13 @@ class SupplyController extends Controller
         $this->repo = $repo;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->repo->all());
+        if ($request->has('all')) {
+            return response()->json($this->repo->all());
+        }
+        $perPage = (int) $request->input('per_page', 10);
+        return response()->json($this->repo->paginate($perPage));
     }
 
     public function show(int $id)

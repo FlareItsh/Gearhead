@@ -41,7 +41,9 @@ import axios from 'axios'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { ChevronDownIcon, Download, Edit2, Search, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+
+import Pagination from '@/components/Pagination'
 import { toast } from 'sonner'
 
 axios.defaults.withCredentials = true
@@ -73,8 +75,23 @@ interface PurchaseDetail {
   purchase_date: string
 }
 
+interface PaginatedLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  links: PaginatedLink[]
+}
+
 export default function InventoryPage() {
-  const [allSupplies, setAllSupplies] = useState<Supply[]>([])
+  const [suppliesData, setSuppliesData] = useState<PaginatedResponse<Supply> | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [filter, setFilter] = useState<'All' | 'supply' | 'consumables'>('All')
   const [showAddItem, setShowAddItem] = useState(false)
@@ -90,6 +107,8 @@ export default function InventoryPage() {
   })
   const [editItem, setEditItem] = useState<Supply | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [perPage, setPerPage] = useState(10)
+  const [allSupplies, setAllSupplies] = useState<Supply[]>([])
 
   // Purchase states
   const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([])
@@ -123,13 +142,48 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadSupplies()
+  }, [filter, perPage])
+
+  useEffect(() => {
     loadSuppliers()
+    loadAllSupplies()
   }, [])
 
-  const loadSupplies = async () => {
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSupplies()
+    }, 500)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue])
+
+  const loadSupplies = async (url?: string) => {
     try {
-      const res = await axios.get('/api/supplies')
-      setAllSupplies(res.data)
+      const endpoint = url || '/api/supplies'
+      const params: any = {
+        per_page: perPage,
+        search: searchValue,
+        type: filter === 'All' ? null : filter,
+      }
+
+      // If passing a full URL (pagination link), we don't need to append params again if they are already there,
+      // but usually Laravel pagination links include page param. We should merge our filters.
+      // However, creating a new URL object is safer.
+
+      let finalUrl = endpoint
+      let finalParams = { ...params }
+
+      if (url) {
+        // If we have a URL, extract the page and use base endpoint with our current filters
+        const urlObj = new URL(url)
+        const page = urlObj.searchParams.get('page')
+        if (page) finalParams.page = page
+        finalUrl = '/api/supplies'
+      }
+
+      const res = await axios.get(finalUrl, { params: finalParams })
+      setSuppliesData(res.data)
     } catch (err) {
       console.error('Failed to fetch supplies:', err)
     }
@@ -144,6 +198,14 @@ export default function InventoryPage() {
     }
   }
 
+  const loadAllSupplies = async () => {
+    try {
+      const res = await axios.get('/api/supplies?all=1')
+      setAllSupplies(res.data)
+    } catch (err) {
+      console.error('Failed to fetch all supplies:', err)
+    }
+  }
   const handleAddDetail = () => {
     if (newDetail.supply_id === 0 || newDetail.quantity === 0 || newDetail.unit_price === 0) {
       setDetailError('Please fill in all fields')
@@ -243,8 +305,8 @@ export default function InventoryPage() {
     setConfirmMessage(`Add "${newItem.supply_name}" to inventory?`)
     setOnConfirmAction(() => async () => {
       try {
-        const res = await axios.post('/api/supplies', newItem)
-        setAllSupplies((prev) => [...prev, res.data])
+        await axios.post('/api/supplies', newItem)
+        loadSupplies()
         setShowAddItem(false)
         setNewItem({
           supply_name: '',
@@ -255,6 +317,7 @@ export default function InventoryPage() {
         })
         setAddItemErrors({})
         toast.success('Item added successfully!')
+        loadAllSupplies()
       } catch (err) {
         console.error(err)
         toast.error('Failed to add item')
@@ -325,26 +388,17 @@ export default function InventoryPage() {
   const handleSaveEdit = async () => {
     if (!editItem) return
     try {
-      const res = await axios.put(`/supplies/${editItem.supply_id}`, editItem)
-      setAllSupplies((prev) => prev.map((s) => (s.supply_id === editItem.supply_id ? res.data : s)))
+      await axios.put(`/supplies/${editItem.supply_id}`, editItem)
+      loadSupplies()
       setShowEditModal(false)
       setEditItem(null)
       toast.success('Item updated successfully!')
+      loadAllSupplies()
     } catch (err) {
       console.error(err)
       toast.error('Failed to update item')
     }
   }
-
-  const filteredSupplies = useMemo(() => {
-    const term = searchValue.toLowerCase().trim()
-    return allSupplies.filter((s) => {
-      const matchesSearch = s.supply_name.toLowerCase().includes(term)
-      const matchesFilter = filter === 'All' || s.supply_type === filter
-      return matchesSearch && matchesFilter
-    })
-  }, [allSupplies, searchValue, filter])
-
   const getStatusInfo = (supply: Supply) => {
     const qty = Number(supply.quantity_stock)
     const reorder = Number(supply.reorder_point)
@@ -371,7 +425,7 @@ export default function InventoryPage() {
     doc.setTextColor(100)
     doc.text(`Generated: ${new Date().toLocaleDateString('en-PH')}`, 14, 28)
 
-    const tableData = filteredSupplies.map((s) => [
+    const tableData = (suppliesData?.data || []).map((s) => [
       s.supply_name,
       s.unit,
       s.quantity_stock.toString(),
@@ -910,12 +964,12 @@ export default function InventoryPage() {
             <div className="border-b p-6">
               <h2 className="text-lg font-semibold">Supply List</h2>
               <p className="text-sm text-muted-foreground">
-                {filteredSupplies.length} item
-                {filteredSupplies.length !== 1 && 's'}
+                {suppliesData?.total || 0} item
+                {suppliesData?.total !== 1 && 's'}
               </p>
             </div>
 
-            {filteredSupplies.length === 0 ? (
+            {(suppliesData?.data || []).length === 0 ? (
               <div className="py-24 text-center text-muted-foreground">No supplies found.</div>
             ) : (
               <>
@@ -923,7 +977,7 @@ export default function InventoryPage() {
                 <div className="hidden lg:block">
                   <div className="custom-scrollbar max-h-[65vh] overflow-y-auto">
                     <Table>
-                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                         <TableRow>
                           <TableHead>Item</TableHead>
                           <TableHead className="text-center">Stock</TableHead>
@@ -934,7 +988,7 @@ export default function InventoryPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredSupplies.map((supply) => {
+                        {(suppliesData?.data || []).map((supply) => {
                           const { status, variant } = getStatusInfo(supply)
                           return (
                             <TableRow key={supply.supply_id}>
@@ -966,7 +1020,7 @@ export default function InventoryPage() {
 
                 {/* Mobile: Responsive Cards */}
                 <div className="block space-y-4 p-4 lg:hidden">
-                  {filteredSupplies.map((supply) => {
+                  {(suppliesData?.data || []).map((supply) => {
                     const { status, variant } = getStatusInfo(supply)
                     return (
                       <div
@@ -1014,6 +1068,38 @@ export default function InventoryPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* PAGINATION */}
+        {suppliesData && (
+          <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Rows per page</span>
+              <Select
+                value={perPage.toString()}
+                onValueChange={(v) => setPerPage(Number(v))}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue placeholder={perPage} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 25, 50, 100].map((pageSize) => (
+                    <SelectItem
+                      key={pageSize}
+                      value={pageSize.toString()}
+                    >
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Pagination
+              links={suppliesData.links}
+              onPageChange={loadSupplies}
+            />
+          </div>
+        )}
 
         {/* EDIT MODAL */}
         <Dialog
