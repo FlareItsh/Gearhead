@@ -879,16 +879,23 @@ export default function InventoryPage() {
                     variant="outline"
                     className="gap-2"
                   >
-                    {filter} <ChevronDownIcon className="h-4 w-4" />
+                    {filter === 'All' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}{' '}
+                    <ChevronDownIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {(['All', 'Supply', 'Consumables'] as const).map((f) => (
+                  {(
+                    [
+                      { label: 'All Items', value: 'All' },
+                      { label: 'Supply', value: 'supply' },
+                      { label: 'Consumables', value: 'consumables' },
+                    ] as const
+                  ).map((option) => (
                     <DropdownMenuItem
-                      key={f}
-                      onClick={() => setFilter(f)}
+                      key={option.value}
+                      onClick={() => setFilter(option.value as 'All' | 'supply' | 'consumables')}
                     >
-                      {f === 'All' ? 'All Items' : f.charAt(0).toUpperCase() + f.slice(1)}
+                      {option.label}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
