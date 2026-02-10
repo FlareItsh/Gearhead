@@ -174,6 +174,7 @@ export default function AdminBookings() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Bookings" />
       <div className="flex flex-col gap-6 p-6">
+        {/* Heading */}
         <div className="flex items-center justify-between">
           <Heading
             title="Bookings"
@@ -196,12 +197,13 @@ export default function AdminBookings() {
           </div>
         </div>
 
+        {/* Search & Filter */}
         <Card className="border border-border/50 bg-background text-foreground">
           <CardContent className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Search</h2>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border px-3 text-sm">
                   {filter}
                   <ChevronDownIcon className="ml-2 h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -231,6 +233,7 @@ export default function AdminBookings() {
           </CardContent>
         </Card>
 
+        {/* Status Filter */}
         <div className="flex w-full rounded-2xl bg-secondary p-1">
           {(['All', 'pending', 'in_progress', 'completed', 'cancelled'] as const).map((s) => {
             const isActive = statusFilter === s
@@ -252,11 +255,11 @@ export default function AdminBookings() {
             )
           })}
         </div>
-
+        {/* Booking List */}
         <Card className="border border-border/50 bg-background text-foreground">
           <CardContent className="p-0">
             {/* Header */}
-            <div className="border-b border-border/50 p-6">
+            <div className="border-b border-border/50 px-6 pb-4">
               <div className="flex flex-col gap-1">
                 <h2 className="text-lg font-semibold">Booking List</h2>
                 <p className="text-sm text-muted-foreground">

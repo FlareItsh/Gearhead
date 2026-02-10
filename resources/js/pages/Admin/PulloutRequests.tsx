@@ -180,7 +180,7 @@ export default function PulloutRequestsPage() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Pullout Requests" />
-      <div className="flex flex-col gap-6 p-6">
+      <div className="flex flex-col gap-4 p-6">
         <Heading
           title="Pullout Requests & Returns"
           description="Manage employee supply requests and track returnable items"
@@ -206,7 +206,7 @@ export default function PulloutRequestsPage() {
         {/* Requests Tab */}
         {activeTab === 'requests' && (
           <Card className="border-border/50 bg-background text-foreground">
-            <CardContent className="p-6">
+            <CardContent>
               {pulloutRequests.length === 0 ? (
                 <div className="flex h-32 items-center justify-center">
                   <p className="text-muted-foreground">No pullout requests found</p>
@@ -218,8 +218,8 @@ export default function PulloutRequestsPage() {
                       key={request.pullout_request_id}
                       className="overflow-hidden border-border/50 bg-background text-foreground"
                     >
-                      <CardContent className="p-0">
-                        <div className="flex items-start justify-between border-b bg-muted/30 p-4">
+                      <CardContent>
+                        <div className="flex items-start justify-between border-b bg-muted/30 px-4 py-2">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold">{request.employee_name}</h3>
@@ -308,7 +308,7 @@ export default function PulloutRequestsPage() {
         {/* Returns Tab */}
         {activeTab === 'returns' && (
           <Card className="bg-background text-foreground">
-            <CardContent className="p-6">
+            <CardContent className="px-4">
               {returnableSupplies.length === 0 ? (
                 <div className="flex h-32 items-center justify-center">
                   <p className="text-muted-foreground">No returnable supplies found</p>
