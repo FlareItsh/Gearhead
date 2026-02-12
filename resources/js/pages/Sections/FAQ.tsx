@@ -36,7 +36,7 @@ export default function FAQSection() {
 
   return (
     <section className="w-full bg-background py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+      <div className="mx-auto w-full max-w-[95rem] px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10 text-center sm:mb-12 md:mb-14 lg:mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
