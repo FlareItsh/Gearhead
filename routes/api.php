@@ -98,6 +98,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/employees/active-available', [EmployeeController::class, 'activeAvailable'])
         ->name('admin.employees.active-available');
 
+    Route::get('/employees/list', [EmployeeController::class, 'getEmployees'])
+        ->name('admin.employees.list');
+
     Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
         ->name('api.service-orders.pending');
 

@@ -20,4 +20,9 @@ interface UserRepositoryInterface
     public function delete(User $user): bool;
 
     public function getCustomersWithBookings();
+
+    /**
+     * Get paginated customers with search.
+     */
+    public function getPaginatedCustomers(int $perPage, ?string $search = null);
 }

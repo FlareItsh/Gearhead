@@ -30,4 +30,9 @@ interface SupplyPurchaseRepositoryInterface
      * @return array<array{supply_purchase_id: int, purchase_date: string, purchase_reference: string, supplier_name: string, supplies: string, total_amount: float, status: string}>
      */
     public function getDetailedPurchases(?string $startDate = null, ?string $endDate = null);
+
+    /**
+     * Get paginated detailed purchases.
+     */
+    public function paginateDetailedPurchases(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null);
 }

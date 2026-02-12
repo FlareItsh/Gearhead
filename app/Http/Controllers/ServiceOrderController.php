@@ -207,6 +207,13 @@ class ServiceOrderController extends Controller
     {
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
+        $search = $request->query('search');
+        $status = $request->query('status');
+        $perPage = (int) $request->query('per_page', 10);
+
+        if ($request->has('per_page') || $search || $status) {
+            return response()->json($this->repo->getPaginatedBookings($perPage, $search, $startDate, $endDate, $status));
+        }
 
         $bookings = $this->repo->getAllBookings($startDate, $endDate);
 

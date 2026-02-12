@@ -49,6 +49,11 @@ interface ServiceOrderRepositoryInterface
     public function getAllBookings(?string $startDate = null, ?string $endDate = null);
 
     /**
+     * Get paginated bookings with filters.
+     */
+    public function getPaginatedBookings(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null, ?string $status = null);
+
+    /**
      * Delete all service order details for a service order.
      */
     public function deleteServiceOrderDetails(int $serviceOrderId): bool;

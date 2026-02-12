@@ -161,4 +161,16 @@ class EmployeeController extends Controller
             ];
         })->toArray());
     }
+    public function getEmployees(Request $request)
+    {
+        $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+        $status = $request->query('status');
+
+        if ($request->has('per_page') || $search || $status) {
+            return response()->json($this->employees->getPaginatedEmployees($perPage, $search, $status));
+        }
+
+        return response()->json($this->employees->all());
+    }
 }

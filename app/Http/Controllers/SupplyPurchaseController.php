@@ -73,6 +73,12 @@ class SupplyPurchaseController extends Controller
     {
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
+        $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+
+        if ($request->has('per_page') || $search) {
+             return response()->json($this->repo->paginateDetailedPurchases($perPage, $search, $startDate, $endDate));
+        }
 
         $purchases = $this->repo->getDetailedPurchases($startDate, $endDate);
 

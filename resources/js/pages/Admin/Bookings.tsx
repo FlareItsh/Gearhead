@@ -1,13 +1,15 @@
 import Heading from '@/components/heading'
+import Pagination from '@/components/Pagination'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,8 +22,8 @@ import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
-import { Check, ChevronDownIcon, Clock, Search, XCircle } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Check, Clock, Search, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Bookings', href: '/admin/bookings' }]
 
@@ -34,16 +36,31 @@ interface Booking {
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
 }
 
+interface PaginatedLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  links: PaginatedLink[]
+}
+
 export default function AdminBookings() {
-  const [bookings, setBookings] = useState<Booking[]>([])
+  const [bookingsData, setBookingsData] = useState<PaginatedResponse<Booking> | null>(null)
   const [searchValue, setSearchValue] = useState('')
-  const [filter, setFilter] = useState<'All' | 'Customer' | 'Service' | 'Status' | 'Date'>('All')
   const [statusFilter, setStatusFilter] = useState<
     'All' | 'pending' | 'in_progress' | 'completed' | 'cancelled'
   >('All')
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
+  const [perPage, setPerPage] = useState(10)
 
   // Set dynamic dates (month-to-date)
   useEffect(() => {
@@ -66,54 +83,61 @@ export default function AdminBookings() {
     setEndDate(formatLocal(todayLocal))
   }, [])
 
-  // Fetch bookings with date range
   useEffect(() => {
     if (startDate && endDate) {
-      const fetchBookings = () => {
-        axios
-          .get('/service-orders/bookings', {
-            params: { start_date: startDate, end_date: endDate },
-          })
-          .then((res) => {
-            setBookings(res.data)
-            setIsLoading(false)
-          })
-          .catch((err) => {
-            console.error('Error fetching bookings:', err)
-            setIsLoading(false)
-          })
+      const timer = setTimeout(() => {
+        loadBookings()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [startDate, endDate, searchValue, statusFilter, perPage])
+
+  const loadBookings = async (url?: string) => {
+    try {
+      setIsLoading(true)
+      const endpoint = url || '/api/service-orders/bookings'
+      const params: any = {
+        per_page: perPage,
+        search: searchValue,
+        start_date: startDate,
+        end_date: endDate,
+        status: statusFilter === 'All' ? null : statusFilter,
       }
 
-      fetchBookings()
-      const interval = setInterval(fetchBookings, 10000)
-      return () => clearInterval(interval)
+      let finalUrl = endpoint
+      let finalParams = { ...params }
+
+      if (url) {
+        const urlObj = new URL(url)
+        const page = urlObj.searchParams.get('page')
+        if (page) finalParams.page = page
+        // Ensure we keep using the base endpoint if the pagination link is full absolute URL which might point to wrong host if not careful,
+        // but axios handles relative URLs well.
+        // Laravel pagination links usually return full URL.
+        // We can just use the URL provided by Laravel, but we MUST merge our current filters.
+        // Actually, if we use the full URL from Laravel, it has page param.
+        // We just need to attach our current filters as well.
+        finalUrl = url
+      } else {
+        finalUrl = '/api/service-orders/bookings'
+      }
+
+      // If finalUrl is absolute, axios works. Params will be appended.
+      // Important: duplicate params? url might have ?page=2. finalParams has page=2.
+      // Whatever, axios handles it.
+
+      const res = await axios.get(finalUrl, { params: finalParams })
+      setBookingsData(res.data)
+    } catch (err) {
+      console.error('Error fetching bookings:', err)
+    } finally {
+      setIsLoading(false)
     }
-  }, [startDate, endDate])
+  }
 
-  const filteredBookings = useMemo(() => {
-    const term = searchValue.toLowerCase()
-
-    return bookings.filter((b) => {
-      const matchesSearch =
-        filter === 'All'
-          ? b.customer_name.toLowerCase().includes(term) ||
-            b.service_names.toLowerCase().includes(term) ||
-            b.status.toLowerCase().includes(term) ||
-            b.order_date.toLowerCase().includes(term)
-          : filter === 'Customer'
-            ? b.customer_name.toLowerCase().includes(term)
-            : filter === 'Service'
-              ? b.service_names.toLowerCase().includes(term)
-              : filter === 'Status'
-                ? b.status.toLowerCase().includes(term)
-                : filter === 'Date'
-                  ? b.order_date.toLowerCase().includes(term)
-                  : true
-
-      const matchesStatus = statusFilter === 'All' ? true : b.status === statusFilter
-      return matchesSearch && matchesStatus
-    })
-  }, [bookings, searchValue, filter, statusFilter])
+  const handlePageChange = (url: string) => {
+    loadBookings(url)
+  }
 
   const getStatusBadge = (status: Booking['status']) => {
     switch (status) {
@@ -202,23 +226,6 @@ export default function AdminBookings() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Search</h2>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border px-3 text-sm">
-                  {filter}
-                  <ChevronDownIcon className="ml-2 h-4 w-4" />
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent className="w-40">
-                  {['All', 'Customer', 'Service', 'Status', 'Date'].map((f) => (
-                    <DropdownMenuItem
-                      key={f}
-                      onClick={() => setFilter(f as typeof filter)}
-                    >
-                      {f}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
 
             <div className="relative w-full">
@@ -263,7 +270,7 @@ export default function AdminBookings() {
               <div className="flex flex-col gap-1">
                 <h2 className="text-lg font-semibold">Booking List</h2>
                 <p className="text-sm text-muted-foreground">
-                  Total Bookings: {filteredBookings.length}
+                  Total Bookings: {bookingsData?.total || 0}
                 </p>
               </div>
             </div>
@@ -272,7 +279,7 @@ export default function AdminBookings() {
               <div className="flex items-center justify-center py-32">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-highlight" />
               </div>
-            ) : filteredBookings.length === 0 ? (
+            ) : !bookingsData || bookingsData.data.length === 0 ? (
               <div className="py-32 text-center text-muted-foreground">
                 No bookings found for the selected filters.
               </div>
@@ -282,7 +289,7 @@ export default function AdminBookings() {
                 <div className="hidden lg:block">
                   <div className="custom-scrollbar max-h-[65vh] overflow-y-auto">
                     <Table>
-                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                         <TableRow className="border-b border-border/50">
                           <TableHead className="font-semibold">Customer</TableHead>
                           <TableHead className="font-semibold">Services</TableHead>
@@ -292,7 +299,7 @@ export default function AdminBookings() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredBookings.map((b) => (
+                        {bookingsData.data.map((b) => (
                           <TableRow
                             key={b.service_order_id}
                             className="border-b border-border/30 transition-colors hover:bg-muted/40"
@@ -319,7 +326,7 @@ export default function AdminBookings() {
 
                 {/* Mobile: Responsive Cards */}
                 <div className="block space-y-4 p-4 lg:hidden">
-                  {filteredBookings.map((b) => (
+                  {bookingsData.data.map((b) => (
                     <div
                       key={b.service_order_id}
                       className="rounded-xl border border-border/60 p-5 shadow-sm"
@@ -348,6 +355,37 @@ export default function AdminBookings() {
                     </div>
                   ))}
                 </div>
+
+                {/* Pagination */}
+                {bookingsData && (
+                  <div className="mt-4 flex flex-col items-center justify-between gap-4 border-t border-border/50 p-4 sm:flex-row">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Rows per page</span>
+                      <Select
+                        value={perPage.toString()}
+                        onValueChange={(v) => setPerPage(Number(v))}
+                      >
+                        <SelectTrigger className="h-8 w-[70px]">
+                          <SelectValue placeholder={perPage} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[5, 10, 25, 50, 100].map((pageSize) => (
+                            <SelectItem
+                              key={pageSize}
+                              value={pageSize.toString()}
+                            >
+                              {pageSize}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Pagination
+                      links={bookingsData.links}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
               </>
             )}
           </CardContent>

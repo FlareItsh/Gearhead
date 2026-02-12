@@ -1,7 +1,16 @@
 import Heading from '@/components/heading'
+import Pagination from '@/components/Pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -14,7 +23,7 @@ import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
-import { CheckCircle, Clock, PackageCheck, XCircle } from 'lucide-react'
+import { CheckCircle, Clock, PackageCheck, Search, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -54,21 +63,66 @@ interface ReturnableSupply {
   returned_by: string | null
 }
 
+interface PaginatedLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  links: PaginatedLink[]
+}
+
 export default function PulloutRequestsPage() {
-  const [pulloutRequests, setPulloutRequests] = useState<PulloutRequest[]>([])
-  const [returnableSupplies, setReturnableSupplies] = useState<ReturnableSupply[]>([])
+  const [pulloutRequestsData, setPulloutRequestsData] =
+    useState<PaginatedResponse<PulloutRequest> | null>(null)
+  const [returnableSuppliesData, setReturnableSuppliesData] =
+    useState<PaginatedResponse<ReturnableSupply> | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'requests' | 'returns'>('requests')
+  const [search, setSearch] = useState('')
+  const [perPage, setPerPage] = useState(10)
 
+  // Debounced search
   useEffect(() => {
-    loadPulloutRequests()
-    loadReturnableSupplies()
-  }, [])
+    const timer = setTimeout(() => {
+      if (activeTab === 'requests') {
+        loadPulloutRequests()
+      } else {
+        loadReturnableSupplies()
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search])
 
-  const loadPulloutRequests = async () => {
+  // Load data on dependencies change
+  useEffect(() => {
+    if (activeTab === 'requests') {
+      loadPulloutRequests()
+    } else {
+      loadReturnableSupplies()
+    }
+  }, [activeTab, perPage])
+
+  const loadPulloutRequests = async (url?: string) => {
+    setLoading(true)
     try {
-      const response = await axios.get('/api/pullout-requests')
-      setPulloutRequests(response.data.pulloutRequests || [])
+      let finalUrl = '/api/pullout-requests'
+      const params: any = { per_page: perPage, search: search }
+
+      if (url) {
+        const urlObj = new URL(url)
+        const page = urlObj.searchParams.get('page')
+        if (page) params.page = page
+      }
+
+      const response = await axios.get(finalUrl, { params })
+      setPulloutRequestsData(response.data.pulloutRequests)
     } catch (error) {
       console.error('Failed to load pullout requests:', error)
     } finally {
@@ -76,12 +130,24 @@ export default function PulloutRequestsPage() {
     }
   }
 
-  const loadReturnableSupplies = async () => {
+  const loadReturnableSupplies = async (url?: string) => {
+    setLoading(true)
     try {
-      const response = await axios.get('/pullout-requests/returnable/list')
-      setReturnableSupplies(response.data || [])
+      let finalUrl = '/pullout-requests/returnable/list'
+      const params: any = { per_page: perPage, search: search }
+
+      if (url) {
+        const urlObj = new URL(url)
+        const page = urlObj.searchParams.get('page')
+        if (page) params.page = page
+      }
+
+      const response = await axios.get(finalUrl, { params })
+      setReturnableSuppliesData(response.data)
     } catch (error) {
       console.error('Failed to load returnable supplies:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -114,7 +180,7 @@ export default function PulloutRequestsPage() {
 
   const handleReturnSupply = async (detailId: number) => {
     try {
-      const adminName = 'Admin' // You can get this from auth context
+      const adminName = 'Admin'
       await axios.post(`/pullout-requests/return/${detailId}`, {
         returned_by: adminName,
       })
@@ -166,12 +232,12 @@ export default function PulloutRequestsPage() {
     })
   }
 
-  if (loading) {
+  if (loading && !pulloutRequestsData && !returnableSuppliesData) {
     return (
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Pullout Requests" />
         <div className="flex h-64 items-center justify-center">
-          <p className="text-muted-foreground">Loading pullout requests...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </AppLayout>
     )
@@ -185,6 +251,45 @@ export default function PulloutRequestsPage() {
           title="Pullout Requests & Returns"
           description="Manage employee supply requests and track returnable items"
         />
+
+        {/* Search & Filter */}
+        <Card className="border border-border/50 bg-background text-foreground">
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows per page</span>
+                <Select
+                  value={perPage.toString()}
+                  onValueChange={(v) => setPerPage(Number(v))}
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue placeholder={perPage} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[5, 10, 25, 50, 100].map((pageSize) => (
+                      <SelectItem
+                        key={pageSize}
+                        value={pageSize.toString()}
+                      >
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Tab Buttons */}
         <div className="flex gap-2">
@@ -207,13 +312,13 @@ export default function PulloutRequestsPage() {
         {activeTab === 'requests' && (
           <Card className="border-border/50 bg-background text-foreground">
             <CardContent>
-              {pulloutRequests.length === 0 ? (
+              {!pulloutRequestsData || pulloutRequestsData.data.length === 0 ? (
                 <div className="flex h-32 items-center justify-center">
                   <p className="text-muted-foreground">No pullout requests found</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pulloutRequests.map((request) => (
+                  {pulloutRequestsData.data.map((request) => (
                     <Card
                       key={request.pullout_request_id}
                       className="overflow-hidden border-border/50 bg-background text-foreground"
@@ -301,6 +406,15 @@ export default function PulloutRequestsPage() {
                   ))}
                 </div>
               )}
+              {/* Pagination */}
+              {pulloutRequestsData && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination
+                    links={pulloutRequestsData.links}
+                    onPageChange={loadPulloutRequests}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -309,7 +423,7 @@ export default function PulloutRequestsPage() {
         {activeTab === 'returns' && (
           <Card className="bg-background text-foreground">
             <CardContent className="px-4">
-              {returnableSupplies.length === 0 ? (
+              {!returnableSuppliesData || returnableSuppliesData.data.length === 0 ? (
                 <div className="flex h-32 items-center justify-center">
                   <p className="text-muted-foreground">No returnable supplies found</p>
                 </div>
@@ -327,7 +441,7 @@ export default function PulloutRequestsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {returnableSupplies.map((supply) => (
+                    {returnableSuppliesData.data.map((supply) => (
                       <TableRow key={supply.pullout_request_details_id}>
                         <TableCell>
                           #{supply.service_order_id} - {supply.service_name}
@@ -380,6 +494,15 @@ export default function PulloutRequestsPage() {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+              {/* Pagination */}
+              {returnableSuppliesData && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination
+                    links={returnableSuppliesData.links}
+                    onPageChange={loadReturnableSupplies}
+                  />
+                </div>
               )}
             </CardContent>
           </Card>

@@ -25,9 +25,18 @@ class PulloutRequestController extends Controller
         $this->supplyRepository = $supplyRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $pulloutRequests = $this->pulloutRequestRepository->getAllWithDetails();
+        $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+        $status = $request->query('status');
+
+        if ($request->has('per_page') || $search || $status) {
+            $pulloutRequests = $this->pulloutRequestRepository->getPaginatedRequests($perPage, $search, $status);
+        } else {
+            $pulloutRequests = $this->pulloutRequestRepository->getAllWithDetails();
+        }
+
         $activeServiceOrders = $this->pulloutServiceRepository->getActiveServiceOrdersForPullout();
         $supplies = $this->supplyRepository->all();
 
@@ -42,6 +51,21 @@ class PulloutRequestController extends Controller
     {
         $item = $this->pulloutRequestRepository->findById($id);
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
+    }
+
+
+
+    public function getReturnableSupplies(Request $request)
+    {
+        $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+
+        if ($request->has('per_page') || $search) {
+             return response()->json($this->pulloutRequestRepository->getPaginatedReturnablePullouts($perPage, $search));
+        }
+
+        $returnableSupplies = $this->pulloutRequestRepository->getReturnablePullouts();
+        return response()->json($returnableSupplies);
     }
 
     public function store(Request $request)
@@ -154,11 +178,7 @@ class PulloutRequestController extends Controller
         return response()->json(null, 204);
     }
 
-    public function getReturnableSupplies()
-    {
-        $returnableSupplies = $this->pulloutRequestRepository->getReturnablePullouts();
-        return response()->json($returnableSupplies);
-    }
+
 
     public function returnSupply(Request $request, $detailId)
     {

@@ -179,6 +179,45 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->get();
     }
 
+    public function getPaginatedBookings(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null, ?string $status = null)
+    {
+        $query = DB::table('service_orders as so')
+            ->join('users as u', 'u.user_id', '=', 'so.user_id')
+            ->join('service_order_details as sod', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->select(
+                'so.service_order_id',
+                DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
+                DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_price'),
+                'so.order_date',
+                'so.status'
+            )
+            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'u.first_name', 'u.middle_name', 'u.last_name');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where(DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name)"), 'like', "%{$search}%")
+                  ->orWhere('so.service_order_id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($startDate) {
+            $query->whereDate('so.order_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('so.order_date', '<=', $endDate);
+        }
+        if ($status && $status !== 'all') {
+             $query->where('so.status', $status);
+        }
+
+        return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
+            ->orderByDesc('so.order_date')
+            ->paginate($perPage);
+    }
+
     public function deleteServiceOrderDetails(int $serviceOrderId): bool
     {
         return DB::table('service_order_details')

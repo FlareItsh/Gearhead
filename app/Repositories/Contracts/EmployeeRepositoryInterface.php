@@ -15,6 +15,11 @@ interface EmployeeRepositoryInterface
     public function all(): Collection;
 
     /**
+     * Get paginated employees with filters.
+     */
+    public function getPaginatedEmployees(int $perPage, ?string $search = null, ?string $status = null);
+
+    /**
      * Find an employee by ID.
      */
     public function find(int $id): Employee;

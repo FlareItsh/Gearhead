@@ -68,4 +68,9 @@ interface PaymentRepositoryInterface
      * Get transactions within a specified date range.
      */
     public function getTransactionsByDateRange(string $startDate, string $endDate);
+
+    /**
+     * Get paginated transactions.
+     */
+    public function getPaginatedTransactions(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null);
 }

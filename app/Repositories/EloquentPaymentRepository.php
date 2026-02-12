@@ -88,14 +88,38 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
      */
     public function getSummaryByDateRange(string $startDate, string $endDate): array
     {
-        $summary = DB::table('payments')
+        // 1. Revenue & Payment Counts
+        $paymentStats = DB::table('payments')
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->selectRaw('COALESCE(SUM(amount), 0) as total_amount, COUNT(*) as total_payments')
+            ->selectRaw('
+                COALESCE(SUM(amount), 0) as total_amount, 
+                COUNT(*) as total_payments,
+                SUM(CASE WHEN payment_method = "cash" THEN 1 ELSE 0 END) as cash_transactions,
+                SUM(CASE WHEN payment_method = "gcash" THEN 1 ELSE 0 END) as gcash_transactions
+            ')
             ->first();
 
+        // 2. Expenses (Supply Purchases)
+        // Using supply_purchase_details to be consistent with financial summary
+        $expenseStats = DB::table('supply_purchase_details')
+            ->whereBetween('purchase_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->selectRaw('
+                COALESCE(SUM(quantity * unit_price), 0) as total_expenses,
+                COUNT(DISTINCT supply_purchase_id) as total_expenses_count
+            ')
+            ->first();
+
+        $totalRevenue = $paymentStats->total_amount ?? 0;
+        $totalExpenses = $expenseStats->total_expenses ?? 0;
+
         return [
-            'total_amount' => $summary->total_amount ?? 0,
-            'total_payments' => $summary->total_payments ?? 0,
+            'total_amount' => $totalRevenue,
+            'total_expenses' => $totalExpenses,
+            'profit' => $totalRevenue - $totalExpenses,
+            'total_payments' => $paymentStats->total_payments ?? 0,
+            'cash_transactions' => $paymentStats->cash_transactions ?? 0,
+            'gcash_transactions' => $paymentStats->gcash_transactions ?? 0,
+            'total_expenses_count' => $expenseStats->total_expenses_count ?? 0,
         ];
     }
 
@@ -317,6 +341,77 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->orderBy('p.created_at', 'desc')
             ->get()
             ->map(function ($transaction) {
+                return [
+                    'payment_id' => $transaction->payment_id,
+                    'date' => $transaction->order_date ?? date('Y-m-d', strtotime($transaction->payment_date)),
+                    'customer' => $transaction->first_name . ' ' . $transaction->last_name,
+                    'services' => $transaction->services ?? 'N/A',
+                    'amount' => (float) $transaction->amount,
+                    'payment_method' => ucfirst($transaction->payment_method),
+                    'gcash_reference' => $transaction->gcash_reference,
+                    'gcash_screenshot' => $transaction->gcash_screenshot,
+                    'status' => $transaction->status,
+                    'is_point_redeemed' => (bool) $transaction->is_point_redeemed,
+                    'employee' => trim($transaction->employee_name) ?: 'Unassigned',
+                ];
+            });
+
+    }
+
+    public function getPaginatedTransactions(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null)
+    {
+        $query = DB::table('payments as p')
+            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
+            ->join('users as u', 'so.user_id', '=', 'u.user_id')
+            ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->leftJoin('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->leftJoin('services as s', 'sv.service_id', '=', 's.service_id')
+            ->leftJoin('employees as e', 'p.employee_id', '=', 'e.employee_id')
+            ->select(
+                'p.payment_id',
+                'p.amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                'p.gcash_screenshot',
+                'p.is_point_redeemed',
+                'p.created_at as payment_date',
+                'so.order_date',
+                'so.status',
+                'u.first_name',
+                'u.last_name',
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw("CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, '')) as employee_name")
+            )
+            ->groupBy(
+                'p.payment_id',
+                'p.amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                'p.gcash_screenshot',
+                'p.is_point_redeemed',
+                'p.created_at',
+                'so.order_date',
+                'so.status',
+                'u.first_name',
+                'u.last_name',
+                'e.first_name',
+                'e.last_name'
+            );
+
+        if ($search) {
+             $query->where(function ($q) use ($search) {
+                $q->where(DB::raw("CONCAT(u.first_name, ' ', u.last_name)"), 'like', "%{$search}%")
+                  ->orWhere('p.gcash_reference', 'like', "%{$search}%");
+            });
+        }
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('p.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        }
+
+        return $query->orderBy('p.created_at', 'desc')
+            ->paginate($perPage)
+            ->through(function ($transaction) {
                 return [
                     'payment_id' => $transaction->payment_id,
                     'date' => $transaction->order_date ?? date('Y-m-d', strtotime($transaction->payment_date)),
