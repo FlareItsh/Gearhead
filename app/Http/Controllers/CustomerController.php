@@ -121,8 +121,15 @@ class CustomerController extends Controller
         return back()->with('success', 'Booking cancelled successfully.');
     }
 
-    public function getCustomers()
+    public function getCustomers(Request $request)
     {
+        $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+
+        if ($request->has('per_page') || $search) {
+            return response()->json($this->users->getPaginatedCustomers($perPage, $search));
+        }
+
         $customers = $this->users->getCustomersWithBookings();
 
         return response()->json($customers);

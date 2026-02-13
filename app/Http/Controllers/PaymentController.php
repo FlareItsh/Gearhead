@@ -336,6 +336,15 @@ class PaymentController extends Controller
      */
     public function getTransactions(Request $request)
     {
+        $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        if ($request->has('per_page') || $search) {
+             return response()->json($this->repo->getPaginatedTransactions($perPage, $search, $startDate, $endDate));
+        }
+
         $request->validate([
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',

@@ -40,5 +40,15 @@ interface PulloutRequestRepositoryInterface
     /**
      * Get all approved pullout requests with returnable supplies
      */
+    public function getPaginatedRequests(int $perPage, ?string $search = null, ?string $status = null);
+
+    /**
+     * Get all approved pullout requests with returnable supplies
+     */
     public function getReturnablePullouts();
+
+    /**
+     * Get paginated returnable pullouts
+     */
+    public function getPaginatedReturnablePullouts(int $perPage, ?string $search = null);
 }

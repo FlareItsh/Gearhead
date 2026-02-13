@@ -14,6 +14,11 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
         return DB::table('supplies')->get();
     }
 
+    public function paginate(int $perPage)
+    {
+        return DB::table('supplies')->paginate($perPage);
+    }
+
     public function findById(int $id)
     {
         return DB::table('supplies')

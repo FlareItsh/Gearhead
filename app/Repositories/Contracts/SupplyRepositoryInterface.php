@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 interface SupplyRepositoryInterface
 {
     public function all();
+    public function paginate(int $perPage);
 
     public function findById(int $id);
 

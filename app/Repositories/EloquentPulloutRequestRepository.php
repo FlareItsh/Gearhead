@@ -196,4 +196,110 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             ->orderByDesc('pr.date_time')
             ->get();
     }
+
+    public function getPaginatedRequests(int $perPage, ?string $search = null, ?string $status = null)
+    {
+        $query = DB::table('pullout_requests as pr')
+            ->join('employees as e', 'pr.employee_id', '=', 'e.employee_id')
+            ->join('pullout_request_details as prd', 'pr.pullout_request_id', '=', 'prd.pullout_request_id')
+            ->join('pullout_services as ps', 'prd.pullout_service_id', '=', 'ps.pullout_service_id')
+            ->join('service_order_details as sod', 'ps.service_order_detail_id', '=', 'sod.service_order_detail_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->join('service_orders as so', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->join('supplies as sup', 'prd.supply_id', '=', 'sup.supply_id')
+            ->select(
+                'pr.pullout_request_id',
+                'pr.date_time',
+                'pr.is_approve',
+                'pr.approve_by',
+                'pr.approve_date',
+                'so.service_order_id',
+                's.service_name',
+                DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
+                DB::raw("GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ') as supplies")
+            )
+            ->groupBy(
+                'pr.pullout_request_id',
+                'pr.date_time',
+                'pr.is_approve',
+                'pr.approve_by',
+                'pr.approve_date',
+                'so.service_order_id',
+                's.service_name',
+                'e.first_name',
+                'e.last_name'
+            );
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where(DB::raw("CONCAT(e.first_name, ' ', e.last_name)"), 'like', "%{$search}%")
+                  ->orWhere('s.service_name', 'like', "%{$search}%")
+                  ->orWhere('pr.pullout_request_id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status && $status !== 'all') {
+            if ($status === 'approved') {
+                $query->where('pr.is_approve', true);
+            } elseif ($status === 'pending') {
+                $query->where('pr.is_approve', false);
+            }
+        }
+
+        $paginator = $query->orderByDesc('pr.date_time')->paginate($perPage);
+
+        $paginator->getCollection()->transform(function ($item) {
+            $item->status = $item->is_approve ? 'approved' : 'pending';
+             // Get individual supply details for this request
+            $details = DB::table('pullout_request_details as prd')
+                ->join('supplies as sup', 'prd.supply_id', '=', 'sup.supply_id')
+                ->where('prd.pullout_request_id', $item->pullout_request_id)
+                ->select('sup.supply_name', 'prd.quantity', 'sup.unit', 'sup.supply_type')
+                ->get();
+            $item->details = $details;
+            return $item;
+        });
+
+        return $paginator;
+    }
+
+    public function getPaginatedReturnablePullouts(int $perPage, ?string $search = null)
+    {
+        $query = DB::table('pullout_requests as pr')
+            ->join('pullout_request_details as prd', 'pr.pullout_request_id', '=', 'prd.pullout_request_id')
+            ->join('supplies as sup', 'prd.supply_id', '=', 'sup.supply_id')
+            ->join('employees as e', 'pr.employee_id', '=', 'e.employee_id')
+            ->join('pullout_services as ps', 'prd.pullout_service_id', '=', 'ps.pullout_service_id')
+            ->join('service_order_details as sod', 'ps.service_order_detail_id', '=', 'sod.service_order_detail_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->join('service_orders as so', 'sod.service_order_id', '=', 'so.service_order_id')
+            ->where('pr.is_approve', true)
+            ->where('sup.supply_type', 'supply')
+            ->select(
+                'prd.pullout_request_details_id',
+                'pr.pullout_request_id',
+                'pr.date_time',
+                'so.service_order_id',
+                's.service_name',
+                DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
+                'sup.supply_name',
+                'sup.unit',
+                'prd.quantity',
+                'prd.is_returned',
+                'prd.returned_at',
+                'prd.returned_by'
+            );
+
+        if ($search) {
+             $query->where(function ($q) use ($search) {
+                $q->where(DB::raw("CONCAT(e.first_name, ' ', e.last_name)"), 'like', "%{$search}%")
+                  ->orWhere('s.service_name', 'like', "%{$search}%")
+                  ->orWhere('sup.supply_name', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderByDesc('pr.date_time')->paginate($perPage);
+    }
 }

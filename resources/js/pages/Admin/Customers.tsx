@@ -1,4 +1,5 @@
 import Heading from '@/components/heading'
+import Pagination from '@/components/Pagination'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -37,7 +38,7 @@ import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
 import { ChevronDownIcon, Edit2, Search, Star } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { route } from 'ziggy-js'
 
@@ -56,20 +57,67 @@ interface User {
   loyaltyPoints: number
 }
 
+interface PaginatedLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  links: PaginatedLink[]
+}
+
 export default function Customers() {
-  const [customers, setCustomers] = useState<User[]>([])
+  const [customersData, setCustomersData] = useState<PaginatedResponse<User> | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [filter, setFilter] = useState<'All' | 'Name' | 'Email' | 'Phone'>('All')
   const [loading, setLoading] = useState(true)
+  const [perPage, setPerPage] = useState(10)
 
+  // Load data on mount and dependencies change
   useEffect(() => {
     loadCustomers()
-  }, [])
+  }, [perPage]) // Reload when perPage changes
 
-  const loadCustomers = async () => {
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadCustomers()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchValue])
+
+  const loadCustomers = async (url?: string) => {
+    setLoading(true)
     try {
-      const res = await axios.get(route('admin.customers.index'))
-      setCustomers(res.data)
+      let finalUrl = url || route('admin.customers.index')
+      const params: any = { per_page: perPage, search: searchValue }
+
+      // If we have a url (pagination link), we might need to extract page or just use it.
+      // Laravel links usually have page param.
+      // We pass params explicitly to ensure per_page and search are preserved if not in url?
+      // Actually standard Laravel pagination links only include what was in the query string when generated.
+      // So if we passed per_page and search to the FIRST request, the links WILL contain them.
+      // But let's be safe and merge params if it's not a full link or if we are changing filters.
+      // Simplest: if url is provided, use it. But axios params might duplicate?
+      // If url contains '?', axios merge logic is tricky.
+
+      if (url) {
+        // If url is used, we assume it has everything needed OR we append.
+        // Better: Extract page from url and us base route.
+        const urlObj = new URL(url)
+        const page = urlObj.searchParams.get('page')
+        if (page) params.page = page
+        finalUrl = route('admin.customers.index')
+      }
+
+      const res = await axios.get(finalUrl, { params })
+      setCustomersData(res.data)
     } catch (err) {
       console.error('Failed to fetch customers:', err)
     } finally {
@@ -136,23 +184,7 @@ export default function Customers() {
     }
   }
 
-  const filteredCustomers = useMemo(() => {
-    return customers.filter((c) => {
-      const name =
-        `${c.first_name} ${c.middle_name ? c.middle_name + ' ' : ''}${c.last_name}`.toLowerCase()
-      const email = c.email?.toLowerCase() ?? ''
-      const phone = c.phone_number?.toLowerCase() ?? ''
-      const term = searchValue.toLowerCase()
-
-      if (filter === 'All')
-        return name.includes(term) || email.includes(term) || phone.includes(term)
-      if (filter === 'Name') return name.includes(term)
-      if (filter === 'Email') return email.includes(term)
-      if (filter === 'Phone') return phone.includes(term)
-
-      return true
-    })
-  }, [customers, searchValue, filter])
+  // Removed useMemo filteredCustomers as filtering is done server-side
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -200,18 +232,19 @@ export default function Customers() {
         <Card className="border border-border/50 bg-background text-foreground">
           <CardContent className="p-0">
             {/* Header */}
+            {/* Header */}
             <div className="border-b border-border/50 p-6">
               <h2 className="text-lg font-semibold">Customer List</h2>
               <p className="text-sm text-muted-foreground">
-                Total: {filteredCustomers.length} customers
+                Total: {customersData?.total || 0} customers
               </p>
             </div>
 
-            {loading ? (
+            {loading && !customersData ? (
               <div className="flex items-center justify-center py-32">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-highlight" />
               </div>
-            ) : filteredCustomers.length === 0 ? (
+            ) : !customersData || customersData.data.length === 0 ? (
               <div className="py-32 text-center text-muted-foreground">No customers found</div>
             ) : (
               <>
@@ -219,7 +252,7 @@ export default function Customers() {
                 <div className="hidden lg:block">
                   <div className="custom-scrollbar max-h-[65vh] overflow-y-auto">
                     <Table>
-                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                         <TableRow className="border-b border-border/50">
                           <TableHead className="font-semibold">Name</TableHead>
                           <TableHead className="font-semibold">Phone</TableHead>
@@ -233,7 +266,7 @@ export default function Customers() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredCustomers.map((c) => (
+                        {customersData.data.map((c) => (
                           <TableRow
                             key={c.user_id}
                             className="border-b border-border/30 transition-colors hover:bg-muted/40"
@@ -272,7 +305,7 @@ export default function Customers() {
 
                 {/* Mobile: Scrollable Cards */}
                 <div className="block space-y-3 p-4 lg:hidden">
-                  {filteredCustomers.map((c) => (
+                  {customersData.data.map((c) => (
                     <div
                       key={c.user_id}
                       className="rounded-xl border border-border/60 bg-card p-5 shadow-sm"
@@ -305,6 +338,37 @@ export default function Customers() {
                   ))}
                 </div>
               </>
+            )}
+            {/* Pagination */}
+            {/* Pagination */}
+            {customersData && (
+              <div className="mt-4 flex flex-col items-center justify-between gap-4 border-t border-border/50 p-4 sm:flex-row">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Rows per page</span>
+                  <Select
+                    value={perPage.toString()}
+                    onValueChange={(v) => setPerPage(Number(v))}
+                  >
+                    <SelectTrigger className="h-8 w-[70px]">
+                      <SelectValue placeholder={perPage} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5, 10, 25, 50, 100].map((pageSize) => (
+                        <SelectItem
+                          key={pageSize}
+                          value={pageSize.toString()}
+                        >
+                          {pageSize}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Pagination
+                  links={customersData.links}
+                  onPageChange={loadCustomers}
+                />
+              </div>
             )}
           </CardContent>
         </Card>
