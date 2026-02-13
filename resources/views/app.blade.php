@@ -44,6 +44,7 @@
     @routes
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @inertiaHead
 </head>
 

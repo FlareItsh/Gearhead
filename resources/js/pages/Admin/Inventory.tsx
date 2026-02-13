@@ -46,8 +46,6 @@ import { useEffect, useState } from 'react'
 import Pagination from '@/components/Pagination'
 import { toast } from 'sonner'
 
-axios.defaults.withCredentials = true
-
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Inventory', href: '/inventory' }]
 
 interface Supply {

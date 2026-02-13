@@ -27,9 +27,6 @@ import { Clock, Pencil, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-// Configure axios to send cookies with requests
-axios.defaults.withCredentials = true
-
 const breadcrumbs = [{ title: 'Services', href: '/services' }]
 
 interface ServiceVariant {
@@ -189,26 +186,16 @@ export default function AdminServices({ services = [], categories = [] }: Servic
     }
 
     try {
-      const config = {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content'),
-        },
-      }
-
       console.log('Submitting with data:', data)
 
       if (editingService) {
         console.log(`Updating service ${editingService.service_id}`)
-        await axios.put(`/api/services/${editingService.service_id}`, data, config)
+        await axios.put(`/api/services/${editingService.service_id}`, data)
         setSuccessMessage('Service updated successfully!')
         toast.success('Service updated successfully!')
       } else {
         console.log('Creating new service')
-        await axios.post('/api/services', data, config)
+        await axios.post('/api/services', data)
         setSuccessMessage('Service created successfully!')
         toast.success('Service created successfully!')
       }

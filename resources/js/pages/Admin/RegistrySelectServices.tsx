@@ -9,8 +9,6 @@ import axios from 'axios'
 import { Clock, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
-axios.defaults.withCredentials = true
-
 interface ServiceVariant {
   service_variant: number
   service_id: number

@@ -29,8 +29,6 @@ import { Edit2, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-axios.defaults.withCredentials = true
-
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Bays', href: '/bays' }]
 
 interface Bay {
