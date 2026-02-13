@@ -174,7 +174,7 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
 
     if (startDate && endDate) {
       fetchData()
-      const interval = setInterval(fetchData, 180000) // Refresh every 3 minutes
+      const interval = setInterval(fetchData, 180000) // Refresh every 3 minutes (should be 180000) (temp 1500)
       return () => clearInterval(interval)
     }
   }, [startDate, endDate, role])

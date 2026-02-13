@@ -82,9 +82,9 @@ export default function Calendar({ selectedDate, onSelect, minDate }: CalendarPr
           disabled={disabled}
           className={`
             flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-all
-            ${disabled ? 'cursor-not-allowed text-muted-foreground/30' : 'hover:bg-primary/20'}
-            ${selected ? 'bg-primary text-white hover:bg-primary hover:text-white' : ''}
-            ${!selected && today ? 'border border-primary text-primary' : ''}
+            ${disabled ? 'cursor-not-allowed text-muted-foreground/30' : 'hover:bg-highlight/20 dark:hover:bg-highlight/40'}
+            ${selected ? 'bg-highlight text-black font-bold shadow-sm hover:bg-highlight/90' : ''}
+            ${!selected && today ? 'border-2 border-highlight text-highlight-foreground font-bold' : ''}
             ${!selected && !disabled && !today ? 'text-foreground' : ''}
           `}
         >

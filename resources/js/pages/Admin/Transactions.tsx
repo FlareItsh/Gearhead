@@ -131,7 +131,9 @@ const TransactionRow = memo(({ item }: { item: Transaction | SupplyPurchase }) =
       <td className="max-w-xs p-4 text-sm">
         {isTransaction ? item.services : renderSuppliesAsBullets(item.supplies)}
       </td>
-      <td className={`p-4 text-sm font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+      <td
+        className={`translate-x-2 p-4 text-right text-sm font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}
+      >
         {isIncome ? '+' : '-'}
         {formatMoney(amount)}
       </td>
@@ -165,7 +167,7 @@ const TransactionRow = memo(({ item }: { item: Transaction | SupplyPurchase }) =
           </div>
         )}
       </td>
-      <td className="p-4">
+      <td className="p-4 text-center">
         <Badge variant={statusVariants[item.status] || 'default'}>
           {formatStatus(item.status)}
         </Badge>

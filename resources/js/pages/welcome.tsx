@@ -52,7 +52,7 @@ export default function Welcome() {
       </section>
 
       <section
-        id="faq"
+        id="contact"
         className="scroll-mt-18 bg-black"
       >
         <FAQSection />
