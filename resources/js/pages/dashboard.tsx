@@ -314,7 +314,6 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
-                      year: 'numeric',
                     })
                   : 'Today'}
               </p>
@@ -332,7 +331,7 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                 </div>
               ) : (
                 <div className="flex flex-1 items-center justify-center px-4">
-                  <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-2xl leading-tight font-bold break-words text-foreground transition-colors group-hover:bg-blue-300 dark:bg-blue-900/20">
+                  <span className="inline-block max-w-full rounded-full bg-blue-100 px-6 py-3 text-center text-2xl leading-tight font-bold wrap-break-word text-foreground transition-colors group-hover:bg-blue-300 dark:bg-blue-900/20">
                     {popularService || 'N/A'}
                   </span>
                 </div>
