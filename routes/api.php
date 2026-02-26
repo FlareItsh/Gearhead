@@ -116,6 +116,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/service-orders/registry', [ServiceOrderController::class, 'createFromRegistry'])
         ->name('api.service-orders.registry');
 
+    Route::get('/queues/active', [\App\Http\Controllers\QueueLineController::class, 'active'])
+        ->name('api.queues.active');
+    Route::post('/queues/walk-in', [\App\Http\Controllers\QueueLineController::class, 'storeWalkIn'])
+        ->name('api.queues.walk-in');
+    Route::post('/queues/reservation', [\App\Http\Controllers\QueueLineController::class, 'storeReservation'])
+        ->name('api.queues.reservation');
+
     Route::put('/service-orders/{id}', [ServiceOrderController::class, 'update'])
         ->name('api.service-orders.update');
 

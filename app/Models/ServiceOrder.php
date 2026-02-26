@@ -51,4 +51,9 @@ class ServiceOrder extends Model
     {
         return $this->hasMany(Payment::class, 'service_order_id', 'service_order_id');
     }
+
+    public function queueLine()
+    {
+        return $this->hasOne(QueueLine::class, 'service_order_id', 'service_order_id');
+    }
 }

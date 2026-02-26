@@ -41,14 +41,15 @@ interface Customer {
 }
 
 interface Props {
-  bayId: number
-  bayNumber: number
+  bayId?: number
+  bayNumber?: number
+  isQueue?: boolean
 }
 
-export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
+export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Props) {
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Registry', href: '/registry' },
-    { title: `Bay #${bayNumber}`, href: '#' },
+    { title: isQueue ? 'Queue' : `Bay #${bayNumber}`, href: '#' },
   ]
 
   const [services, setServices] = useState<Service[]>([])
@@ -148,7 +149,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
         setEditingOrder({
           service_order_id: bookingData.service_order_id,
           user_id: bookingData.user_id,
-          bay_id: bayId,
+          bay_id: bayId || 0,
           status: 'pending',
           user: {
             user_id: bookingData.user_id,
@@ -159,7 +160,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
           details: serviceIds.map((id: number, index: number) => ({
             service_order_detail_id: index,
             service_id: id,
-            service: { service_id: id },
+            service: { service_id: id, service_name: '', category: '', variants: [] },
           })),
         })
         setIsEditingMode(true) // Use editing mode to skip customer selection
@@ -172,8 +173,8 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
   // Load existing service order for this bay (for editing)
   useEffect(() => {
     // Only load existing order after services are loaded
-    if (services.length === 0) {
-      console.log('Waiting for services to load before loading existing order')
+    if (services.length === 0 || isQueue) {
+      console.log('Waiting for services to load or isQueue is true')
       return
     }
 
@@ -457,15 +458,21 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
         console.log('Using Idempotency Key:', idempotencyKey)
 
-        // Create the service order and assign to bay
-        const response = await axios.post('/api/service-orders/registry', {
+        // Create the service order and assign to bay or queue
+        const endpoint = isQueue ? '/api/queues/walk-in' : '/api/service-orders/registry'
+        const payload = {
           customer_id: customer.user_id,
-          bay_id: bayId,
           service_ids: serviceIds,
           variant_ids: variantIds, // Pass variant IDs too
           employee_id: assignedEmployee?.employee_id || null,
           idempotency_key: idempotencyKey,
-        })
+        }
+
+        if (!isQueue) {
+          Object.assign(payload, { bay_id: bayId })
+        }
+
+        const response = await axios.post(endpoint, payload)
 
         console.log('Service order created:', response.data)
       }
@@ -474,7 +481,8 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
       localStorage.removeItem('registry_selected_services')
 
       // Navigate to registry after successful creation/update
-      router.visit('/registry?serviceStarted=true', {
+      const routeUrl = isQueue ? '/registry?queueAdded=true' : '/registry?serviceStarted=true'
+      router.visit(routeUrl, {
         preserveState: false,
         preserveScroll: false,
       })
@@ -526,11 +534,14 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={`${isEditingMode ? 'Edit' : 'Select'} Services - Bay #${bayNumber}`} />
+      <Head
+        title={`${isEditingMode ? 'Edit' : 'Select'} Services - ${isQueue ? 'Queue' : `Bay #${bayNumber}`}`}
+      />
       <div className="flex flex-col gap-6 p-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {isEditingMode ? 'Edit' : 'Select'} Services for Bay #{bayNumber}
+            {isEditingMode ? 'Edit' : 'Select'} Services for{' '}
+            {isQueue ? 'Queue' : `Bay #${bayNumber}`}
           </h1>
           <div className="mt-2 space-y-1">
             <p className="text-muted-foreground">
@@ -800,6 +811,7 @@ export default function RegistrySelectServices({ bayId, bayNumber }: Props) {
                 setNewCustomerForm({
                   first_name: '',
                   last_name: '',
+                  email: '',
                   phone_number: '',
                   address: '',
                 })

@@ -1,3 +1,4 @@
+import Heading from '@/components/heading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -101,6 +102,7 @@ export default function Registry({
   // Dialog State
   const [selectedBayForService, setSelectedBayForService] = useState<Bay | null>(null)
   const [showStartServiceDialog, setShowStartServiceDialog] = useState(false)
+  const [isQueueDialog, setIsQueueDialog] = useState(false)
   const [startServiceStep, setStartServiceStep] = useState<
     'initial' | 'booking' | 'walk-in' | 'assign'
   >('initial')
@@ -126,6 +128,10 @@ export default function Registry({
     const params = new URLSearchParams(window.location.search)
     if (params.get('serviceStarted') === 'true') {
       toast.success('Service started successfully!')
+      window.history.replaceState({}, '', '/registry')
+    }
+    if (params.get('queueAdded') === 'true') {
+      toast.success('Successfully added to queue!')
       window.history.replaceState({}, '', '/registry')
     }
     if (params.get('paymentCompleted') === 'true') {
@@ -204,6 +210,7 @@ export default function Registry({
   }
   const handleStartService = (bay: Bay) => {
     setSelectedBayForService(bay)
+    setIsQueueDialog(false)
     setSelectedEmployeeId('')
     setStartServiceStep('initial')
     setShowStartServiceDialog(true)
@@ -214,21 +221,59 @@ export default function Registry({
       .catch((err) => console.error('Failed to fetch bookings:', err))
   }
 
-  const handleSelectBooking = (booking: any) => {
-    setSelectedBooking(booking)
-    setStartServiceStep('assign')
-    setSelectedEmployeeId('') // Reset selection
+  const handleAddQueue = () => {
+    setSelectedBayForService(null)
+    setIsQueueDialog(true)
+    setSelectedEmployeeId('')
+    setStartServiceStep('initial')
+    setShowStartServiceDialog(true)
+    // Pre-fetch bookings silently
+    axios
+      .get('/api/service-orders/today-bookings')
+      .then((res) => setTodayBookings(res.data || []))
+      .catch((err) => console.error('Failed to fetch bookings:', err))
+  }
+
+  const handleSelectBooking = async (booking: any) => {
+    if (isQueueDialog) {
+      setIsAssigning(true)
+      try {
+        await axios.post('/api/queues/reservation', {
+          service_order_id: booking.service_order_id,
+        })
+        toast.success('Reservation added to queue!')
+        setShowStartServiceDialog(false)
+        setIsQueueDialog(false)
+        setSelectedBooking(null)
+        await Promise.all([loadBays(), loadServiceOrders()])
+      } catch (error) {
+        console.error('Failed to add reservation to queue:', error)
+        toast.error('Failed to process request')
+      } finally {
+        setIsAssigning(false)
+      }
+    } else {
+      setSelectedBooking(booking)
+      setStartServiceStep('assign')
+      setSelectedEmployeeId('') // Reset selection
+    }
   }
 
   const handleWalkIn = () => {
-    setStartServiceStep('walk-in')
-    setSelectedBooking(null)
-    setSelectedEmployeeId('') // Reset selection
+    if (isQueueDialog) {
+      router.visit('/registry/queue/select-services')
+    } else {
+      setStartServiceStep('walk-in')
+      setSelectedBooking(null)
+      setSelectedEmployeeId('') // Reset selection
+    }
   }
 
   const handleProceedWithEmployee = async () => {
-    if (!selectedBayForService || !selectedEmployeeId) return
-    if (!selectedBayForService.bay_id) return // Safety check
+    if ((!selectedBayForService && !isQueueDialog) || !selectedEmployeeId) return
+
+    // Safety check for regular bay service start
+    if (!isQueueDialog && (!selectedBayForService || !selectedBayForService.bay_id)) return
 
     const employee = employees.find((e) => e.employee_id === parseInt(selectedEmployeeId))
     if (!employee) return
@@ -241,7 +286,7 @@ export default function Registry({
         last_name: employee.last_name,
       })
 
-      const url = `/registry/${selectedBayForService.bay_id}/select-services?employee=${encodeURIComponent(employeeData)}`
+      const url = `/registry/${selectedBayForService!.bay_id}/select-services?employee=${encodeURIComponent(employeeData)}`
 
       router.visit(url)
       return
@@ -259,23 +304,24 @@ export default function Registry({
         }
 
         await axios.put(`/service-orders/${selectedBooking.service_order_id}`, {
-          bay_id: selectedBayForService.bay_id,
+          bay_id: selectedBayForService!.bay_id,
           employee_id: employee.employee_id,
           status: 'in_progress',
           service_ids: serviceIds,
         })
+        toast.success('Service started successfully!')
 
         // Reset and Refresh
         setShowStartServiceDialog(false)
         setSelectedBayForService(null)
+        setIsQueueDialog(false)
         setSelectedEmployeeId('')
         setSelectedBooking(null)
 
         await Promise.all([loadBays(), loadServiceOrders()])
-        toast.success('Service started successfully!')
       } catch (error) {
-        console.error('Failed to start service:', error)
-        toast.error('Failed to start service')
+        console.error('Failed to start service/queue:', error)
+        toast.error('Failed to process request')
       } finally {
         setIsAssigning(false)
       }
@@ -381,9 +427,20 @@ export default function Registry({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Registry" />
       <div className="flex flex-col gap-6 p-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Registry</h1>
-          <p className="text-muted-foreground">Manage and monitor bays for carwash services</p>
+        <div className="flex items-center justify-between">
+          <Heading
+            title="Registry"
+            description="Manage and monitor bays for carwash services"
+          />
+
+          <Button
+            variant="highlight"
+            size="lg"
+            className="ml-auto"
+            onClick={handleAddQueue}
+          >
+            Add Queue
+          </Button>
         </div>
 
         {loading ? (
@@ -671,7 +728,7 @@ export default function Registry({
             </button>
 
             <h2 className="mb-6 text-2xl font-bold">
-              {startServiceStep === 'initial' && 'Start Service'}
+              {startServiceStep === 'initial' && (isQueueDialog ? 'Add to Queue' : 'Start Service')}
               {startServiceStep === 'walk-in' && 'Walk-in Service'}
               {startServiceStep === 'booking' && 'Select Reservation'}
               {startServiceStep === 'assign' && 'Assign Staff'}

@@ -53,6 +53,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.registry')
         ->middleware('role:admin');
 
+    Route::get('/registry/queue/select-services', function () {
+        return Inertia::render('Admin/RegistrySelectServices', [
+            'isQueue' => true,
+        ]);
+    })->name('admin.registry.queue.select-services')->middleware('role:admin');
+
     Route::get('/registry/{bayId}/select-services', function ($bayId) {
         // Get bay details from database
         $bay = Bay::find($bayId);

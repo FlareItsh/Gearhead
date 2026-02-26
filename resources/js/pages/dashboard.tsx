@@ -388,6 +388,17 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
               </CardContent>
             </Card>
 
+            {/* Queue Line */}
+            <Card className="border border-sidebar-border/70 bg-background">
+              <CardContent className="p-4 text-foreground">
+                <HeadingSmall
+                  title="Queue Line"
+                  description="Customers waiting for service"
+                />
+                <QueueLineTable />
+              </CardContent>
+            </Card>
+
             {/* Low Stock Items */}
             <Card className="border border-sidebar-border/70 bg-background">
               <CardContent className="p-4 text-foreground">
@@ -396,17 +407,6 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                   description="Supplies running low"
                 />
                 <LowStockTable supplies={lowStockSupplies} />
-              </CardContent>
-            </Card>
-
-            {/* TODO Queue Line */}
-            <Card className="border border-sidebar-border/70 bg-background">
-              <CardContent className="p-4 text-foreground">
-                <HeadingSmall
-                  title="Queue Line"
-                  description="Customers waiting for service"
-                />
-                <QueueLineTable />
               </CardContent>
             </Card>
           </div>
