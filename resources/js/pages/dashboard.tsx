@@ -1,7 +1,7 @@
 import { LowStockTable } from '@/components/dashboard/low-stock-table'
+import QueueLineTable from '@/components/dashboard/queue-line-table'
 import Heading from '@/components/heading'
 import HeadingSmall from '@/components/heading-small'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Input } from '@/components/ui/input'
@@ -341,7 +341,7 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
           </div>
 
           {/* Middle Row: Upcoming Appointments & Low Stock */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {/* Upcoming Appointments Table */}
             <Card className="border border-sidebar-border/70 bg-background">
               <CardContent className="p-4 text-foreground">
@@ -365,7 +365,6 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                           <TableHead>Customer</TableHead>
                           <TableHead>Services</TableHead>
                           <TableHead className="text-center">Expected Time</TableHead>
-                          <TableHead className="text-center">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -379,22 +378,6 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                               <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-foreground">
                                 {new Date(order.time).toLocaleString()}
                               </span>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge
-                                variant={
-                                  order.status === 'pending'
-                                    ? 'warning'
-                                    : order.status === 'in_progress'
-                                      ? 'default'
-                                      : order.status === 'completed'
-                                        ? 'success'
-                                        : 'secondary'
-                                }
-                                className="font-medium capitalize shadow-sm"
-                              >
-                                {order.status.replace(/_/g, ' ')}
-                              </Badge>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -413,6 +396,17 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                   description="Supplies running low"
                 />
                 <LowStockTable supplies={lowStockSupplies} />
+              </CardContent>
+            </Card>
+
+            {/* TODO Queue Line */}
+            <Card className="border border-sidebar-border/70 bg-background">
+              <CardContent className="p-4 text-foreground">
+                <HeadingSmall
+                  title="Queue Line"
+                  description="Customers waiting for service"
+                />
+                <QueueLineTable />
               </CardContent>
             </Card>
           </div>
