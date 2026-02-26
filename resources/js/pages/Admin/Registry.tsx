@@ -730,7 +730,7 @@ export default function Registry({
             <h2 className="mb-6 text-2xl font-bold">
               {startServiceStep === 'initial' && (isQueueDialog ? 'Add to Queue' : 'Start Service')}
               {startServiceStep === 'walk-in' && 'Walk-in Service'}
-              {startServiceStep === 'booking' && 'Select Reservation'}
+              {startServiceStep === 'booking' && 'Select from Queue'}
               {startServiceStep === 'assign' && 'Assign Staff'}
             </h2>
 
@@ -750,9 +750,9 @@ export default function Registry({
                     📅
                   </div>
                   <div className="text-center">
-                    <h3 className="text-lg font-bold">Existing Reservation</h3>
+                    <h3 className="text-lg font-bold">Reservations & Queue</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      For clients with prior booking
+                      For clients with prior booking or in queue
                     </p>
                   </div>
                 </button>
@@ -788,7 +788,16 @@ export default function Registry({
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <p className="font-semibold text-foreground">{booking.customer_name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-foreground">
+                                {booking.customer_name}
+                              </p>
+                              {booking.is_queued && (
+                                <span className="inline-flex items-center rounded-full bg-highlight/10 px-2 py-0.5 text-xs font-medium text-highlight ring-1 ring-highlight/20 ring-inset">
+                                  Queue #{booking.queue_number}
+                                </span>
+                              )}
+                            </div>
                             <p className="mt-1 text-sm text-muted-foreground">{booking.services}</p>
                           </div>
                           <div className="text-right">

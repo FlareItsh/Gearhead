@@ -275,8 +275,15 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
             ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->leftJoin('queue_lines as ql', function ($join) {
+                $join->on('so.service_order_id', '=', 'ql.service_order_id')
+                     ->where('ql.status', '=', 'waiting');
+            })
             ->where('so.status', 'pending')
-            ->where('so.order_type', 'R')
+            ->where(function ($query) {
+                $query->where('so.order_type', 'R')
+                      ->orWhereNotNull('ql.queue_line_id');
+            })
             ->select(
                 'so.service_order_id',
                 'so.user_id',
@@ -284,13 +291,18 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'u.first_name',
                 'u.last_name',
                 'u.phone_number as phone',
+                'ql.created_at as queue_created_at',
+                'ql.queue_line_id',
+                DB::raw('(SELECT COUNT(*) + 1 FROM queue_lines ql2 WHERE ql2.status = "waiting" AND ql2.created_at < ql.created_at) as queue_number'),
                 DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
                 DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services'),
                 DB::raw('GROUP_CONCAT(s.service_id) as service_ids'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total')
             )
-            ->groupBy('so.service_order_id', 'so.user_id', 'so.order_date', 'u.first_name', 'u.last_name', 'u.phone_number')
-            ->orderBy('so.order_date')
+            ->groupBy('so.service_order_id', 'so.user_id', 'so.order_date', 'u.first_name', 'u.last_name', 'u.phone_number', 'ql.created_at', 'ql.queue_line_id')
+            ->orderByRaw('CASE WHEN ql.queue_line_id IS NOT NULL THEN 0 ELSE 1 END')
+            ->orderBy('ql.created_at', 'asc')
+            ->orderBy('so.order_date', 'asc')
             ->get()
             ->map(function ($booking) {
                 return [
@@ -304,6 +316,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                     'service_ids' => $booking->service_ids ? explode(',', $booking->service_ids) : [],
                     'total' => $booking->total,
                     'order_date' => $booking->order_date,
+                    'is_queued' => !is_null($booking->queue_line_id),
+                    'queue_number' => $booking->queue_number,
                 ];
             });
     }
