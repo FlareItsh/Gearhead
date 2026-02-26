@@ -472,9 +472,9 @@ export default function Registry({
                   <div
                     className={cn(
                       'absolute inset-x-0 top-0 h-1 transition-all duration-500',
-                      isAvailable && 'bg-gradient-to-r from-green-400 to-emerald-500',
-                      isOccupied && 'bg-gradient-to-r from-orange-400 to-amber-500',
-                      isMaintenance && 'bg-gradient-to-r from-red-500 to-rose-600',
+                      isAvailable && 'bg-linear-to-r from-green-400 to-emerald-500',
+                      isOccupied && 'bg-linear-to-r from-orange-400 to-amber-500',
+                      isMaintenance && 'bg-linear-to-r from-red-500 to-rose-600',
                     )}
                   />
 
