@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\QueueLine;
+use App\Repositories\Contracts\BayRepositoryInterface;
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
-use App\Repositories\Contracts\EmployeeRepositoryInterface;
-use App\Repositories\Contracts\BayRepositoryInterface;
-
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,8 +14,11 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     protected PaymentRepositoryInterface $repo;
+
     protected ServiceOrderRepositoryInterface $serviceOrders;
+
     protected EmployeeRepositoryInterface $employees;
+
     protected BayRepositoryInterface $bays;
 
     public function __construct(
@@ -246,20 +248,20 @@ class PaymentController extends Controller
 
             // Get service order to check user
             $serviceOrder = $this->serviceOrders->findById($validated['service_order_id']);
-            
-            if (!$serviceOrder) {
+
+            if (! $serviceOrder) {
                 return response()->json(['message' => 'Service order not found'], 404);
             }
-            
+
             // Check loyalty eligibility and automatically apply it if eligible
             $isEligibleForLoyalty = $this->checkLoyaltyEligibility($serviceOrder->user_id);
-            
+
             if ($isEligibleForLoyalty) {
                 $isLoyaltyRedemption = true;
             }
-            
+
             // If loyalty redemption was requested but NOT eligible (shouldn't happen with auto-apply but for safety)
-            if ($useLoyalty === 'true' && !$isEligibleForLoyalty) {
+            if ($useLoyalty === 'true' && ! $isEligibleForLoyalty) {
                 return response()->json([
                     'message' => 'Customer is not eligible for loyalty point redemption',
                 ], 422);
@@ -288,11 +290,11 @@ class PaymentController extends Controller
             // Update service order status to completed and update employee if changed
             $updateData = ['status' => 'completed'];
             $oldEmployeeId = $serviceOrder->employee_id;
-            
+
             if (isset($validated['employee_id'])) {
                 $updateData['employee_id'] = $validated['employee_id'];
             }
-            
+
             $this->serviceOrders->update($serviceOrder, $updateData);
 
             // Mark the new employee as available
@@ -308,6 +310,11 @@ class PaymentController extends Controller
             // Update bay status back to available
             $this->bays->updateStatus($validated['bay_id'], 'available');
 
+            // Update queue line status if exists
+            QueueLine::where('service_order_id', $validated['service_order_id'])
+                ->where('status', 'waiting')
+                ->update(['status' => 'completed']);
+
             return response()->json([
                 'message' => 'Payment processed successfully',
                 'payment' => $payment,
@@ -318,18 +325,17 @@ class PaymentController extends Controller
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Payment processing failed: ' . $e->getMessage(), [
+            Log::error('Payment processing failed: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
+
             return response()->json([
                 'message' => 'Failed to process payment',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
-
-
 
     /**
      * Get transactions list by date range.
@@ -342,7 +348,7 @@ class PaymentController extends Controller
         $endDate = $request->query('end_date');
 
         if ($request->has('per_page') || $search) {
-             return response()->json($this->repo->getPaginatedTransactions($perPage, $search, $startDate, $endDate));
+            return response()->json($this->repo->getPaginatedTransactions($perPage, $search, $startDate, $endDate));
         }
 
         $request->validate([

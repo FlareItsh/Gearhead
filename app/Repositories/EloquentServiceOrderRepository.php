@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
-
 use App\Models\ServiceOrder;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -199,7 +198,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where(DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name)"), 'like', "%{$search}%")
-                  ->orWhere('so.service_order_id', 'like', "%{$search}%");
+                    ->orWhere('so.service_order_id', 'like', "%{$search}%");
             });
         }
 
@@ -210,7 +209,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             $query->whereDate('so.order_date', '<=', $endDate);
         }
         if ($status && $status !== 'all') {
-             $query->where('so.status', $status);
+            $query->where('so.status', $status);
         }
 
         return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
@@ -277,12 +276,12 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->leftJoin('queue_lines as ql', function ($join) {
                 $join->on('so.service_order_id', '=', 'ql.service_order_id')
-                     ->where('ql.status', '=', 'waiting');
+                    ->where('ql.status', '=', 'waiting');
             })
             ->where('so.status', 'pending')
             ->where(function ($query) {
                 $query->where('so.order_type', 'R')
-                      ->orWhereNotNull('ql.queue_line_id');
+                    ->orWhereNotNull('ql.queue_line_id');
             })
             ->select(
                 'so.service_order_id',
@@ -316,7 +315,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                     'service_ids' => $booking->service_ids ? explode(',', $booking->service_ids) : [],
                     'total' => $booking->total,
                     'order_date' => $booking->order_date,
-                    'is_queued' => !is_null($booking->queue_line_id),
+                    'is_queued' => ! is_null($booking->queue_line_id),
                     'queue_number' => $booking->queue_number,
                 ];
             });
@@ -324,9 +323,20 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
 
     public function cancelBooking(int $serviceOrderId): bool
     {
-        return DB::table('service_orders')
-            ->where('service_order_id', $serviceOrderId)
-            ->update(['status' => 'cancelled', 'updated_at' => now()]) > 0;
+        return DB::transaction(function () use ($serviceOrderId) {
+            $updated = DB::table('service_orders')
+                ->where('service_order_id', $serviceOrderId)
+                ->update(['status' => 'cancelled', 'updated_at' => now()]) > 0;
+
+            if ($updated) {
+                DB::table('queue_lines')
+                    ->where('service_order_id', $serviceOrderId)
+                    ->where('status', 'waiting')
+                    ->update(['status' => 'cancelled', 'updated_at' => now()]);
+            }
+
+            return $updated;
+        });
     }
 
     public function countCompletedBookingsForUser(int $userId): int

@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasFullName, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasFullName, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * The primary key for the model.
