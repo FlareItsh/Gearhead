@@ -13,8 +13,8 @@ class SupplyPurchaseDetailsSeeder extends Seeder
         $details = [];
 
         // Define date range for purchase_date (entire 2025)
-        $start = strtotime('2025-01-01 00:00:00');
-        $end = strtotime('2025-12-31 23:59:59');
+        $start = strtotime('2026-01-01 00:00:00');
+        $end = strtotime('2026-12-31 23:59:59');
 
         // Loop over 100 purchases
         for ($purchaseId = 1; $purchaseId <= 100; $purchaseId++) {
@@ -48,8 +48,7 @@ class SupplyPurchaseDetailsSeeder extends Seeder
         foreach ($details as $d) {
             if (! DB::table('supply_purchase_details')
                 ->where('supply_purchase_details_id', $d['supply_purchase_details_id'])
-                ->exists()
-            ) {
+                ->exists()) {
                 DB::table('supply_purchase_details')->insert($d);
             }
         }

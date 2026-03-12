@@ -14,7 +14,7 @@ class ServiceOrdersSeeder extends Seeder
             for ($day = 1; $day <= 28; $day++) { // Safe for Feb
                 $hour = rand(8, 18);
                 $min = rand(0, 59);
-                $dateStr = sprintf('2025-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
+                $dateStr = sprintf('2026-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
                 $monthTimeline[] = $dateStr;
             }
         }
@@ -28,8 +28,8 @@ class ServiceOrdersSeeder extends Seeder
         $orders = [];
         for ($i = 1; $i <= 200; $i++) {
             $orderDate = $monthTimeline[$i % count($monthTimeline)];
-            $created = date('Y-m-d H:i:s', strtotime($orderDate.' -'.rand(1, 48).' hours'));
-            $updated = date('Y-m-d H:i:s', strtotime($created.' +'.rand(1, 24).' hours'));
+            $created = date('Y-m-d H:i:s', strtotime($orderDate . ' -' . rand(1, 48) . ' hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 24) . ' hours'));
             $userId = $userIds[array_rand($userIds)];
             $employeeId = rand(1, 10);
             $bayId = rand(1, 6);

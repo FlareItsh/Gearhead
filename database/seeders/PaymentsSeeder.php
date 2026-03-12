@@ -16,7 +16,7 @@ class PaymentsSeeder extends Seeder
             for ($day = 1; $day <= 28; $day++) {
                 $hour = rand(8, 18);
                 $min = rand(0, 59);
-                $monthTimeline[] = sprintf('2025-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
+                $monthTimeline[] = sprintf('2026-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
             }
         }
         shuffle($monthTimeline);
@@ -34,7 +34,7 @@ class PaymentsSeeder extends Seeder
             $gcash_reference = $payment_method === 'gcash' ? (string) rand(1000000000000, 9999999999999) : null;
 
             $created = $monthTimeline[$index % count($monthTimeline)];
-            $updated = date('Y-m-d H:i:s', strtotime($created.' +2 hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created . ' +2 hours'));
 
             DB::table('payments')->updateOrInsert(
                 ['payment_id' => $index + 1],
