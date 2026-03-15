@@ -37,6 +37,7 @@ import axios from 'axios'
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { usePermissions } from '@/hooks/use-permissions'
 
 // ---------- Interfaces ----------
 interface BreadcrumbItem {
@@ -80,6 +81,7 @@ export default function Staffs() {
   const [filter, setFilter] = useState<'All' | 'Active' | 'Inactive' | 'Absent'>('All')
   const [perPage, setPerPage] = useState(10)
   const [loading, setLoading] = useState(true)
+  const { hasPermission } = usePermissions()
 
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestions, setSuggestions] = useState<Staff[]>([])
@@ -304,18 +306,111 @@ export default function Staffs() {
           />
 
           {/*add modal*/}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="highlight">
-                <Plus className="h-4 w-4" /> Add Employee
-              </Button>
-            </DialogTrigger>
-            {/* ... modal content unchanged ... */
-            /* Actually I can't easily skip modal content without matching it. 
-                I'll keep the modal content as is by matching surrounding code? 
-                The modal is huge.
-                I will only replace the top part (filteredStaff) and the table part separately. */}
-          </Dialog>
+          {hasPermission('add_employee') && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="highlight">
+                  <Plus className="h-4 w-4" /> Add Employee
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>
+                    Add <span className="font-semibold text-highlight">Employee</span>
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="grid gap-3 py-2 text-foreground">
+                  {/* first name */}
+                  <div>
+                    <Label>First Name</Label>
+                    <Input
+                      value={addForm.firstName}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          firstName: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  {/*last name*/}
+                  <div>
+                    <Label>Last Name</Label>
+                    <Input
+                      value={addForm.lastName}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          lastName: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  {/*middle name*/}
+                  <div>
+                    <Label>Middle Name (optional)</Label>
+                    <Input
+                      value={addForm.middleName}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          middleName: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  {/*phone*/}
+                  <div>
+                    <Label>Phone Number</Label>
+                    <Input
+                      value={addForm.phone}
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value)
+                        setAddForm({
+                          ...addForm,
+                          phone: formatted,
+                        })
+                      }}
+                      maxLength={11}
+                    />
+                  </div>
+                  {/*address*/}
+                  <div>
+                    <Label>Address</Label>
+                    <Input
+                      value={addForm.address}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          address: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter className="flex justify-end gap-3">
+                  <DialogClose asChild>
+                    <Button
+                      variant="secondary"
+                      onClick={resetAddForm}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <DialogClose asChild>
+                    <Button
+                      variant="highlight"
+                      onClick={handleAdd}
+                    >
+                      Save Employee
+                    </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {/* ... search ... */
@@ -434,17 +529,18 @@ export default function Staffs() {
                             <TableCell>
                               <div className="flex justify-center gap-3">
                                 {/* Edit Modal (Dialog) */}
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <button
-                                      onClick={() => openEdit(staff)}
-                                      className=""
-                                    >
-                                      <Pencil className="h-4 w-4" />
-                                    </button>
-                                  </DialogTrigger>
+                                {hasPermission('edit_employee') && (
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <button
+                                        onClick={() => openEdit(staff)}
+                                        className=""
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </button>
+                                    </DialogTrigger>
 
-                                  <DialogContent className="sm:max-w-md">
+                                    <DialogContent className="sm:max-w-md">
                                     <DialogHeader>
                                       <DialogTitle>
                                         Edit{' '}
@@ -566,14 +662,17 @@ export default function Staffs() {
                                     </DialogFooter>
                                   </DialogContent>
                                 </Dialog>
+                                )}
 
                                 {/*delete*/}
-                                <button
-                                  onClick={() => handleDelete(staff.id)}
-                                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+                                {hasPermission('delete_employee') && (
+                                  <button
+                                    onClick={() => handleDelete(staff.id)}
+                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>

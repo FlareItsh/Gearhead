@@ -31,6 +31,7 @@ class User extends Authenticatable
         'address',
         'password',
         'role',
+        'permissions',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'permissions' => 'array',
     ];
 
     /**
@@ -57,6 +59,11 @@ class User extends Authenticatable
     public function hasAnyRole(array $roles): bool
     {
         return in_array($this->role, $roles);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return in_array($permission, $this->permissions ?? []);
     }
 
     public function hasRole(string $role): bool

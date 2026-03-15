@@ -45,6 +45,7 @@ import { useEffect, useState } from 'react'
 
 import Pagination from '@/components/Pagination'
 import { toast } from 'sonner'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Inventory', href: '/inventory' }]
 
@@ -91,6 +92,7 @@ interface PaginatedResponse<T> {
 export default function InventoryPage() {
   const [suppliesData, setSuppliesData] = useState<PaginatedResponse<Supply> | null>(null)
   const [searchValue, setSearchValue] = useState('')
+  const { hasPermission } = usePermissions()
   const [filter, setFilter] = useState<'All' | 'supply' | 'consumables'>('All')
   const [showAddItem, setShowAddItem] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -452,20 +454,24 @@ export default function InventoryPage() {
             description="Track supplies and materials"
           />
           <div className="flex gap-3">
-            <Button
-              onClick={downloadPDF}
-              variant="secondary"
-            >
-              <Download className="mr-2 h-4 w-4" /> Export PDF
-            </Button>
+            {hasPermission('export_inventory_pdf') && (
+              <Button
+                onClick={downloadPDF}
+                variant="secondary"
+              >
+                <Download className="mr-2 h-4 w-4" /> Export PDF
+              </Button>
+            )}
 
             <Dialog
               open={showAddItem}
               onOpenChange={setShowAddItem}
             >
-              <DialogTrigger asChild>
-                <Button variant="highlight">+ Add Item</Button>
-              </DialogTrigger>
+              {hasPermission('add_inventory_item') && (
+                <DialogTrigger asChild>
+                  <Button variant="highlight">+ Add Item</Button>
+                </DialogTrigger>
+              )}
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>
@@ -549,9 +555,11 @@ export default function InventoryPage() {
               open={showPurchaseModal}
               onOpenChange={setShowPurchaseModal}
             >
-              <DialogTrigger asChild>
-                <Button variant="highlight">+ Add Purchase</Button>
-              </DialogTrigger>
+              {hasPermission('add_inventory_purchase') && (
+                <DialogTrigger asChild>
+                  <Button variant="highlight">+ Add Purchase</Button>
+                </DialogTrigger>
+              )}
               <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                 <DialogHeader>
                   <DialogTitle>
@@ -781,19 +789,23 @@ export default function InventoryPage() {
             </Dialog>
 
             {/* PULLOUT REQUEST MODAL */}
-            <PulloutRequestModal
-              supplies={allSupplies}
-              onSuccess={loadSupplies}
-            />
+            {hasPermission('pullout_inventory_request') && (
+              <PulloutRequestModal
+                supplies={allSupplies}
+                onSuccess={loadSupplies}
+              />
+            )}
 
             {/* ADD SUPPLIER MODAL */}
             <Dialog
               open={showAddSupplier}
               onOpenChange={setShowAddSupplier}
             >
-              <DialogTrigger asChild>
-                <Button variant="highlight">+ Add Supplier</Button>
-              </DialogTrigger>
+              {hasPermission('add_inventory_supplier') && (
+                <DialogTrigger asChild>
+                  <Button variant="highlight">+ Add Supplier</Button>
+                </DialogTrigger>
+              )}
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>
@@ -1000,13 +1012,15 @@ export default function InventoryPage() {
                                 <Badge variant={variant}>{status}</Badge>
                               </TableCell>
                               <TableCell className="text-center">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => openEditModal(supply)}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
+                                {hasPermission('edit_inventory_item') && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openEditModal(supply)}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </TableCell>
                             </TableRow>
                           )
@@ -1049,14 +1063,16 @@ export default function InventoryPage() {
                               </div>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditModal(supply)}
-                            className="mt-2 shrink-0"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
+                          {hasPermission('edit_inventory_item') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditModal(supply)}
+                              className="mt-2 shrink-0"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     )

@@ -26,6 +26,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { CreditCard, Download, PhilippinePeso, Search } from 'lucide-react'
 import { memo, useEffect, useState } from 'react'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -205,6 +206,7 @@ const TransactionRow = memo(({ item }: { item: Transaction | SupplyPurchase }) =
 
 export default function Transactions({ transactions }: TransactionsProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const { hasPermission } = usePermissions()
   const [isLoading, setIsLoading] = useState(true)
   const [financialData, setFinancialData] = useState<Stats>({
     total_revenue: 0,
@@ -652,14 +654,16 @@ export default function Transactions({ transactions }: TransactionsProps) {
                       className="h-9 pl-9 sm:w-40"
                     />
                   </div>
-                  <Button
-                    onClick={handleExport}
-                    variant="secondary"
-                    className="gap-2 whitespace-nowrap"
-                  >
-                    <Download className="h-4 w-4" />
-                    Export PDF
-                  </Button>
+                  {hasPermission('export_transactions_pdf') && (
+                    <Button
+                      onClick={handleExport}
+                      variant="secondary"
+                      className="gap-2 whitespace-nowrap"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export PDF
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

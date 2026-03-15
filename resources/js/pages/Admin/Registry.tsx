@@ -17,6 +17,7 @@ import { Head, router } from '@inertiajs/react'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { usePermissions } from '@/hooks/use-permissions'
 
 axios.defaults.withCredentials = true
 
@@ -98,6 +99,7 @@ export default function Registry({
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   const [availableEmployees, setAvailableEmployees] = useState<Employee[]>(initialEmployees)
   const [loading, setLoading] = useState(false)
+  const { hasPermission } = usePermissions()
 
   // Dialog State
   const [selectedBayForService, setSelectedBayForService] = useState<Bay | null>(null)
@@ -433,14 +435,16 @@ export default function Registry({
             description="Manage and monitor bays for carwash services"
           />
 
-          <Button
-            variant="highlight"
-            size="lg"
-            className="ml-auto"
-            onClick={handleAddQueue}
-          >
-            Add Queue
-          </Button>
+          {hasPermission('add_queue') && (
+            <Button
+              variant="highlight"
+              size="lg"
+              className="ml-auto"
+              onClick={handleAddQueue}
+            >
+              Add Queue
+            </Button>
+          )}
         </div>
 
         {loading ? (
@@ -466,7 +470,7 @@ export default function Registry({
                     isMaintenance &&
                       'border-red-200/50 bg-red-50/40 dark:border-red-900/50 dark:bg-red-950/30',
                   )}
-                  onClick={() => isAvailable && handleStartService(bay)}
+                  onClick={() => isAvailable && hasPermission('start_service') && handleStartService(bay)}
                 >
                   {/* Status accent border */}
                   <div
@@ -680,13 +684,15 @@ export default function Registry({
                       <>
                         {/* Old Inline Select Employee Logic Removed */}
                         <div className="mt-6">
-                          <Button
-                            onClick={() => handleStartService(bay)}
-                            variant="highlight"
-                            className="h-11 w-full font-medium"
-                          >
-                            Start Service
-                          </Button>
+                          {hasPermission('start_service') && (
+                            <Button
+                              onClick={() => handleStartService(bay)}
+                              variant="highlight"
+                              className="h-11 w-full font-medium"
+                            >
+                              Start Service
+                            </Button>
+                          )}
                         </div>
                       </>
                     )}

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
-
-
 use Illuminate\Http\Request;
 
 class SupplyPurchaseController extends Controller
@@ -30,6 +28,10 @@ class SupplyPurchaseController extends Controller
 
     public function store(Request $request)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('add_inventory_purchase')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $created = $this->repo->create($request->all());
 
         return response()->json($created, 201);
@@ -77,7 +79,7 @@ class SupplyPurchaseController extends Controller
         $search = $request->query('search');
 
         if ($request->has('per_page') || $search) {
-             return response()->json($this->repo->paginateDetailedPurchases($perPage, $search, $startDate, $endDate));
+            return response()->json($this->repo->paginateDetailedPurchases($perPage, $search, $startDate, $endDate));
         }
 
         $purchases = $this->repo->getDetailedPurchases($startDate, $endDate);

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\SupplyRepositoryInterface;
-
-
 use Illuminate\Http\Request;
 
 class SupplyController extends Controller
@@ -22,6 +20,7 @@ class SupplyController extends Controller
             return response()->json($this->repo->all());
         }
         $perPage = (int) $request->input('per_page', 10);
+
         return response()->json($this->repo->paginate($perPage));
     }
 
@@ -36,6 +35,10 @@ class SupplyController extends Controller
 
     public function store(Request $request)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('add_inventory_item')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $id = $this->repo->create($request->all());
         $item = $this->repo->findById($id);
 
@@ -44,6 +47,10 @@ class SupplyController extends Controller
 
     public function update(Request $request, int $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('edit_inventory_item')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $item = $this->repo->findById($id);
 
         if (! $item) {

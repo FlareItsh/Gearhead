@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Repositories\Contracts\PaymentRepositoryInterface;
-use App\Repositories\Contracts\ServiceRepositoryInterface;
-use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
-
 use App\Repositories\BookingRepository;
-
-
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+use App\Repositories\Contracts\ServiceRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -125,9 +122,20 @@ class CustomerController extends Controller
     {
         $perPage = (int) $request->query('per_page', 10);
         $search = $request->query('search');
+        $role = $request->query('role');
 
-        if ($request->has('per_page') || $search) {
-            return response()->json($this->users->getPaginatedCustomers($perPage, $search));
+        if ($request->has('per_page') || $search || $role) {
+            $paginated = $this->users->getPaginatedCustomers($perPage, $search, $role);
+            // decode permissions json for response
+            foreach ($paginated->items() as $item) {
+                if ($item->permissions) {
+                    $item->permissions = json_decode($item->permissions, true);
+                } else {
+                    $item->permissions = [];
+                }
+            }
+
+            return response()->json($paginated);
         }
 
         $customers = $this->users->getCustomersWithBookings();
@@ -185,8 +193,13 @@ class CustomerController extends Controller
             'phone_number' => $customer->phone_number,
         ], 201);
     }
+
     public function update(Request $request, int $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('edit_user')) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
         $user = $this->users->findById($id);
 
         if (! $user) {
@@ -200,14 +213,15 @@ class CustomerController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,'.$id.',user_id',
             'phone_number' => 'nullable|string|max:20',
             'role' => 'required|string|in:admin,customer',
+            'permissions' => 'nullable|array',
             'password' => 'nullable|string|min:8',
             'admin_password' => 'required|string',
         ]);
 
         // Verify admin password
-        if (!Hash::check($validated['admin_password'], $request->user()->password)) {
+        if (! Hash::check($validated['admin_password'], $request->user()->password)) {
             return response()->json([
-                'message' => 'Incorrect admin password provided.'
+                'message' => 'Incorrect admin password provided.',
             ], 403);
         }
 

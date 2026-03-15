@@ -24,5 +24,5 @@ interface UserRepositoryInterface
     /**
      * Get paginated customers with search.
      */
-    public function getPaginatedCustomers(int $perPage, ?string $search = null);
+    public function getPaginatedCustomers(int $perPage, ?string $search = null, ?string $role = null);
 }

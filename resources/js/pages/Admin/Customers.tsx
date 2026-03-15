@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
   TableBody,
@@ -35,6 +36,7 @@ import {
 } from '@/components/ui/table'
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
+import { AdminPrivileges } from '@/components/admin-privileges'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
 import { ChevronDownIcon, Edit2, Search, Star } from 'lucide-react'
@@ -53,6 +55,7 @@ interface User {
   phone_number: string
   address?: string | null
   role: string
+  permissions?: string[]
   bookings: number
   loyaltyPoints: number
 }
@@ -78,11 +81,12 @@ export default function Customers() {
   const [filter, setFilter] = useState<'All' | 'Name' | 'Email' | 'Phone'>('All')
   const [loading, setLoading] = useState(true)
   const [perPage, setPerPage] = useState(10)
+  const [activeTab, setActiveTab] = useState<'customers'|'admins'>('customers')
 
   // Load data on mount and dependencies change
   useEffect(() => {
     loadCustomers()
-  }, [perPage]) // Reload when perPage changes
+  }, [perPage, activeTab]) // Reload when perPage or activeTab changes
 
   // Debounce search
   useEffect(() => {
@@ -96,7 +100,7 @@ export default function Customers() {
     setLoading(true)
     try {
       let finalUrl = url || route('admin.customers.index')
-      const params: any = { per_page: perPage, search: searchValue }
+      const params: any = { per_page: perPage, search: searchValue, role: activeTab === 'customers' ? 'customer' : 'admin' }
 
       // If we have a url (pagination link), we might need to extract page or just use it.
       // Laravel links usually have page param.
@@ -135,6 +139,7 @@ export default function Customers() {
     phone_number: '',
     role: 'customer',
     password: '',
+    permissions: [] as string[],
   })
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [processing, setProcessing] = useState(false)
@@ -146,8 +151,9 @@ export default function Customers() {
       middle_name: user.middle_name || '',
       last_name: user.last_name,
       email: user.email,
-      phone_number: user.phone_number,
+      phone_number: user.phone_number || '',
       role: user.role,
+      permissions: user.permissions || [],
       password: '', // Password empty by default
     })
     setIsEditOpen(true)
@@ -232,12 +238,19 @@ export default function Customers() {
         <Card className="border border-border/50 bg-background text-foreground">
           <CardContent className="p-0">
             {/* Header */}
-            {/* Header */}
-            <div className="border-b border-border/50 p-6">
-              <h2 className="text-lg font-semibold">Customer List</h2>
-              <p className="text-sm text-muted-foreground">
-                Total: {customersData?.total || 0} customers
-              </p>
+            <div className="border-b border-border/50 p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">{activeTab === 'customers' ? 'Customer List' : 'Admin List'}</h2>
+                <p className="text-sm text-muted-foreground">
+                  Total: {customersData?.total || 0} {activeTab}
+                </p>
+              </div>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-[400px]">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="customers">Customers</TabsTrigger>
+                  <TabsTrigger value="admins">Admins</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
             {loading && !customersData ? (
@@ -377,9 +390,9 @@ export default function Customers() {
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
       >
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className={`sm:max-w-[500px] ${editForm.role === 'admin' ? 'sm:max-w-[700px]' : ''} transition-all duration-300`}>
           <DialogHeader>
-            <DialogTitle>Edit Customer</DialogTitle>
+            <DialogTitle>Edit User ({editForm.role})</DialogTitle>
             <DialogDescription>
               Make changes to the customer's profile here. Click save when you're done.
             </DialogDescription>
@@ -455,6 +468,12 @@ export default function Customers() {
                 onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
               />
             </div>
+            {editForm.role === 'admin' && (
+              <AdminPrivileges 
+                selectedPermissions={editForm.permissions} 
+                onChange={(perms) => setEditForm({ ...editForm, permissions: perms })} 
+              />
+            )}
           </div>
           <DialogFooter>
             <Button

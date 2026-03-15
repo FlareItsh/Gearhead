@@ -2,11 +2,11 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -61,39 +61,45 @@ class EloquentUserRepository implements UserRepositoryInterface
                 'u.phone_number',
                 'u.address',
                 'u.role',
+                'u.permissions',
                 DB::raw('COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) as bookings'),
                 DB::raw('(COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) % 9) as loyaltyPoints')
             )
-            ->groupBy('u.user_id', 'u.first_name', 'u.middle_name', 'u.last_name', 'u.email', 'u.phone_number', 'u.address', 'u.role')
+            ->groupBy('u.user_id', 'u.first_name', 'u.middle_name', 'u.last_name', 'u.email', 'u.phone_number', 'u.address', 'u.role', 'u.permissions')
             ->get();
     }
 
-    public function getPaginatedCustomers(int $perPage, ?string $search = null)
+    public function getPaginatedCustomers(int $perPage, ?string $search = null, ?string $role = null)
     {
         $query = DB::table('users as u')
             ->leftJoin('service_orders as so', 'u.user_id', '=', 'so.user_id')
-            ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id')
-            ->where('u.role', 'customer')
-            ->select(
-                'u.user_id',
-                'u.first_name',
-                'u.middle_name',
-                'u.last_name',
-                'u.email',
-                'u.phone_number',
-                'u.address',
-                'u.role',
-                DB::raw('COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) as bookings'),
-                DB::raw('(COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) % 9) as loyaltyPoints')
-            )
-            ->groupBy('u.user_id', 'u.first_name', 'u.middle_name', 'u.last_name', 'u.email', 'u.phone_number', 'u.address', 'u.role');
+            ->leftJoin('payments as p', 'so.service_order_id', '=', 'p.service_order_id');
+
+        if ($role) {
+            $query->where('u.role', $role);
+        }
+
+        $query->select(
+            'u.user_id',
+            'u.first_name',
+            'u.middle_name',
+            'u.last_name',
+            'u.email',
+            'u.phone_number',
+            'u.address',
+            'u.role',
+            'u.permissions',
+            DB::raw('COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) as bookings'),
+            DB::raw('(COUNT(DISTINCT CASE WHEN p.payment_id IS NOT NULL THEN so.service_order_id END) % 9) as loyaltyPoints')
+        )
+            ->groupBy('u.user_id', 'u.first_name', 'u.middle_name', 'u.last_name', 'u.email', 'u.phone_number', 'u.address', 'u.role', 'u.permissions');
 
         if ($search) {
-             $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('u.first_name', 'like', "%{$search}%")
-                  ->orWhere('u.last_name', 'like', "%{$search}%")
-                  ->orWhere('u.email', 'like', "%{$search}%")
-                  ->orWhere('u.phone_number', 'like', "%{$search}%");
+                    ->orWhere('u.last_name', 'like', "%{$search}%")
+                    ->orWhere('u.email', 'like', "%{$search}%")
+                    ->orWhere('u.phone_number', 'like', "%{$search}%");
             });
         }
 

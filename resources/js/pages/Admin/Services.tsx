@@ -26,6 +26,7 @@ import axios from 'axios'
 import { Clock, Pencil, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }]
 
@@ -59,6 +60,7 @@ export default function AdminServices({ services = [], categories = [] }: Servic
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { hasPermission } = usePermissions()
 
   const { data, setData, processing, reset } = useForm({
     service_name: '',
@@ -233,13 +235,15 @@ export default function AdminServices({ services = [], categories = [] }: Servic
             title="Services"
             description="Manage carwash services and pricing"
           />
-          <Button
-            variant="highlight"
-            onClick={handleAddNew}
-          >
-            <Plus className="h-4 w-4" />
-            Add Service
-          </Button>
+          {hasPermission('add_service') && (
+            <Button
+              variant="highlight"
+              onClick={handleAddNew}
+            >
+              <Plus className="h-4 w-4" />
+              Add Service
+            </Button>
+          )}
         </div>
 
         {/* Search Bar */}
@@ -370,14 +374,16 @@ export default function AdminServices({ services = [], categories = [] }: Servic
                       ))}
                     </div>
 
-                    <Button
-                      variant="highlight"
-                      className="mt-2 w-full"
-                      onClick={() => handleEdit(s)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
+                    {hasPermission('edit_service') && (
+                      <Button
+                        variant="highlight"
+                        className="mt-2 w-full"
+                        onClick={() => handleEdit(s)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

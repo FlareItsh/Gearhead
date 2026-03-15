@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\ServiceRepositoryInterface;
-
-
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -30,6 +28,10 @@ class ServiceController extends Controller
 
     public function store(Request $request)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('add_service')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'service_name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -43,7 +45,7 @@ class ServiceController extends Controller
         ]);
 
         // Filter to only enabled variants for creation
-        $validated['variants'] = array_filter($validated['variants'], fn($v) => $v['enabled']);
+        $validated['variants'] = array_filter($validated['variants'], fn ($v) => $v['enabled']);
 
         $created = $this->repo->create($validated);
 
@@ -52,6 +54,10 @@ class ServiceController extends Controller
 
     public function update(Request $request, int $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('edit_service')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $service = $this->repo->findById($id);
         if (! $service) {
             return response()->json(['message' => 'Not found'], 404);

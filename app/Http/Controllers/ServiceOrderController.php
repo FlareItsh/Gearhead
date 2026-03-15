@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
-use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use App\Repositories\Contracts\BayRepositoryInterface;
-
-
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ServiceOrderController extends Controller
 {
     protected ServiceOrderRepositoryInterface $repo;
+
     protected EmployeeRepositoryInterface $employees;
+
     protected BayRepositoryInterface $bays;
 
     public function __construct(
@@ -287,6 +287,10 @@ class ServiceOrderController extends Controller
      */
     public function createFromRegistry(Request $request)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('add_queue')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:users,user_id',
             'bay_id' => 'required|integer|exists:bays,bay_id',
@@ -360,6 +364,10 @@ class ServiceOrderController extends Controller
      */
     public function assignEmployee(Request $request, int $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('start_service')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $validated = $request->validate([
                 'employee_id' => 'required|integer|exists:employees,employee_id',

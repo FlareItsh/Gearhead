@@ -347,6 +347,13 @@ class PaymentController extends Controller
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
+        // Check permission if requesting all data (export)
+        if (! $request->has('per_page')) {
+            if (! $request->user() || ! $request->user()->hasPermission('export_transactions_pdf')) {
+                abort(403, 'Unauthorized action.');
+            }
+        }
+
         if ($request->has('per_page') || $search) {
             return response()->json($this->repo->getPaginatedTransactions($perPage, $search, $startDate, $endDate));
         }

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\BayRepositoryInterface;
-
-
 use Illuminate\Http\Request;
 
 class BayController extends Controller
@@ -29,6 +27,10 @@ class BayController extends Controller
 
     public function store(Request $request)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('add_bay')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'bay_number' => 'required|integer|unique:bays',
             'bay_type' => 'required|string',
@@ -42,6 +44,10 @@ class BayController extends Controller
 
     public function update(Request $request, int $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('edit_bay')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $validated = $request->validate([
                 'bay_number' => 'sometimes|integer|unique:bays,bay_number,'.$id.',bay_id',
@@ -57,8 +63,12 @@ class BayController extends Controller
         }
     }
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('delete_bay')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $this->bayRepository->delete($id);
 

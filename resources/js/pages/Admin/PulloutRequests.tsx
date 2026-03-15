@@ -26,6 +26,7 @@ import axios from 'axios'
 import { CheckCircle, Clock, PackageCheck, Search, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Pullout Requests', href: '/pullout-requests' }]
 
@@ -87,6 +88,7 @@ export default function PulloutRequestsPage() {
   const [activeTab, setActiveTab] = useState<'requests' | 'returns'>('requests')
   const [search, setSearch] = useState('')
   const [perPage, setPerPage] = useState(10)
+  const { hasPermission } = usePermissions()
 
   // Debounced search
   useEffect(() => {
@@ -345,7 +347,7 @@ export default function PulloutRequestsPage() {
                               </p>
                             )}
                           </div>
-                          {request.status === 'pending' && (
+                          {request.status === 'pending' && hasPermission('approve_pullout_request') && (
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
@@ -473,15 +475,17 @@ export default function PulloutRequestsPage() {
                         </TableCell>
                         <TableCell>
                           {!supply.is_returned ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-green-600 text-green-600 hover:bg-green-50"
-                              onClick={() => handleReturnSupply(supply.pullout_request_details_id)}
-                            >
-                              <PackageCheck className="mr-1 h-4 w-4" />
-                              Mark Returned
-                            </Button>
+                            hasPermission('mark_return_pullout') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-green-600 text-green-600 hover:bg-green-50"
+                                onClick={() => handleReturnSupply(supply.pullout_request_details_id)}
+                              >
+                                <PackageCheck className="mr-1 h-4 w-4" />
+                                Mark Returned
+                              </Button>
+                            )
                           ) : (
                             <div className="text-sm text-muted-foreground">
                               Returned by {supply.returned_by}

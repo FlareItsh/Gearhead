@@ -140,19 +140,45 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
   // 2. `page.props.auth.user.role` from Inertia (if available)
   // 3. default to 'admin'
   const page = usePage()
-  const inertiaRole = (page.props as { auth?: { user?: { role?: string } } })?.auth?.user?.role
+  const inertiaUser = (page.props as any)?.auth?.user
+  const inertiaRole = inertiaUser?.role
+  const userPermissions = inertiaUser?.permissions
   const currentRole = userRole ?? inertiaRole ?? 'admin'
+
+  // Filter mainNavItems based on permissions if the user is an admin
+  let adminNavItems = mainNavItems
+  if (currentRole === 'admin' && Array.isArray(userPermissions)) {
+    const permissionMap: Record<string, string> = {
+      'Dashboard': 'view_dashboard',
+      'Registry': 'view_registry',
+      'Bookings': 'view_bookings',
+      'Bays': 'view_bays',
+      'Services': 'view_services',
+      'Inventory': 'view_inventory',
+      'Pullout Requests': 'view_pullout_requests',
+      'Users': 'view_users',
+      'Employees': 'view_employees',
+      'Transactions': 'view_transactions',
+      'Reports': 'view_reports',
+    }
+    
+    adminNavItems = mainNavItems.filter(item => {
+      const requiredPerm = permissionMap[item.title]
+      if (!requiredPerm) return true // no permission map defined, allow
+      return userPermissions.includes(requiredPerm)
+    })
+  }
 
   // Determine which nav items to render. Priority:
   // 1. If roleNavItems is provided and contains the current role, use that.
   // 2. If role is 'customer' use exported customerNavItems.
-  // 3. Otherwise use the default mainNavItems (admin view).
+  // 3. Otherwise use the filtered adminNavItems.
   const itemsToRender: NavItem[] =
     roleNavItems && roleNavItems[currentRole]
       ? roleNavItems[currentRole]
       : currentRole === 'customer'
         ? customerNavItems
-        : mainNavItems
+        : adminNavItems
 
   return (
     <Sidebar

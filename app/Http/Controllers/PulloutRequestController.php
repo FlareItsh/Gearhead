@@ -5,14 +5,14 @@ namespace App\Http\Controllers;
 use App\Repositories\Contracts\PulloutRequestRepositoryInterface;
 use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
 use App\Repositories\Contracts\SupplyRepositoryInterface;
-
 use Illuminate\Http\Request;
-
 
 class PulloutRequestController extends Controller
 {
     protected PulloutRequestRepositoryInterface $pulloutRequestRepository;
+
     protected PulloutServiceRepositoryInterface $pulloutServiceRepository;
+
     protected SupplyRepositoryInterface $supplyRepository;
 
     public function __construct(
@@ -43,17 +43,16 @@ class PulloutRequestController extends Controller
         return response()->json([
             'pulloutRequests' => $pulloutRequests,
             'activeServiceOrders' => $activeServiceOrders,
-            'supplies' => $supplies
+            'supplies' => $supplies,
         ]);
     }
 
     public function show(int $id)
     {
         $item = $this->pulloutRequestRepository->findById($id);
+
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
-
-
 
     public function getReturnableSupplies(Request $request)
     {
@@ -61,10 +60,11 @@ class PulloutRequestController extends Controller
         $search = $request->query('search');
 
         if ($request->has('per_page') || $search) {
-             return response()->json($this->pulloutRequestRepository->getPaginatedReturnablePullouts($perPage, $search));
+            return response()->json($this->pulloutRequestRepository->getPaginatedReturnablePullouts($perPage, $search));
         }
 
         $returnableSupplies = $this->pulloutRequestRepository->getReturnablePullouts();
+
         return response()->json($returnableSupplies);
     }
 
@@ -93,18 +93,22 @@ class PulloutRequestController extends Controller
 
             return response()->json([
                 'message' => 'Pullout request created successfully',
-                'pulloutRequest' => $pulloutRequest
+                'pulloutRequest' => $pulloutRequest,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create pullout request',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     public function approve(Request $request, $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('approve_pullout_request')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'approved_by' => 'required|string',
         ]);
@@ -114,28 +118,32 @@ class PulloutRequestController extends Controller
 
             if ($result) {
                 return response()->json([
-                    'message' => 'Pullout request approved successfully'
+                    'message' => 'Pullout request approved successfully',
                 ]);
             } else {
                 return response()->json([
-                    'message' => 'Failed to approve pullout request'
+                    'message' => 'Failed to approve pullout request',
                 ], 400);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error approving pullout request',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     public function reject(Request $request, $id)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('approve_pullout_request')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $pulloutRequest = $this->pulloutRequestRepository->findById($id);
-        
-        if (!$pulloutRequest) {
+
+        if (! $pulloutRequest) {
             return response()->json([
-                'message' => 'Pullout request not found'
+                'message' => 'Pullout request not found',
             ], 404);
         }
 
@@ -147,11 +155,11 @@ class PulloutRequestController extends Controller
 
         if ($updated) {
             return response()->json([
-                'message' => 'Pullout request rejected successfully'
+                'message' => 'Pullout request rejected successfully',
             ]);
         } else {
             return response()->json([
-                'message' => 'Failed to reject pullout request'
+                'message' => 'Failed to reject pullout request',
             ], 400);
         }
     }
@@ -164,6 +172,7 @@ class PulloutRequestController extends Controller
         }
 
         $this->pulloutRequestRepository->update($item, $request->all());
+
         return response()->json($item);
     }
 
@@ -175,13 +184,16 @@ class PulloutRequestController extends Controller
         }
 
         $this->pulloutRequestRepository->delete($item);
+
         return response()->json(null, 204);
     }
 
-
-
     public function returnSupply(Request $request, $detailId)
     {
+        if (! $request->user() || ! $request->user()->hasPermission('mark_return_pullout')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'returned_by' => 'required|string',
         ]);
@@ -194,17 +206,17 @@ class PulloutRequestController extends Controller
 
             if ($result) {
                 return response()->json([
-                    'message' => 'Supply returned successfully'
+                    'message' => 'Supply returned successfully',
                 ]);
             } else {
                 return response()->json([
-                    'message' => 'Supply cannot be returned (already returned or consumable)'
+                    'message' => 'Supply cannot be returned (already returned or consumable)',
                 ], 400);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error returning supply',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

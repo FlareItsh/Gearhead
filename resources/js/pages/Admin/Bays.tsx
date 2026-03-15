@@ -28,6 +28,7 @@ import axios from 'axios'
 import { Edit2, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Bays', href: '/bays' }]
 
@@ -43,6 +44,7 @@ interface Bay {
 export default function Bays() {
   const [bays, setBays] = useState<Bay[]>([])
   const [loading, setLoading] = useState(true)
+  const { hasPermission } = usePermissions()
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -267,9 +269,11 @@ export default function Bays() {
               }
             }}
           >
-            <DialogTrigger asChild>
-              <Button variant="highlight">+ Add Bay</Button>
-            </DialogTrigger>
+            {hasPermission('add_bay') && (
+              <DialogTrigger asChild>
+                <Button variant="highlight">+ Add Bay</Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>
@@ -394,23 +398,27 @@ export default function Bays() {
 
                     {/* Action Buttons */}
                     <div className="mt-6 flex gap-3">
-                      <Button
-                        onClick={() => openEditModal(bay)}
-                        variant="highlight"
-                        className="h-11 flex-1 border-border/70 font-medium"
-                      >
-                        <Edit2 className="mr-2 h-4 w-4" />
-                        Edit Bay
-                      </Button>
+                      {hasPermission('edit_bay') && (
+                        <Button
+                          onClick={() => openEditModal(bay)}
+                          variant="highlight"
+                          className="h-11 flex-1 border-border/70 font-medium"
+                        >
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Edit Bay
+                        </Button>
+                      )}
 
-                      <Button
-                        onClick={() => handleDeleteClick(bay)}
-                        variant="destructive"
-                        className="h-11 flex-1 font-medium"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </Button>
+                      {hasPermission('delete_bay') && (
+                        <Button
+                          onClick={() => handleDeleteClick(bay)}
+                          variant="destructive"
+                          className="h-11 flex-1 font-medium"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
