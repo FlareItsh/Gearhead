@@ -25,7 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Reports', href: '/reports' }]
 
 const areaChartConfig: ChartConfig = {
   revenue: { label: 'Revenue', color: 'var(--chart-1)' },
-  expenses: { label: 'Expenses', color: 'var(--chart-3)' },
+  expenses: { label: 'Expenses', color: 'var(--chart-5)' },
   profit: { label: 'Profit', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
@@ -578,29 +578,33 @@ export default function Reports() {
 
                   <Area
                     dataKey="revenue"
-                    type="natural"
+                    type="monotone"
                     stroke={areaChartConfig.revenue.color}
                     fill="url(#revenue)"
                     strokeWidth={2.5}
-                    dot={false}
+                    dot={{ r: 3, strokeWidth: 1, fill: areaChartConfig.revenue.color }}
+                    activeDot={{ r: 6 }}
                     isAnimationActive={false}
                   />
                   <Area
                     dataKey="expenses"
-                    type="natural"
+                    type="monotone"
                     stroke={areaChartConfig.expenses.color}
                     fill="url(#expenses)"
                     strokeWidth={2.5}
-                    dot={false}
+                    strokeDasharray="5 5"
+                    dot={{ r: 3, strokeWidth: 1, fill: areaChartConfig.expenses.color }}
+                    activeDot={{ r: 6 }}
                     isAnimationActive={false}
                   />
                   <Area
                     dataKey="profit"
-                    type="natural"
+                    type="monotone"
                     stroke={areaChartConfig.profit.color}
                     fill="url(#profit)"
                     strokeWidth={2.5}
-                    dot={false}
+                    dot={{ r: 3, strokeWidth: 1, fill: areaChartConfig.profit.color }}
+                    activeDot={{ r: 6 }}
                     isAnimationActive={false}
                   />
 
@@ -628,18 +632,22 @@ export default function Reports() {
                     <AreaChart margin={{ top: 8, bottom: 8 }}>
                       <Area
                         dataKey="revenue"
+                        type="monotone"
                         stroke={areaChartConfig.revenue.color}
                         fillOpacity={0.25}
                         strokeWidth={1.5}
                       />
                       <Area
                         dataKey="expenses"
+                        type="monotone"
                         stroke={areaChartConfig.expenses.color}
                         fillOpacity={0.25}
                         strokeWidth={1.5}
+                        strokeDasharray="3 3"
                       />
                       <Area
                         dataKey="profit"
+                        type="monotone"
                         stroke={areaChartConfig.profit.color}
                         fillOpacity={0.25}
                         strokeWidth={1.5}

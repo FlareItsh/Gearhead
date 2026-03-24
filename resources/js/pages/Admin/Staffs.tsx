@@ -31,13 +31,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { usePermissions } from '@/hooks/use-permissions'
 
 // ---------- Interfaces ----------
 interface BreadcrumbItem {
@@ -541,127 +541,127 @@ export default function Staffs() {
                                     </DialogTrigger>
 
                                     <DialogContent className="sm:max-w-md">
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        Edit{' '}
-                                        <span className="font-semibold text-highlight">
-                                          Employee
-                                        </span>
-                                      </DialogTitle>
-                                    </DialogHeader>
+                                      <DialogHeader>
+                                        <DialogTitle>
+                                          Edit{' '}
+                                          <span className="font-semibold text-highlight">
+                                            Employee
+                                          </span>
+                                        </DialogTitle>
+                                      </DialogHeader>
 
-                                    <div className="grid gap-3 py-2">
-                                      {/* first name */}
-                                      <div>
-                                        <Label>First Name</Label>
-                                        <Input
-                                          value={editForm.firstName}
-                                          onChange={(e) =>
-                                            setEditForm({
-                                              ...editForm,
-                                              firstName: e.target.value,
-                                            })
-                                          }
-                                        />
+                                      <div className="grid gap-3 py-2">
+                                        {/* first name */}
+                                        <div>
+                                          <Label>First Name</Label>
+                                          <Input
+                                            value={editForm.firstName}
+                                            onChange={(e) =>
+                                              setEditForm({
+                                                ...editForm,
+                                                firstName: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        {/*last name*/}
+                                        <div>
+                                          <Label>Last Name</Label>
+                                          <Input
+                                            value={editForm.lastName}
+                                            onChange={(e) =>
+                                              setEditForm({
+                                                ...editForm,
+                                                lastName: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        {/*middle name*/}
+                                        <div>
+                                          <Label>Middle Name (optional)</Label>
+                                          <Input
+                                            value={editForm.middleName}
+                                            onChange={(e) =>
+                                              setEditForm({
+                                                ...editForm,
+                                                middleName: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        {/*phone*/}
+                                        <div>
+                                          <Label>Phone Number</Label>
+                                          <Input
+                                            value={editForm.phone}
+                                            onChange={(e) => {
+                                              const formatted = formatPhone(e.target.value)
+                                              setEditForm({
+                                                ...editForm,
+                                                phone: formatted,
+                                              })
+                                            }}
+                                            maxLength={11}
+                                          />
+                                        </div>
+                                        {/*address*/}
+                                        <div>
+                                          <Label>Address</Label>
+                                          <Input
+                                            value={editForm.address}
+                                            onChange={(e) =>
+                                              setEditForm({
+                                                ...editForm,
+                                                address: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        {/*status*/}
+                                        <div>
+                                          <Label>Status</Label>
+                                          <Select
+                                            value={editForm.status}
+                                            onValueChange={(value) =>
+                                              setEditForm({
+                                                ...editForm,
+                                                status: value as typeof editForm.status,
+                                              })
+                                            }
+                                          >
+                                            <SelectTrigger className="w-full">
+                                              <SelectValue placeholder="Select status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Active">Active</SelectItem>
+                                              <SelectItem value="Inactive">Inactive</SelectItem>
+                                              <SelectItem value="Absent">Absent</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
                                       </div>
-                                      {/*last name*/}
-                                      <div>
-                                        <Label>Last Name</Label>
-                                        <Input
-                                          value={editForm.lastName}
-                                          onChange={(e) =>
-                                            setEditForm({
-                                              ...editForm,
-                                              lastName: e.target.value,
-                                            })
-                                          }
-                                        />
-                                      </div>
-                                      {/*middle name*/}
-                                      <div>
-                                        <Label>Middle Name (optional)</Label>
-                                        <Input
-                                          value={editForm.middleName}
-                                          onChange={(e) =>
-                                            setEditForm({
-                                              ...editForm,
-                                              middleName: e.target.value,
-                                            })
-                                          }
-                                        />
-                                      </div>
-                                      {/*phone*/}
-                                      <div>
-                                        <Label>Phone Number</Label>
-                                        <Input
-                                          value={editForm.phone}
-                                          onChange={(e) => {
-                                            const formatted = formatPhone(e.target.value)
-                                            setEditForm({
-                                              ...editForm,
-                                              phone: formatted,
-                                            })
-                                          }}
-                                          maxLength={11}
-                                        />
-                                      </div>
-                                      {/*address*/}
-                                      <div>
-                                        <Label>Address</Label>
-                                        <Input
-                                          value={editForm.address}
-                                          onChange={(e) =>
-                                            setEditForm({
-                                              ...editForm,
-                                              address: e.target.value,
-                                            })
-                                          }
-                                        />
-                                      </div>
-                                      {/*status*/}
-                                      <div>
-                                        <Label>Status</Label>
-                                        <Select
-                                          value={editForm.status}
-                                          onValueChange={(value) =>
-                                            setEditForm({
-                                              ...editForm,
-                                              status: value as typeof editForm.status,
-                                            })
-                                          }
-                                        >
-                                          <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select status" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="Active">Active</SelectItem>
-                                            <SelectItem value="Inactive">Inactive</SelectItem>
-                                            <SelectItem value="Absent">Absent</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    </div>
 
-                                    <DialogFooter className="flex justify-end gap-3">
-                                      <DialogClose asChild>
-                                        <Button
-                                          variant="secondary"
-                                          onClick={resetEditForm}
-                                        >
-                                          Cancel
-                                        </Button>
-                                      </DialogClose>
-                                      <DialogClose asChild>
-                                        <Button
-                                          variant="highlight"
-                                          onClick={handleUpdate}
-                                        >
-                                          Update Employee
-                                        </Button>
-                                      </DialogClose>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </Dialog>
+                                      <DialogFooter className="flex justify-end gap-3">
+                                        <DialogClose asChild>
+                                          <Button
+                                            variant="secondary"
+                                            onClick={resetEditForm}
+                                          >
+                                            Cancel
+                                          </Button>
+                                        </DialogClose>
+                                        <DialogClose asChild>
+                                          <Button
+                                            variant="highlight"
+                                            onClick={handleUpdate}
+                                          >
+                                            Update Employee
+                                          </Button>
+                                        </DialogClose>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
                                 )}
 
                                 {/*delete*/}

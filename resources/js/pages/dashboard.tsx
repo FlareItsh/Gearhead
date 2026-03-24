@@ -28,7 +28,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: dashboard().u
 
 const areaChartConfig: ChartConfig = {
   revenue: { label: 'Revenue', color: 'var(--chart-1)' },
-  expenses: { label: 'Expenses', color: 'var(--chart-3)' },
+  expenses: { label: 'Expenses', color: 'var(--chart-5)' },
   profit: { label: 'Profit', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
@@ -467,26 +467,33 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                   />
                   <Area
                     dataKey="revenue"
-                    type="natural"
+                    type="monotone"
                     stroke={areaChartConfig.revenue.color}
                     fill="url(#revenue)"
                     strokeWidth={2}
+                    dot={{ r: 3, strokeWidth: 1, fill: areaChartConfig.revenue.color }}
+                    activeDot={{ r: 6 }}
                     isAnimationActive={false}
                   />
                   <Area
                     dataKey="expenses"
-                    type="natural"
+                    type="monotone"
                     stroke={areaChartConfig.expenses.color}
                     fill="url(#expenses)"
                     strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={{ r: 3, strokeWidth: 1, fill: areaChartConfig.expenses.color }}
+                    activeDot={{ r: 6 }}
                     isAnimationActive={false}
                   />
                   <Area
                     dataKey="profit"
-                    type="natural"
+                    type="monotone"
                     stroke={areaChartConfig.profit.color}
                     fill="url(#profit)"
                     strokeWidth={2}
+                    dot={{ r: 3, strokeWidth: 1, fill: areaChartConfig.profit.color }}
+                    activeDot={{ r: 6 }}
                     isAnimationActive={false}
                   />
                   <Tooltip content={<ChartTooltipContent />} />

@@ -115,7 +115,7 @@
   --chart-2: oklch(60% 0.2 180);
   --chart-3: oklch(60% 0.2 120);
   --chart-4: oklch(60% 0.2 300);
-  --chart-5: oklch(60% 0.2 0);
+  --chart-5: oklch(58.459% 0.19504 25.604);
 
   /* Sidebar */
   --sidebar: oklch(15.91% 0 0);
@@ -179,7 +179,7 @@
   --chart-2: oklch(60% 0.2 180);
   --chart-3: oklch(60% 0.2 120);
   --chart-4: oklch(60% 0.2 300);
-  --chart-5: oklch(60% 0.2 0);
+  --chart-5: oklch(58.459% 0.19504 25.604);
 
   /* Sidebar */
   --sidebar: oklch(15.91% 0 0);
