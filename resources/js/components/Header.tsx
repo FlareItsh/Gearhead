@@ -103,7 +103,12 @@ export default function Header({ navLinks }: HeaderProps) {
   }, [linksToUse])
 
   const isActiveLink = (link: NavLink) => {
-    // If link has a section, check if it's the active section
+    // If we're on a route page, use route-based matching only
+    if (currentPath !== '/' && link.section) {
+      return currentPath === `/${link.section}`
+    }
+
+    // If link has a section and we're on home, check if it's the active section
     if (link.section) {
       return link.section === activeSection
     }
