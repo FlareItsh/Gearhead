@@ -156,7 +156,6 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
       'Services': 'view_services',
       'Inventory': 'view_inventory',
       'Pullout Requests': 'view_pullout_requests',
-      'Users': 'view_users',
       'Employees': 'view_employees',
       'Transactions': 'view_transactions',
       'Reports': 'view_reports',
