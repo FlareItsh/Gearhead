@@ -933,7 +933,7 @@ export default function InventoryPage() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[140px] justify-between"
+                    className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm hover:bg-muted-foreground/10 dark:bg-background-dark dark:text-foreground-dark dark:border-border-dark dark:hover:bg-muted-foreground/20"
                   >
                     {filter === 'All'
                       ? 'All'
@@ -942,7 +942,7 @@ export default function InventoryPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" 
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-md"
+                  className="bg-background dark:bg-background-dark border border-border dark:border-border-dark rounded-md shadow-md"
                 >
                   {[
                     { label: 'All Items', value: 'All' },
@@ -954,7 +954,7 @@ export default function InventoryPage() {
                       onClick={() =>
                         setFilter(option.value as 'All' | 'supply' | 'consumables')
                       }
-                      className="font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-md"
+                      className="text-foreground dark:text-foreground-dark hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20 rounded-md"
                     >
                       {option.label}
                     </DropdownMenuItem>
