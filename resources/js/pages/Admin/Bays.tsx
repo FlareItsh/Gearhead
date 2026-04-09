@@ -277,7 +277,7 @@ export default function Bays() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  Add New <span className="font-semibold text-yellow-500">Bay</span>
+                  Add New <span className="font-semibold text-yellow-400 black:text-highlight">Bay</span>
                 </DialogTitle>
               </DialogHeader>
 
@@ -435,7 +435,7 @@ export default function Bays() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
-                Edit <span className="font-semibold text-highlight">Bay</span>
+                Edit <span className="font-semibold text-yellow-400 black:text-highlight">Bay</span>
               </DialogTitle>
             </DialogHeader>
 

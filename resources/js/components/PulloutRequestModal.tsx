@@ -208,7 +208,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            Create <span className="text-yellow-400">Pullout Request</span>
+            Create <span className="text-yellow-400 black:text-highlight">Pullout Request</span>
           </DialogTitle>
           <DialogDescription>Request supplies/materials for an active service.</DialogDescription>
         </DialogHeader>
@@ -222,10 +222,10 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                 value={selectedServiceOrder}
                 onValueChange={setSelectedServiceOrder}
               >
-                <SelectTrigger className="h-14 w-full border-muted-foreground/30 bg-muted/20 text-base">
+                <SelectTrigger className="h-14 w-full border border-border bg-background text-foreground text-base">
                   <SelectValue placeholder="Choose a service order..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-border text-foreground">
                   {serviceOrders.length === 0 ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
                       No active services found.
@@ -237,7 +237,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                         value={so.service_order_detail_id.toString()}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-highlight">
+                          <span className="font-semibold text-yellow-400 black:text-highlight">
                             {so.bay_number ? `Bay ${so.bay_number}` : 'Bay ?'}
                           </span>
                           <span className="text-muted-foreground">|</span>
@@ -286,7 +286,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
           <div className="space-y-4">
             <Label className="text-base font-semibold">Requested Supplies</Label>
 
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-xl border border-border bg-background p-5 shadow-sm">
               <div className="flex flex-col gap-4">
                 {/* Supply Search - Full Width */}
                 <div
@@ -312,7 +312,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                   </div>
                   {/* Suggestions Dropdown */}
                   {showSuggestions && supplySearch && (
-                    <div className="absolute top-full z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in zoom-in-95">
+                    <div className="absolute top-full z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-border bg-background text-foreground shadow-md">
                       {supplies
                         .filter(
                           (s) =>
@@ -396,7 +396,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
             {pulloutDetails.length > 0 ? (
               <div className="overflow-hidden rounded-md border">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted/50">
+                  <thead className="bg-muted dark:bg-muted/50">
                     <tr className="border-b">
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Item
@@ -415,7 +415,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                       return (
                         <tr
                           key={i}
-                          className="hover:bg-muted/5"
+                          className="hover:bg-muted/30 dark:hover:bg-muted/10"
                         >
                           <td className="px-4 py-3 font-medium">{supply?.supply_name}</td>
                           <td className="px-4 py-3 text-center">
@@ -443,7 +443,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                 </table>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-8 text-center text-sm text-muted-foreground">
+              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-border bg-muted/30 dark:bg-muted/10 py-8 text-center text-sm text-muted-foreground">
                 <Package className="mb-2 h-8 w-8 opacity-20" />
                 <p>No items added yet.</p>
                 <p className="text-xs">Search and add supplies above.</p>

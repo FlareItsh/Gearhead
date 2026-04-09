@@ -335,17 +335,17 @@ export default function RegistryPayment({ bayId }: Props) {
       {/* Full Width, Edge-to-Edge Layout */}
       <div className="min-h-screen bg-background">
         {/* Header Bar */}
-        <div className="border-b bg-card">
+        <div className="border-b dark:bg-card">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
               <h1 className="text-2xl font-bold">
-                Bay <span className="text-yellow-400">#{bayId} - Payment</span>
+                Bay <span className="text-yellow-400 black:text-highlight">#{bayId} - Payment</span>
               </h1>
               <p className="text-sm text-muted-foreground">Gearhead Carwash</p>
             </div>
             <Link
               href="/registry"
-              className="text-sm text-yellow-400 hover:underline"
+              className="text-sm text-yellow-400 black:text-highlight hover:underline"
             >
               ← Back
             </Link>
@@ -357,20 +357,20 @@ export default function RegistryPayment({ bayId }: Props) {
           <div className="space-y-5 lg:col-span-8">
             {/* Customer + Services */}
             <Card className="bg-background">
-              <CardContent className="pt-5">
+              <CardContent className="pt-5 pb-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <div>
-                    <p className="text-xs font-medium text-yellow-400">Customer</p>
-                    <p className="mt-1 text-lg font-semibold">{details.customerName}</p>
+                    <p className="text-xs font-medium text-yellow-400 black:text-highlight">Customer</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{details.customerName}</p>
                     {details.assignedEmployee && (
                       <div className="mt-4">
-                        <p className="text-xs font-medium text-yellow-400">Assigned Employee</p>
+                        <p className="text-xs font-medium text-highlight">Assigned Employee</p>
                         <p className="mt-1 text-lg font-semibold">{details.assignedEmployee}</p>
                       </div>
                     )}
                   </div>
                   <div className="md:col-span-2">
-                    <p className="mb-2 text-xs font-medium text-yellow-400">Services</p>
+                    <p className="mb-2 text-xs font-medium text-yellow-400 black:text-highlight">Services</p>
                     <div className="space-y-1.5 text-sm">
                       {details.services.map((s, i) => (
                         <div
@@ -378,7 +378,7 @@ export default function RegistryPayment({ bayId }: Props) {
                           className="flex justify-between"
                         >
                           <span className="text-muted-foreground">{s.name}</span>
-                          <span>₱{s.price.toLocaleString()}</span>
+                          <span className="text-foreground">₱{s.price.toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -386,8 +386,8 @@ export default function RegistryPayment({ bayId }: Props) {
                 </div>
                 <div className="mt-5 border-t pt-4">
                   <div className="flex justify-between text-xl font-bold">
-                    <span>Total Amount</span>
-                    <span className="text-yellow-400">₱{details.total.toLocaleString()}</span>
+                    <span className="text-foreground">Total Amount</span>
+                    <span className="text-yellow-400 black:text-highlight">₱{details.total.toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>
@@ -395,8 +395,8 @@ export default function RegistryPayment({ bayId }: Props) {
 
             {/* Loyalty Points Banner */}
             {isLoyaltyEligible && (
-              <Card className="border-2 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20">
-                <CardContent className="pt-5">
+              <Card className="border-2 border-highlight bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20">
+                <CardContent className="pt-5 pb-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="rounded-full bg-yellow-400 p-3">
@@ -426,12 +426,12 @@ export default function RegistryPayment({ bayId }: Props) {
             {/* Loyalty Progress (not eligible yet) */}
             {!isLoyaltyEligible && loyaltyInfo && (
               <Card className="border-border/50 bg-background">
-                <CardContent className="pt-5">
+                <CardContent className="pt-5 pb-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
                       <div>
-                        <p className="font-medium">Loyalty Progress</p>
+                        <p className="font-medium text-foreground">Loyalty Progress</p>
                         <p className="text-sm text-muted-foreground">
                           {loyaltyInfo.points_earned} / 9 services completed
                         </p>
@@ -447,7 +447,7 @@ export default function RegistryPayment({ bayId }: Props) {
                     </div>
                   </div>
                   {/* Progress bar */}
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-300 dark:bg-muted">
                     <div
                       className="h-full bg-yellow-400 transition-all duration-500"
                       style={{
@@ -462,9 +462,9 @@ export default function RegistryPayment({ bayId }: Props) {
             {/* Payment Method */}
             {!useLoyaltyPoints && (
               <Card className="bg-background">
-                <CardContent className="pt-5">
+                <CardContent className="pt-5 pb-6">
                   <div className="mb-5 flex items-center justify-between">
-                    <h3 className="font-semibold text-yellow-400">Payment Method</h3>
+                    <h3 className="font-semibold text-yellow-400 black:text-highlight">Payment Method</h3>
                     <div className="flex gap-8 text-lg">
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
@@ -474,9 +474,9 @@ export default function RegistryPayment({ bayId }: Props) {
                             setMethod('cash')
                           }}
                         />
-                        <span className="font-medium">Cash</span>
+                        <span className="font-medium text-foreground">Cash</span>
                       </label>
-                      <label className="flex cursor-pointer items-center gap-2">
+                      <label className="flex cursor-pointer items-center gap-2 text-foreground">
                         <input
                           type="radio"
                           checked={method === 'gcash'}
@@ -492,13 +492,13 @@ export default function RegistryPayment({ bayId }: Props) {
                   {method === 'cash' && (
                     <div className="grid grid-cols-1 items-end gap-5 md:grid-cols-3">
                       <div className="md:col-span-2">
-                        <label className="text-sm font-medium">Amount Received</label>
+                        <label className="text-sm font-medium text-foreground">Amount Received</label>
                         <Input
                           type="number"
                           placeholder="0"
                           value={paidAmount || ''}
                           onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
-                          className="mt-2 h-16 text-3xl font-bold"
+                          className="mt-2 h-16 text-3xl font-bold text-foreground"
                           autoFocus
                         />
                       </div>
@@ -516,9 +516,9 @@ export default function RegistryPayment({ bayId }: Props) {
                   )}
 
                   {method === 'gcash' && (
-                    <div className="space-y-5">
+                    <div className="space-y-5 text-foreground">
                       <div>
-                        <label className="text-sm font-medium">
+                        <label className="text-sm font-medium text-foreground">
                           Reference Number{' '}
                           <span className="text-muted-foreground">(required if no screenshot)</span>
                         </label>
@@ -595,7 +595,7 @@ export default function RegistryPayment({ bayId }: Props) {
           <div className="lg:col-span-4">
             <div className="sticky top-6 space-y-5">
               <Card
-                className={`text-white ${useLoyaltyPoints ? 'bg-gradient-to-br from-yellow-400 to-orange-500' : 'bg-black'}`}
+                className={`${useLoyaltyPoints ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white' : 'bg-background dark:bg-black text-foreground dark:text-white'}`}
               >
                 <CardContent className="pt-8 pb-10 text-center">
                   <p className="text-lg opacity-90">Bay #{bayId}</p>
@@ -658,7 +658,7 @@ export default function RegistryPayment({ bayId }: Props) {
               )}
               {modalType === 'warning' && (
                 <div className="rounded-full bg-yellow-100 p-4 dark:bg-yellow-950/30">
-                  <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-yellow-400" />
+                  <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-highlight" />
                 </div>
               )}
             </div>

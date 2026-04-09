@@ -206,15 +206,17 @@ export default function Customers() {
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Search Customers</h2>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
                   {filter}
                   <ChevronDownIcon className="ml-2 h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-40">
+
+                <DropdownMenuContent className="w-40 bg-background border border-border shadow-md">
                   {['All', 'Name', 'Email', 'Phone'].map((f) => (
                     <DropdownMenuItem
                       key={f}
                       onClick={() => setFilter(f as typeof filter)}
+                      className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20"
                     >
                       {f}
                     </DropdownMenuItem>

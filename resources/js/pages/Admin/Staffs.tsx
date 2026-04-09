@@ -316,7 +316,7 @@ export default function Staffs() {
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>
-                    Add <span className="font-semibold text-highlight">Employee</span>
+                    Add <span className="font-semibold text-yellow-400 dark:text-highlight">Employee</span>
                   </DialogTitle>
                 </DialogHeader>
 
@@ -471,14 +471,23 @@ export default function Staffs() {
                 value={filter}
                 onValueChange={(value) => setFilter(value as typeof filter)}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] bg-background text-foreground border border-border shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
                   <SelectValue placeholder="Filter by: All" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Absent">Absent</SelectItem>
+
+                <SelectContent className="bg-background text-foreground border border-border shadow-md">
+                  <SelectItem value="All" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
+                    All
+                  </SelectItem>
+                  <SelectItem value="Active" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
+                    Active
+                  </SelectItem>
+                  <SelectItem value="Inactive" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
+                    Inactive
+                  </SelectItem>
+                  <SelectItem value="Absent" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
+                    Absent
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

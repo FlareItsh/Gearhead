@@ -33,7 +33,7 @@ export default function Pagination({ links, onPageChange }: PaginationProps) {
             key={index}
             variant={link.active ? 'default' : 'outline'}
             size="icon"
-            className={`h-8 w-8 ${link.active ? 'bg-primary text-primary-foreground' : ''} ${
+            className={`h-8 w-8 ${link.active ? 'bg-yellow-400 text-black hover:bg-yellow-300 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90' : ''} ${
               !link.url ? 'cursor-not-allowed opacity-50' : ''
             }`}
             disabled={!link.url}

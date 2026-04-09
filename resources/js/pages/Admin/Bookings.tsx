@@ -223,13 +223,13 @@ export default function AdminBookings() {
 
         {/* Search & Filter */}
         <Card className="border border-border/50 bg-background text-foreground">
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex flex-col gap-4 pt-5 pb-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Search</h2>
             </div>
 
             <div className="relative w-full">
-              <Search className="t absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
               <Input
                 placeholder="Search bookings..."
                 value={searchValue}
@@ -266,7 +266,7 @@ export default function AdminBookings() {
         <Card className="border border-border/50 bg-background text-foreground">
           <CardContent className="p-0">
             {/* Header */}
-            <div className="border-b border-border/50 px-6 pb-4">
+            <div className="border-b border-border/50 px-6 pt-5 pb-5">
               <div className="flex flex-col gap-1">
                 <h2 className="text-lg font-semibold">Booking List</h2>
                 <p className="text-sm text-muted-foreground">

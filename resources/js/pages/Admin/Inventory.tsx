@@ -475,7 +475,7 @@ export default function InventoryPage() {
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>
-                    Add <span className="text-yellow-400">Item</span>
+                    Add <span className="text-yellow-400 dark:text-highlight">Item</span>
                   </DialogTitle>
                   <DialogDescription>Record a new inventory item.</DialogDescription>
                 </DialogHeader>
@@ -563,7 +563,7 @@ export default function InventoryPage() {
               <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                 <DialogHeader>
                   <DialogTitle>
-                    Record <span className="text-yellow-400">Purchase</span>
+                    Record <span className="text-yellow-400 dark:text-highlight">Purchase</span>
                   </DialogTitle>
                   <DialogDescription>Add supplies from a supplier</DialogDescription>
                 </DialogHeader>
@@ -809,7 +809,7 @@ export default function InventoryPage() {
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>
-                    Add <span className="text-yellow-400">Supplier</span>
+                    Add <span className="text-yellow-400 dark:text-highlight">Supplier</span>
                   </DialogTitle>
                   <DialogDescription>Add a new supplier to the system</DialogDescription>
                 </DialogHeader>
@@ -925,39 +925,36 @@ export default function InventoryPage() {
         </div>
 
         {/* Search & Filter */}
-        <Card className="bg-background">
-          <CardContent>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative flex-1">
-                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search supplies..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  className="pl-10 text-foreground"
-                />
-              </div>
+        <Card className="border border-border/50 bg-background text-foreground">
+          <CardContent className="flex flex-col gap-4 pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Search</h2>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="gap-2"
+                    className="w-[140px] justify-between"
                   >
-                    {filter === 'All' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}{' '}
+                    {filter === 'All'
+                      ? 'All'
+                      : filter.charAt(0).toUpperCase() + filter.slice(1)}
                     <ChevronDownIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {(
-                    [
-                      { label: 'All Items', value: 'All' },
-                      { label: 'Supply', value: 'supply' },
-                      { label: 'Consumables', value: 'consumables' },
-                    ] as const
-                  ).map((option) => (
+                <DropdownMenuContent align="end" 
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-md"
+                >
+                  {[
+                    { label: 'All Items', value: 'All' },
+                    { label: 'Supply', value: 'supply' },
+                    { label: 'Consumables', value: 'consumables' },
+                  ].map((option) => (
                     <DropdownMenuItem
                       key={option.value}
-                      onClick={() => setFilter(option.value as 'All' | 'supply' | 'consumables')}
+                      onClick={() =>
+                        setFilter(option.value as 'All' | 'supply' | 'consumables')
+                      }
+                      className="font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-md"
                     >
                       {option.label}
                     </DropdownMenuItem>
@@ -965,13 +962,24 @@ export default function InventoryPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative w-full">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search supplies..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="w-full pl-10"
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         {/* Supply List Table */}
         <Card className="bg-background text-foreground">
           <CardContent className="p-0">
-            <div className="border-b px-6 pb-4">
+            <div className="border-b px-6 pt-5 pb-6">
               <h2 className="text-lg font-semibold">Supply List</h2>
               <p className="text-sm text-muted-foreground">
                 {suppliesData?.total || 0} item
@@ -1092,14 +1100,16 @@ export default function InventoryPage() {
                 value={perPage.toString()}
                 onValueChange={(v) => setPerPage(Number(v))}
               >
-                <SelectTrigger className="h-8 w-[70px]">
+                <SelectTrigger className="h-8 w-[70px] bg-background text-foreground border border-border shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
                   <SelectValue placeholder={perPage} />
                 </SelectTrigger>
-                <SelectContent>
+
+                <SelectContent className="bg-background text-foreground border border-border shadow-md">
                   {[5, 10, 25, 50, 100].map((pageSize) => (
                     <SelectItem
                       key={pageSize}
                       value={pageSize.toString()}
+                      className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20"
                     >
                       {pageSize}
                     </SelectItem>

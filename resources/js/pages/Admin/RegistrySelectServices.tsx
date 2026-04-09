@@ -550,7 +550,7 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
                 : 'Choose services for this carwash order'}
             </p>
             {assignedEmployee && (
-              <p className="text-sm font-medium text-yellow-500">
+              <p className="text-sm font-medium text-yellow-400 black:text-highlight">
                 Assigned Employee: {assignedEmployee.first_name} {assignedEmployee.last_name}
               </p>
             )}
@@ -596,7 +596,7 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
                         className={cn(
                           'rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
                           !selectedCategory
-                            ? 'bg-yellow-500 text-white'
+                            ? 'bg-highlight text-black'
                             : 'border border-border bg-muted hover:border-highlight',
                         )}
                       >
@@ -611,7 +611,7 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
                           className={cn(
                             'rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
                             selectedCategory === category
-                              ? 'bg-yellow-500 text-white'
+                              ? 'bg-highlight text-black'
                               : 'border border-border bg-muted hover:border-highlight',
                           )}
                         >
@@ -636,7 +636,7 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
                           setServiceSearch('')
                           setSelectedCategory('')
                         }}
-                        className="text-yellow-500 hover:underline"
+                        className="text-highlight hover:underline"
                       >
                         Clear filters
                       </button>
@@ -750,8 +750,8 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
 
                 <div className="mb-6 border-t border-border pt-4">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Amount</span>
-                    <p className="text-2xl font-bold text-yellow-500">
+                    <span className="text-yellow-400 black:text-highlight">Total Amount</span>
+                    <p className="text-2xl font-bold text-yellow-400 black:text-highlight">
                       ₱{getTotalPrice().toLocaleString()}
                     </p>
                   </div>
@@ -1035,11 +1035,11 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
       {/* Variant Selection Modal */}
       {isVariantModalOpen && selectedServiceForModal && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 dark:bg-black/50 p-4 backdrop-blur-sm animate-in fade-in"
           onClick={() => setIsVariantModalOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-2xl animate-in slide-in-from-bottom-5 zoom-in-95"
+            className="w-full max-w-md rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-background p-6 shadow-2xl animate-in slide-in-from-bottom-5 zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between">
@@ -1067,7 +1067,7 @@ export default function RegistrySelectServices({ bayId, bayNumber, isQueue }: Pr
                   return (
                     <div
                       key={variant.service_variant}
-                      className="flex items-center justify-between rounded-lg border border-border/60 bg-card p-3 shadow-sm transition-all hover:border-primary/50"
+                      className="flex items-center justify-between rounded-lg border-gray-200 dark:border-border/60 bg-white dark:bg-card p-3 shadow-sm transition-all hover:border-primary/50"
                     >
                       <div>
                         <p className="text-base font-bold">{variant.size}</p>

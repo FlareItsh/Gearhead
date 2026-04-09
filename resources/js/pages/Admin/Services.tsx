@@ -1,6 +1,7 @@
 import Heading from '@/components/heading'
 import HeadingSmall from '@/components/heading-small'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -246,44 +247,24 @@ export default function AdminServices({ services = [], categories = [] }: Servic
           )}
         </div>
 
-        {/* Search Bar */}
-        <div className="flex flex-col gap-4 rounded-lg border border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 items-center gap-3">
-            <Search className="h-5 w-5 text-foreground" />
-            <Input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 border-none bg-transparent text-foreground shadow-none focus-visible:ring-0"
-            />
-          </div>
-          <Select
-            value={selectedCategory}
-            onValueChange={setSelectedCategory}
-          >
-            <SelectTrigger className="mt-2 w-full sm:mt-0 sm:w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                value="All"
-                className="font-bold"
-              >
-                All
-              </SelectItem>
-              {categories.map((cat) => (
-                <SelectItem
-                  key={cat}
-                  value={cat}
-                  className="font-bold"
-                >
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Card className="border border-border/50 bg-background text-foreground">
+          <CardContent className="flex flex-col gap-4 pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Search</h2>
+            </div>
+
+            <div className="relative w-full">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"/>
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Category Filters */}
         <div className="custom-scrollbar flex w-full gap-4 overflow-x-auto">
@@ -403,11 +384,11 @@ export default function AdminServices({ services = [], categories = [] }: Servic
               <DialogTitle>
                 {editingService ? (
                   <>
-                    Edit <span className="text-yellow-500">Service</span>
+                    Edit <span className="text-yellow-500 black:text-highlight">Service</span>
                   </>
                 ) : (
                   <>
-                    Add <span className="text-yellow-500">Service</span>
+                    Add <span className="text-yellow-500 black:text-highlight">Service</span>
                   </>
                 )}
               </DialogTitle>
