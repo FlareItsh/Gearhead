@@ -184,9 +184,6 @@ export default function Header({ navLinks }: HeaderProps) {
             </Link>
           ) : (
             <>
-              <Link href="/services">
-                <Button variant="highlight">Book Now</Button>
-              </Link>
               <Link href={login()}>
                 <Button variant="outline">Log in</Button>
               </Link>
