@@ -1,9 +1,14 @@
+import BookingConfirmationModal from '@/components/BookingConfirmationModal'
+import GuestBookingModal from '@/components/GuestBookingModal'
 import Heading from '@/components/heading'
 import HeadingSmall from '@/components/heading-small'
 import { Button } from '@/components/ui/button'
 import Calendar from '@/components/ui/calendar'
 import AppLayout from '@/layouts/app-layout'
-import { Head, usePage } from '@inertiajs/react'
+import GuestLayout from '@/layouts/guest-layout'
+import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
+import { register } from '@/routes'
+import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
 import { AlertCircle, CheckCircle2, ChevronDown, Clock, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -32,13 +37,28 @@ interface SelectedService extends Service {
   selectedVariant: ServiceVariant
 }
 
+interface User {
+  user_id: number
+  name: string
+  email: string
+  role: string
+}
+
+interface GuestInfo {
+  name: string
+  email: string
+  phone: string
+}
+
 export default function Services() {
   const pageProps = usePage().props as unknown as {
     services?: Service[]
     categories?: string[]
     selectedCategory?: string
+    auth?: { user: User | null }
   }
 
+  const auth = pageProps.auth ?? { user: null }
   const services = pageProps.services ?? []
   const categories = pageProps.categories ?? []
 
@@ -52,6 +72,12 @@ export default function Services() {
   const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom')
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Guest booking state
+  const [showGuestModal, setShowGuestModal] = useState(false)
+  const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null)
+  const [showBookingConfirmation, setShowBookingConfirmation] = useState(false)
+  const [pendingBooking, setPendingBooking] = useState<PendingBooking | null>(null)
 
   // Modal state
   const [showModal, setShowModal] = useState(false)
@@ -233,6 +259,13 @@ export default function Services() {
       return
     }
 
+    // If guest and no guest info collected yet, show modal
+    if (!auth.user && !guestInfo) {
+      setIsModalOpen(false) // Close the services modal first
+      setShowGuestModal(true)
+      return
+    }
+
     setIsBooking(true)
     try {
       // Get variant_ids from selectedServices
@@ -257,7 +290,6 @@ export default function Services() {
 
       // Convert time to proper format with selected date
       // selectedTime is like "3:00 PM"
-      const [yearStr, monthStr, dayStr] = selectedDate.split('-')
       const [timeStr, period] = selectedTime.split(' ')
       const [hourStr, minuteStr] = timeStr.split(':')
       let hour = parseInt(hourStr)
@@ -277,16 +309,24 @@ export default function Services() {
       console.log('Sending booking with order_date:', orderDate)
       console.log('Sending booking with variant_ids:', variantIds)
 
-      const response = await axios.post('/api/bookings/book', {
+      const bookingData: Record<string, unknown> = {
         order_date: orderDate,
         variant_ids: variantIds,
-      })
+      }
+
+      // Include guest info if available
+      if (guestInfo) {
+        bookingData.guest_info = guestInfo
+      }
+
+      const response = await axios.post('/api/bookings/book', bookingData)
 
       // Success - clear selections and close modal
       setSelectedServices([])
       localStorage.removeItem('selectedServices')
       setIsModalOpen(false)
       setSelectedTime('')
+      setGuestInfo(null)
 
       setModalType('success')
       setModalMessage('Booking confirmed! Your reservation has been created.')
@@ -311,8 +351,38 @@ export default function Services() {
     }
   }
 
+  const handleGuestInfoSubmit = (info: GuestInfo) => {
+    // Create pending booking object - map services to the required interface
+    const pending: PendingBooking = {
+      services: selectedServices.map((s) => ({
+        service_name: s.service_name,
+        selectedVariant: s.selectedVariant,
+      })),
+      date: selectedDate,
+      time: selectedTime,
+      guestInfo: info,
+      totalPrice,
+    }
+
+    // Save to localStorage and state
+    savePendingBooking(pending)
+    setPendingBooking(pending)
+
+    // Close the guest modal and show confirmation modal
+    setShowGuestModal(false)
+    setShowBookingConfirmation(true)
+  }
+
+  const handleProceedToSignup = () => {
+    // Redirect to register page - pending booking is already saved in localStorage
+    router.visit(register())
+  }
+
+  const LayoutComponent = auth.user ? AppLayout : GuestLayout
+  const layoutProps = auth.user ? { breadcrumbs } : {}
+
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
+    <LayoutComponent {...layoutProps}>
       <Head title="Services" />
 
       {/* Main Content (unchanged) */}
@@ -412,7 +482,7 @@ export default function Services() {
               </span>
             </div>
             <div>
-              <span className="text-primary/70">Total amount:</span>{' '}
+              <span className="text-primary/70 dark:text-primary/90">Total amount:</span>{' '}
               <strong className="text-primary">₱{totalPrice.toLocaleString()}</strong>
             </div>
           </div>
@@ -498,7 +568,7 @@ export default function Services() {
                   {/* Total (Mobile only, or kept here if prefered, but usually better at bottom) */}
                   <div className="flex min-h-[80px] items-center justify-between border-t border-border/30 bg-muted/20 px-5 py-4">
                     <span className="text-base font-medium text-foreground">Total</span>
-                    <span className="text-2xl font-bold text-foreground">
+                    <span className="text-2xl font-bold text-foreground dark:text-white">
                       ₱{totalPrice.toLocaleString()}
                     </span>
                   </div>
@@ -570,6 +640,11 @@ export default function Services() {
                                   onClick={() => {
                                     setSelectedTime(time)
                                     setIsTimeDropdownOpen(false)
+                                    // Show guest info modal for guests after time selection
+                                    if (!auth.user && !guestInfo) {
+                                      setIsModalOpen(false) // Close the services modal first
+                                      setShowGuestModal(true)
+                                    }
                                   }}
                                   className={`block w-full px-4 py-3 text-left transition-colors hover:bg-primary/10 ${
                                     selectedTime === time
@@ -781,6 +856,23 @@ export default function Services() {
           </div>
         </div>
       )}
-    </AppLayout>
+
+      {/* Guest Booking Modal */}
+      <GuestBookingModal
+        isOpen={showGuestModal}
+        onClose={() => setShowGuestModal(false)}
+        onSubmit={handleGuestInfoSubmit}
+        isLoading={isBooking}
+      />
+
+      {/* Booking Confirmation Modal */}
+      <BookingConfirmationModal
+        isOpen={showBookingConfirmation}
+        onClose={() => setShowBookingConfirmation(false)}
+        booking={pendingBooking}
+        onProceedToSignup={handleProceedToSignup}
+        isLoading={isBooking}
+      />
+    </LayoutComponent>
   )
 }

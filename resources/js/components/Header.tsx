@@ -26,7 +26,13 @@ export default function Header({ navLinks }: HeaderProps) {
   const { auth } = usePage().props as unknown as SharedData
   const [isOpen, setIsOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const saved = localStorage.getItem('appearance')
+    if (saved === 'light') return false
+    if (saved === 'dark') return true
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
   const hash = typeof window !== 'undefined' ? window.location.hash : ''
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/'
 
@@ -39,10 +45,12 @@ export default function Header({ navLinks }: HeaderProps) {
 
     if (newTheme === 'dark') {
       html.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+      localStorage.setItem('appearance', 'dark')
+      setIsDarkMode(true)
     } else {
       html.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      localStorage.setItem('appearance', 'light')
+      setIsDarkMode(false)
     }
   }
 
@@ -176,6 +184,9 @@ export default function Header({ navLinks }: HeaderProps) {
             </Link>
           ) : (
             <>
+              <Link href="/services">
+                <Button variant="highlight">Book Now</Button>
+              </Link>
               <Link href={login()}>
                 <Button variant="outline">Log in</Button>
               </Link>
@@ -278,6 +289,15 @@ export default function Header({ navLinks }: HeaderProps) {
                 </Link>
               ) : (
                 <>
+                  <Link href="/services">
+                    <Button
+                      variant="highlight"
+                      className="w-full"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Book Now
+                    </Button>
+                  </Link>
                   <Link href={login()}>
                     <Button
                       variant="outline"

@@ -4,6 +4,7 @@ import { createInertiaApp } from '@inertiajs/react'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { createRoot } from 'react-dom/client'
 import { initializeTheme } from './hooks/use-appearance'
+import { router } from '@inertiajs/react'
 
 import axios from 'axios'
 
@@ -16,14 +17,10 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 createInertiaApp({
   title: (title) => (title ? `${title} - ${appName}` : appName),
   resolve: (name) =>
-    // Do NOT lowercase the incoming page name — keeping the original
-    // casing allows folders like `pages/Customer/Bookings.tsx` to resolve
-    // correctly. The SSR entry already uses the non-lowercased variant.
     resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
 
   setup({ el, App, props }) {
     const root = createRoot(el)
-
     root.render(<App {...props} />)
   },
   progress: {
@@ -31,5 +28,22 @@ createInertiaApp({
   },
 })
 
-// This will set light / dark mode on load...
+// Initialize theme on load
 initializeTheme()
+
+// Re-apply theme during navigation to persist user's choice
+router.on('start', () => {
+  const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'system'
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const isDark = savedAppearance === 'dark' || (savedAppearance === 'system' && prefersDark)
+  document.documentElement.classList.toggle('dark', isDark)
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+})
+
+router.on('finish', () => {
+  const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'system'
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const isDark = savedAppearance === 'dark' || (savedAppearance === 'system' && prefersDark)
+  document.documentElement.classList.toggle('dark', isDark)
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+})
