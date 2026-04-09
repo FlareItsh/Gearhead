@@ -19,9 +19,12 @@ class SupplyController extends Controller
         if ($request->has('all')) {
             return response()->json($this->repo->all());
         }
-        $perPage = (int) $request->input('per_page', 10);
 
-        return response()->json($this->repo->paginate($perPage));
+        $perPage = (int) $request->input('per_page', 10);
+        $search = $request->input('search');
+        $type = $request->input('type');
+
+        return response()->json($this->repo->paginate($perPage, $search, $type));
     }
 
     public function show(int $id)

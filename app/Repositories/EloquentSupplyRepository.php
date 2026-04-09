@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Repositories\Contracts\SupplyRepositoryInterface;
-
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -14,9 +13,19 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
         return DB::table('supplies')->get();
     }
 
-    public function paginate(int $perPage)
+    public function paginate(int $perPage, ?string $search = null, ?string $type = null)
     {
-        return DB::table('supplies')->paginate($perPage);
+        $query = DB::table('supplies');
+
+        if ($search) {
+            $query->where('supply_name', 'like', "%{$search}%");
+        }
+
+        if ($type) {
+            $query->where('supply_type', $type);
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function findById(int $id)
