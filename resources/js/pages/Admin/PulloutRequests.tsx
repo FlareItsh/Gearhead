@@ -352,7 +352,7 @@ export default function PulloutRequestsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-green-600 text-green-600 hover:bg-green-50"
+                                className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
                                 onClick={() => handleApprove(request.pullout_request_id)}
                               >
                                 <CheckCircle className="mr-1 h-4 w-4" />
@@ -361,7 +361,7 @@ export default function PulloutRequestsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-red-600 text-red-600 hover:bg-red-50"
+                                className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
                                 onClick={() => handleReject(request.pullout_request_id)}
                               >
                                 <XCircle className="mr-1 h-4 w-4" />
