@@ -81,26 +81,34 @@ export function AdminPrivileges({ selectedPermissions, onChange }: AdminPrivileg
     let newPermissions = [...selectedPermissions]
 
     if (checked) {
-      if (!newPermissions.includes(id)) newPermissions.push(id)
-    } else {
-      newPermissions = newPermissions.filter((p) => p !== id)
+      if (!newPermissions.includes(id)) {
+        newPermissions.push(id)
+      }
 
-      // Nested uncheck logic
+      // If checking a parent, check all its children
       const parentPrivilege = PRIVILEGES.find((p) => p.id === id)
       if (parentPrivilege && parentPrivilege.children) {
-        // Uncheck all children
-        const childIds = parentPrivilege.children.map((c) => c.id)
-        newPermissions = newPermissions.filter((p) => !childIds.includes(p))
+        parentPrivilege.children.forEach((child) => {
+          if (!newPermissions.includes(child.id)) {
+            newPermissions.push(child.id)
+          }
+        })
       }
-    }
 
-    // Auto-check parent if child is checked (optional, but good UX)
-    if (checked) {
-      const parent = PRIVILEGES.find((p) =>
-        p.children?.some((c) => c.id === id)
-      )
+      // If checking a child, ensure the parent is also checked
+      const parent = PRIVILEGES.find((p) => p.children?.some((c) => c.id === id))
       if (parent && !newPermissions.includes(parent.id)) {
         newPermissions.push(parent.id)
+      }
+    } else {
+      // Unchecking logic
+      newPermissions = newPermissions.filter((p) => p !== id)
+
+      // If unchecking a parent, uncheck all its children
+      const parentPrivilege = PRIVILEGES.find((p) => p.id === id)
+      if (parentPrivilege && parentPrivilege.children) {
+        const childIds = parentPrivilege.children.map((c) => c.id)
+        newPermissions = newPermissions.filter((p) => !childIds.includes(p))
       }
     }
 
