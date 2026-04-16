@@ -12,9 +12,9 @@ class PulloutRequestsSeeder extends Seeder
         $now = now();
 
         $requests = [
-            ['pullout_request_id'=>1,'employee_id'=>1,'date_time'=>null,'approve_by'=>6,'approve_date'=>null,'is_approve'=>true],
-            ['pullout_request_id'=>2,'employee_id'=>2,'date_time'=>null,'approve_by'=>1,'approve_date'=>null,'is_approve'=>true],
-            ['pullout_request_id'=>3,'employee_id'=>3,'date_time'=>null,'approve_by'=>6,'approve_date'=>null,'is_approve'=>true],
+            ['pullout_request_id' => 1, 'employee_id' => 1, 'date_time' => $now, 'approve_by' => 6, 'approve_date' => null, 'is_approve' => true],
+            ['pullout_request_id' => 2, 'employee_id' => 2, 'date_time' => $now, 'approve_by' => 1, 'approve_date' => null, 'is_approve' => true],
+            ['pullout_request_id' => 3, 'employee_id' => 3, 'date_time' => $now, 'approve_by' => 6, 'approve_date' => null, 'is_approve' => true],
         ];
 
         foreach ($requests as $r) {
