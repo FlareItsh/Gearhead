@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
-
-
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -94,6 +92,15 @@ class EmployeeController extends Controller
             'status' => 'required|in:Active,Inactive,Absent',
         ]);
 
+        $currentEmployee = $this->employees->find($id);
+
+        if ($currentEmployee->assigned_status === 'assigned' && strtolower($request->status) !== strtolower($currentEmployee->status)) {
+            return response()->json([
+                'message' => 'Status cannot be changed while assigned to a service.',
+                'errors' => ['status' => ['This employee is currently assigned and their status cannot be modified.']],
+            ], 422);
+        }
+
         $employee = $this->employees->update($id, [
             'first_name' => $request->firstName,
             'middle_name' => $request->middleName,
@@ -161,6 +168,7 @@ class EmployeeController extends Controller
             ];
         })->toArray());
     }
+
     public function getEmployees(Request $request)
     {
         $perPage = (int) $request->query('per_page', 10);

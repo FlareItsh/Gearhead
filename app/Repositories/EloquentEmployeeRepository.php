@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\EmployeeRepositoryInterface;
-
 use App\Models\Employee;
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use Illuminate\Support\Collection;
 
 class EloquentEmployeeRepository implements EmployeeRepositoryInterface
@@ -21,9 +20,9 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
             });
         }
 
@@ -44,6 +43,7 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
                     'status' => ucfirst($employee->status),
                     'date_hired' => optional($employee->date_hired)->format('Y-m-d'),
                     'role' => $employee->role,
+                    'assigned_status' => $employee->assigned_status,
                     'created_at' => $employee->created_at,
                     'updated_at' => $employee->updated_at,
                 ];
@@ -90,6 +90,7 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
     public function updateAssignedStatus(int $id, string $status): bool
     {
         $employee = Employee::findOrFail($id);
+
         return $employee->update(['assigned_status' => $status]);
     }
 }

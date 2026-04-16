@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -53,6 +54,7 @@ interface Staff {
   phone: string
   address: string
   status: 'Active' | 'Inactive' | 'Absent'
+  assignedStatus: 'available' | 'assigned' | 'on_leave'
   dateHired: string
   role: 'Admin' | 'Employee'
 }
@@ -143,6 +145,7 @@ export default function Staffs() {
         phone: s.phone_number,
         address: s.address,
         status: s.status,
+        assignedStatus: s.assigned_status,
         dateHired: s.date_hired,
         role: s.role || 'Employee',
       }))
@@ -630,24 +633,38 @@ export default function Staffs() {
                                         {/*status*/}
                                         <div>
                                           <Label>Status</Label>
-                                          <Select
-                                            value={editForm.status}
-                                            onValueChange={(value) =>
-                                              setEditForm({
-                                                ...editForm,
-                                                status: value as typeof editForm.status,
-                                              })
-                                            }
-                                          >
-                                            <SelectTrigger className="w-full">
-                                              <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="Active">Active</SelectItem>
-                                              <SelectItem value="Inactive">Inactive</SelectItem>
-                                              <SelectItem value="Absent">Absent</SelectItem>
-                                            </SelectContent>
-                                          </Select>
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <div className="w-full">
+                                                  <Select
+                                                    value={editForm.status}
+                                                    disabled={editingStaff?.assignedStatus === 'assigned'}
+                                                    onValueChange={(value) =>
+                                                      setEditForm({
+                                                        ...editForm,
+                                                        status: value as typeof editForm.status,
+                                                      })
+                                                    }
+                                                  >
+                                                    <SelectTrigger className="w-full">
+                                                      <SelectValue placeholder="Select status" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                      <SelectItem value="Active">Active</SelectItem>
+                                                      <SelectItem value="Inactive">Inactive</SelectItem>
+                                                      <SelectItem value="Absent">Absent</SelectItem>
+                                                    </SelectContent>
+                                                  </Select>
+                                                </div>
+                                              </TooltipTrigger>
+                                              {editingStaff?.assignedStatus === 'assigned' && (
+                                                <TooltipContent>
+                                                  <p>Status cannot be changed while assigned to a service.</p>
+                                                </TooltipContent>
+                                              )}
+                                            </Tooltip>
+                                          </TooltipProvider>
                                         </div>
                                       </div>
 
