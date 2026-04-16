@@ -176,7 +176,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('supply-purchase-details.destroy');
 
     Route::get('/customers/index', [CustomerController::class, 'getCustomers'])
-        ->name('admin.customers.index');
+        ->name('api.admin.customers.index');
 
     // * Pullout Request routes
     Route::get('/pullout-requests', [PulloutRequestController::class, 'index'])

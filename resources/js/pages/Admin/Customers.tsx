@@ -83,6 +83,7 @@ export default function Customers() {
   const [loading, setLoading] = useState(true)
   const [perPage, setPerPage] = useState(10)
   const [activeTab, setActiveTab] = useState<'customers' | 'admins'>('customers')
+  const [lastUrl, setLastUrl] = useState<string | null>(null)
 
   // Load data on mount and dependencies change
   useEffect(() => {
@@ -100,35 +101,41 @@ export default function Customers() {
   const loadCustomers = async (url?: string) => {
     setLoading(true)
     try {
-      let finalUrl = url || route('admin.customers.index')
+      const targetUrl = url || lastUrl || route('api.admin.customers.index')
       const params: any = {
         per_page: perPage,
         search: searchValue,
         role: activeTab === 'customers' ? 'customer' : 'admin',
       }
 
-      // If we have a url (pagination link), we might need to extract page or just use it.
-      // Laravel links usually have page param.
-      // We pass params explicitly to ensure per_page and search are preserved if not in url?
-      // Actually standard Laravel pagination links only include what was in the query string when generated.
-      // So if we passed per_page and search to the FIRST request, the links WILL contain them.
-      // But let's be safe and merge params if it's not a full link or if we are changing filters.
-      // Simplest: if url is provided, use it. But axios params might duplicate?
-      // If url contains '?', axios merge logic is tricky.
-
+      // If 'url' is provided (from pagination links), handle it carefully
+      let finalUrl = targetUrl
       if (url) {
-        // If url is used, we assume it has everything needed OR we append.
-        // Better: Extract page from url and us base route.
-        const urlObj = new URL(url)
-        const page = urlObj.searchParams.get('page')
-        if (page) params.page = page
-        finalUrl = route('admin.customers.index')
+        try {
+          // Handle both absolute and relative URLs safely
+          const baseUrl = window.location.origin
+          const urlObj = new URL(url, baseUrl)
+          const page = urlObj.searchParams.get('page')
+          if (page) {
+            params.page = page
+          }
+          // Use the base API route to ensure we hit the JSON endpoint
+          finalUrl = route('api.admin.customers.index')
+        } catch (e) {
+          console.error('URL parsing failed, falling back to page 1:', e)
+        }
       }
 
       const res = await axios.get(finalUrl, { params })
       setCustomersData(res.data)
+
+      // Store this as the last successful URL (for refreshing after updates)
+      if (res.data.current_page) {
+        setLastUrl(finalUrl + `?page=${res.data.current_page}`)
+      }
     } catch (err) {
       console.error('Failed to fetch customers:', err)
+      toast.error('Failed to update the list. Please try refreshing.')
     } finally {
       setLoading(false)
     }
@@ -195,7 +202,7 @@ export default function Customers() {
       setIsConfirmOpen(false)
       setEditingUser(null)
       setAdminPassword('')
-      loadCustomers() // Reload list
+      await loadCustomers() // Reload list (preserves current page via lastUrl)
     } catch (error: any) {
       console.error(error)
       toast.error(error.response?.data?.message || 'Failed to update customer')
