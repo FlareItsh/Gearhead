@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import AppLayout from '@/layouts/app-layout'
 import { cn } from '@/lib/utils'
 import { type BreadcrumbItem } from '@/types'
@@ -399,25 +400,53 @@ export default function Bays() {
                     {/* Action Buttons */}
                     <div className="mt-6 flex gap-3">
                       {hasPermission('edit_bay') && (
-                        <Button
-                          onClick={() => openEditModal(bay)}
-                          variant="highlight"
-                          className="h-11 flex-1 border-border/70 font-medium"
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Edit Bay
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex-1">
+                                <Button
+                                  onClick={() => openEditModal(bay)}
+                                  variant="highlight"
+                                  className="h-11 w-full border-border/70 font-medium"
+                                  disabled={isOccupied}
+                                >
+                                  <Edit2 className="mr-2 h-4 w-4" />
+                                  Edit Bay
+                                </Button>
+                              </div>
+                            </TooltipTrigger>
+                            {isOccupied && (
+                              <TooltipContent>
+                                <p>Occupied bays cannot be edited.</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
 
                       {hasPermission('delete_bay') && (
-                        <Button
-                          onClick={() => handleDeleteClick(bay)}
-                          variant="destructive"
-                          className="h-11 flex-1 font-medium"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex-1">
+                                <Button
+                                  onClick={() => handleDeleteClick(bay)}
+                                  variant="destructive"
+                                  className="h-11 w-full font-medium"
+                                  disabled={isOccupied}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </TooltipTrigger>
+                            {isOccupied && (
+                              <TooltipContent>
+                                <p>Occupied bays cannot be deleted.</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </CardContent>

@@ -49,6 +49,15 @@ class BayController extends Controller
         }
 
         try {
+            $currentBay = $this->bayRepository->find($id);
+
+            if ($currentBay->status === 'occupied') {
+                return response()->json([
+                    'message' => 'Occupied bays cannot be updated.',
+                    'errors' => ['status' => ['This bay is currently occupied and cannot be modified.']],
+                ], 422);
+            }
+
             $validated = $request->validate([
                 'bay_number' => 'sometimes|integer|unique:bays,bay_number,'.$id.',bay_id',
                 'bay_type' => 'sometimes|string',
@@ -70,6 +79,15 @@ class BayController extends Controller
         }
 
         try {
+            $currentBay = $this->bayRepository->find($id);
+
+            if ($currentBay->status === 'occupied') {
+                return response()->json([
+                    'message' => 'Occupied bays cannot be deleted.',
+                    'errors' => ['status' => ['This bay is currently occupied and cannot be deleted.']],
+                ], 422);
+            }
+
             $this->bayRepository->delete($id);
 
             return response()->json(null, 204);
