@@ -59,7 +59,7 @@ export default function Welcome() {
       </section>
 
       <section
-        id="contact"
+        id="footer"
         className="scroll-mt-18"
       >
         <Footer />

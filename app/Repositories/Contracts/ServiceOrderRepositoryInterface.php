@@ -11,6 +11,8 @@ interface ServiceOrderRepositoryInterface
 
     public function findById(int $id): ?ServiceOrder;
 
+    public function findByUserAndDate(int $userId, string $orderDate): ?ServiceOrder;
+
     public function create(array $data): ServiceOrder;
 
     /**

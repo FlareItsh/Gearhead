@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\PaymentController;
 use App\Models\Bay;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\Request;
@@ -11,6 +10,19 @@ use Inertia\Inertia;
 
 // * Public Routes
 Route::get('/', fn () => Inertia::render('welcome'))->name('home');
+
+// * Guest-accessible booking route
+Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {
+    $user = $request->user();
+
+    // If user is admin, show admin services page
+    if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+        return $admin->services($request);
+    }
+
+    // Otherwise show customer services page (works for both authenticated customers and guests)
+    return $customer->services($request);
+})->name('services');
 
 // * Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -30,15 +42,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return $customer->bookings($request, $bookingRepo);
     })->name('bookings');
-
-    Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {
-        $user = $request->user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
-            return $admin->services($request);
-        }
-
-        return $customer->services($request);
-    })->name('services');
 
     // * Customer-specific routes
     Route::get('/payments', [CustomerController::class, 'payments'])

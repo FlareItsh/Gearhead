@@ -17,7 +17,10 @@ class ServiceFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'service_name' => $this->faker->words(2, true),
+            'description' => $this->faker->sentence(),
+            'category' => $this->faker->randomElement(['Basic', 'Premium', 'Deluxe']),
+            'status' => 'active',
         ];
     }
 }

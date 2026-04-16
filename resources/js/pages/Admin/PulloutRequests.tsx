@@ -114,7 +114,7 @@ export default function PulloutRequestsPage() {
   const loadPulloutRequests = async (url?: string) => {
     setLoading(true)
     try {
-      let finalUrl = '/api/pullout-requests'
+      const finalUrl = '/api/pullout-requests'
       const params: any = { per_page: perPage, search: search }
 
       if (url) {
@@ -135,7 +135,7 @@ export default function PulloutRequestsPage() {
   const loadReturnableSupplies = async (url?: string) => {
     setLoading(true)
     try {
-      let finalUrl = '/pullout-requests/returnable/list'
+      const finalUrl = '/pullout-requests/returnable/list'
       const params: any = { per_page: perPage, search: search }
 
       if (url) {

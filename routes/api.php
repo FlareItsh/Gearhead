@@ -219,6 +219,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('customers.create');
 });
 
+// * Guest-accessible booking endpoint (before auth middleware)
+Route::post('/bookings/book', [ServiceOrderController::class, 'book'])
+    ->name('bookings.book');
+
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     // * Payments API: return the current user's payments count
     Route::get('/payments/count', [PaymentController::class, 'countForCurrentUser'])
@@ -231,8 +235,6 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
         ->name('bookings.upcoming');
     Route::post('/bookings', [ServiceOrderController::class, 'store'])
         ->name('bookings.store');
-    Route::post('/bookings/book', [ServiceOrderController::class, 'book'])
-        ->name('bookings.book');
     Route::post('/bookings/cancel/{id}', [CustomerController::class, 'cancelBooking'])
         ->name('bookings.cancel');
 });

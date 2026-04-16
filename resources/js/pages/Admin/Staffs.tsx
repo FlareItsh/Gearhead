@@ -121,7 +121,7 @@ export default function Staffs() {
       }
 
       let finalUrl = endpoint
-      let finalParams = { ...params }
+      const finalParams = { ...params }
       if (url) {
         finalUrl = url
         // Ensure parameters are maintained if url doesn't have them,
