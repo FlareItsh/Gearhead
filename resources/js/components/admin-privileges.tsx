@@ -108,31 +108,54 @@ export function AdminPrivileges({ selectedPermissions, onChange }: AdminPrivileg
   }
 
   return (
-    <div className="grid gap-3 pt-4 border-t border-border">
-      <h3 className="font-semibold text-sm">Admin Privileges</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+    <div className="grid gap-4 pt-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
+          Access Control List
+        </h3>
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
+          Scroll for more
+        </p>
+      </div>
+      <div className="custom-scrollbar grid max-h-[400px] grid-cols-1 gap-3 overflow-y-auto pr-2 sm:grid-cols-2 lg:max-h-[500px]">
         {PRIVILEGES.map((privilege) => (
-          <div key={privilege.id} className="space-y-2 rounded-lg border border-border/50 p-3 bg-muted/20">
-            <div className="flex items-center space-x-2">
+          <div
+            key={privilege.id}
+            className="space-y-3 rounded-xl border border-border/50 bg-muted/5 p-4 transition-all hover:border-highlight/30 hover:bg-muted/10 shadow-sm"
+          >
+            <div className="flex items-center space-x-3">
               <Checkbox
                 id={privilege.id}
                 checked={selectedPermissions.includes(privilege.id)}
                 onCheckedChange={(checked) => togglePermission(privilege.id, checked as boolean)}
+                className="data-[state=checked]:bg-highlight data-[state=checked]:border-highlight"
               />
-              <Label htmlFor={privilege.id} className="font-medium">
+              <Label
+                htmlFor={privilege.id}
+                className="text-sm font-bold leading-none tracking-tight text-foreground cursor-pointer"
+              >
                 {privilege.label}
               </Label>
             </div>
             {privilege.children && (
-              <div className="ml-6 grid grid-cols-1 gap-2 pt-1">
+              <div className="ml-7 grid grid-cols-1 gap-2.5 border-l border-border/50 pl-4 py-1">
                 {privilege.children.map((child) => (
-                  <div key={child.id} className="flex items-center space-x-2">
+                  <div
+                    key={child.id}
+                    className="flex items-center space-x-2.5 group/item"
+                  >
                     <Checkbox
                       id={child.id}
                       checked={selectedPermissions.includes(child.id)}
-                      onCheckedChange={(checked) => togglePermission(child.id, checked as boolean)}
+                      onCheckedChange={(checked) =>
+                        togglePermission(child.id, checked as boolean)
+                      }
+                      className="h-3.5 w-3.5 data-[state=checked]:bg-highlight/80 data-[state=checked]:border-highlight/80"
                     />
-                    <Label htmlFor={child.id} className="text-sm font-normal text-muted-foreground">
+                    <Label
+                      htmlFor={child.id}
+                      className="text-[13px] font-medium leading-none text-muted-foreground cursor-pointer transition-colors group-hover/item:text-foreground"
+                    >
                       {child.label}
                     </Label>
                   </div>

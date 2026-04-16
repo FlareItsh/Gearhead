@@ -1,3 +1,4 @@
+import { AdminPrivileges } from '@/components/admin-privileges'
 import Heading from '@/components/heading'
 import Pagination from '@/components/Pagination'
 import { Button } from '@/components/ui/button'
@@ -25,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
   TableBody,
@@ -34,9 +34,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import AppLayout from '@/layouts/app-layout'
+import { cn } from '@/lib/utils'
 import { type BreadcrumbItem } from '@/types'
-import { AdminPrivileges } from '@/components/admin-privileges'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
 import { ChevronDownIcon, Edit2, Search, Star } from 'lucide-react'
@@ -81,7 +82,7 @@ export default function Customers() {
   const [filter, setFilter] = useState<'All' | 'Name' | 'Email' | 'Phone'>('All')
   const [loading, setLoading] = useState(true)
   const [perPage, setPerPage] = useState(10)
-  const [activeTab, setActiveTab] = useState<'customers'|'admins'>('customers')
+  const [activeTab, setActiveTab] = useState<'customers' | 'admins'>('customers')
 
   // Load data on mount and dependencies change
   useEffect(() => {
@@ -100,7 +101,11 @@ export default function Customers() {
     setLoading(true)
     try {
       let finalUrl = url || route('admin.customers.index')
-      const params: any = { per_page: perPage, search: searchValue, role: activeTab === 'customers' ? 'customer' : 'admin' }
+      const params: any = {
+        per_page: perPage,
+        search: searchValue,
+        role: activeTab === 'customers' ? 'customer' : 'admin',
+      }
 
       // If we have a url (pagination link), we might need to extract page or just use it.
       // Laravel links usually have page param.
@@ -142,6 +147,7 @@ export default function Customers() {
     permissions: [] as string[],
   })
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editTab, setEditTab] = useState('general')
   const [processing, setProcessing] = useState(false)
 
   const handleEditClick = (user: User) => {
@@ -156,8 +162,16 @@ export default function Customers() {
       permissions: user.permissions || [],
       password: '', // Password empty by default
     })
+    setEditTab('general')
     setIsEditOpen(true)
   }
+
+  // Auto-switch tab if role changes to non-admin
+  useEffect(() => {
+    if (editForm.role !== 'admin' && editTab === 'privileges') {
+      setEditTab('general')
+    }
+  }, [editForm.role])
 
   // Password Confirmation State
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -211,7 +225,7 @@ export default function Customers() {
                   <ChevronDownIcon className="ml-2 h-4 w-4" />
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="w-40 bg-background border border-border shadow-md">
+                <DropdownMenuContent className="w-40 border border-border bg-background shadow-md">
                   {['All', 'Name', 'Email', 'Phone'].map((f) => (
                     <DropdownMenuItem
                       key={f}
@@ -240,14 +254,20 @@ export default function Customers() {
         <Card className="border border-border/50 bg-background text-foreground">
           <CardContent className="p-0">
             {/* Header */}
-            <div className="border-b border-border/50 p-6 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-border/50 p-6">
               <div>
-                <h2 className="text-lg font-semibold">{activeTab === 'customers' ? 'Customer List' : 'Admin List'}</h2>
+                <h2 className="text-lg font-semibold">
+                  {activeTab === 'customers' ? 'Customer List' : 'Admin List'}
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   Total: {customersData?.total || 0} {activeTab}
                 </p>
               </div>
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-[400px]">
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as any)}
+                className="w-[400px]"
+              >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="customers">Customers</TabsTrigger>
                   <TabsTrigger value="admins">Admins</TabsTrigger>
@@ -392,101 +412,206 @@ export default function Customers() {
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
       >
-        <DialogContent className={`sm:max-w-[500px] ${editForm.role === 'admin' ? 'sm:max-w-[700px]' : ''} transition-all duration-300`}>
-          <DialogHeader>
-            <DialogTitle>Edit User ({editForm.role})</DialogTitle>
-            <DialogDescription>
-              Make changes to the customer's profile here. Click save when you're done.
-            </DialogDescription>
+        <DialogContent className="p-0 transition-all duration-300 sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
+          <DialogHeader className="p-6 pb-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl font-bold">
+                  Edit Profile: {editForm.first_name} {editForm.last_name}
+                </DialogTitle>
+                <DialogDescription>
+                  Update account details and access permissions for this user.
+                </DialogDescription>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Current Role
+                </span>
+                <span
+                  className={cn(
+                    'rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide',
+                    editForm.role === 'admin'
+                      ? 'bg-highlight/10 text-highlight'
+                      : 'bg-muted text-muted-foreground',
+                  )}
+                >
+                  {editForm.role}
+                </span>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="first_name">First Name</Label>
-                <Input
-                  id="first_name"
-                  value={editForm.first_name}
-                  onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="middle_name">Middle Name</Label>
-                <Input
-                  id="middle_name"
-                  value={editForm.middle_name}
-                  onChange={(e) => setEditForm({ ...editForm, middle_name: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="last_name">Last Name</Label>
-                <Input
-                  id="last_name"
-                  value={editForm.last_name}
-                  onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
-                />
-              </div>
+
+          <Tabs
+            value={editTab}
+            onValueChange={setEditTab}
+            className="w-full"
+          >
+            <div className="px-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="general">General Information</TabsTrigger>
+                <TabsTrigger
+                  value="privileges"
+                  disabled={editForm.role !== 'admin'}
+                >
+                  Access Permissions
+                </TabsTrigger>
+              </TabsList>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={editForm.phone_number}
-                onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={editForm.role}
-                onValueChange={(val) => setEditForm({ ...editForm, role: val })}
+
+            <div className="custom-scrollbar max-h-[60vh] overflow-y-auto px-6 py-4">
+              <TabsContent
+                value="general"
+                className="mt-0 space-y-6"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="customer">Customer</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="first_name"
+                        className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        First Name
+                      </Label>
+                      <Input
+                        id="first_name"
+                        value={editForm.first_name}
+                        onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+                        className="h-10 border-border/60 bg-muted/5 focus:ring-highlight"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="middle_name"
+                        className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        Middle Name
+                      </Label>
+                      <Input
+                        id="middle_name"
+                        value={editForm.middle_name}
+                        onChange={(e) => setEditForm({ ...editForm, middle_name: e.target.value })}
+                        className="h-10 border-border/60 bg-muted/5 focus:ring-highlight"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="last_name"
+                        className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        Last Name
+                      </Label>
+                      <Input
+                        id="last_name"
+                        value={editForm.last_name}
+                        onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+                        className="h-10 border-border/60 bg-muted/5 focus:ring-highlight"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="email"
+                        className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        Email Address
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                        className="h-10 border-border/60 bg-muted/5 focus:ring-highlight"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="phone"
+                        className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="phone"
+                        value={editForm.phone_number}
+                        onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
+                        className="h-10 border-border/60 bg-muted/5 focus:ring-highlight"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="role"
+                        className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        System Role
+                      </Label>
+                      <Select
+                        value={editForm.role}
+                        onValueChange={(val) => setEditForm({ ...editForm, role: val })}
+                      >
+                        <SelectTrigger className="h-10 border-border/60 bg-muted/5">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="customer">Customer</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
+                  <div className="grid gap-2">
+                    <Label
+                      htmlFor="password"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Security <span className="text-highlight">(Modify Password)</span>
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Leave blank to keep current password"
+                      value={editForm.password}
+                      onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                      className="h-10 border-border/60 bg-background focus:ring-highlight"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Only fill this if you want to reset the user&apos;s password.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {editForm.role === 'admin' && (
+                <TabsContent
+                  value="privileges"
+                  className="mt-0"
+                >
+                  <AdminPrivileges
+                    selectedPermissions={editForm.permissions}
+                    onChange={(perms) => setEditForm({ ...editForm, permissions: perms })}
+                  />
+                </TabsContent>
+              )}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">
-                New Password <span className="text-xs text-muted-foreground">(Optional)</span>
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Leave blank to keep current"
-                value={editForm.password}
-                onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-              />
-            </div>
-            {editForm.role === 'admin' && (
-              <AdminPrivileges 
-                selectedPermissions={editForm.permissions} 
-                onChange={(perms) => setEditForm({ ...editForm, permissions: perms })} 
-              />
-            )}
-          </div>
-          <DialogFooter>
+          </Tabs>
+
+          <DialogFooter className="border-t border-border p-6 bg-muted/5">
             <Button
               variant="outline"
               onClick={() => setIsEditOpen(false)}
+              className="px-6 h-10 font-bold tracking-tight hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveClick}
+              variant="highlight"
               disabled={processing}
+              className="px-8 h-10 font-bold tracking-tight shadow-md"
             >
               Save Changes
             </Button>
