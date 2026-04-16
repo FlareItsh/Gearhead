@@ -10,14 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { cn } from '@/lib/utils'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/react'
 import axios from 'axios'
+import { Loader2, UserPlus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { usePermissions } from '@/hooks/use-permissions'
 
 axios.defaults.withCredentials = true
 
@@ -379,6 +380,7 @@ export default function Registry({
       return
     }
 
+    setIsAssigning(true)
     try {
       const order = serviceOrders.get(bayId)
       if (!order) return
@@ -396,6 +398,8 @@ export default function Registry({
     } catch (err) {
       console.error('Failed to assign employee:', err)
       toast.error('Failed to assign employee')
+    } finally {
+      setIsAssigning(false)
     }
   }
 
@@ -470,7 +474,9 @@ export default function Registry({
                     isMaintenance &&
                       'border-red-200/50 bg-red-50/40 dark:border-red-900/50 dark:bg-red-950/30',
                   )}
-                  onClick={() => isAvailable && hasPermission('start_service') && handleStartService(bay)}
+                  onClick={() =>
+                    isAvailable && hasPermission('start_service') && handleStartService(bay)
+                  }
                 >
                   {/* Status accent border */}
                   <div
@@ -598,24 +604,40 @@ export default function Registry({
                             </div>
 
                             {/* Assigned Employee */}
-                            <div className="border-t border-border pt-2">
+                            <div className="border-t border-border pt-4">
                               {selectedBayForReassignment === bay.bay_id ? (
-                                <div className="space-y-2">
-                                  <Label
-                                    htmlFor={`reassign-employee-${bay.bay_id}`}
-                                    className="text-xs font-semibold text-muted-foreground"
-                                  >
-                                    Reassign Employee:
-                                  </Label>
+                                <div className="space-y-3 rounded-xl border border-highlight/20 bg-highlight/5 p-3 duration-300 animate-in fade-in slide-in-from-top-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label
+                                      htmlFor={`reassign-employee-${bay.bay_id}`}
+                                      className="flex items-center gap-2 text-xs font-bold tracking-wider text-highlight uppercase"
+                                    >
+                                      <UserPlus className="h-3 w-3" />
+                                      New Assignment
+                                    </Label>
+                                    <Button
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        setSelectedBayForReassignment(null)
+                                        setSelectedReassignEmployeeId('')
+                                      }}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 rounded-full text-highlight hover:bg-highlight/10"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+
                                   <Select
                                     value={selectedReassignEmployeeId}
                                     onValueChange={setSelectedReassignEmployeeId}
                                   >
                                     <SelectTrigger
                                       id={`reassign-employee-${bay.bay_id}`}
-                                      className="h-9 text-sm"
+                                      className="h-10 border-highlight/20 bg-background text-sm ring-offset-background focus:ring-1 focus:ring-highlight"
                                     >
-                                      <SelectValue placeholder="Choose an employee..." />
+                                      <SelectValue placeholder="Select staff..." />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {availableEmployees.map((employee) => (
@@ -628,48 +650,50 @@ export default function Registry({
                                       ))}
                                     </SelectContent>
                                   </Select>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      onClick={() => handleAssignEmployee(bay.bay_id)}
-                                      disabled={!selectedReassignEmployeeId}
-                                      size="sm"
-                                      className="flex-1"
-                                    >
-                                      Assign
-                                    </Button>
-                                    <Button
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        setSelectedBayForReassignment(null)
-                                        setSelectedReassignEmployeeId('')
-                                      }}
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      className="flex-1"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
+
+                                  <Button
+                                    onClick={() => handleAssignEmployee(bay.bay_id)}
+                                    disabled={!selectedReassignEmployeeId || isAssigning}
+                                    size="sm"
+                                    variant="highlight"
+                                    className="w-full"
+                                  >
+                                    {isAssigning ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                        Assigning...
+                                      </>
+                                    ) : (
+                                      'Confirm Assignment'
+                                    )}
+                                  </Button>
                                 </div>
                               ) : (
                                 <div>
-                                  <p className="text-xs font-semibold text-muted-foreground">
-                                    Assigned Employee:
+                                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    Assigned Staff:
                                   </p>
-                                  <div className="mt-1 flex items-center justify-between">
-                                    <p className="font-medium text-foreground">
-                                      {order.employee
-                                        ? `${order.employee.first_name} ${order.employee.last_name}`
-                                        : 'Not assigned'}
-                                    </p>
+                                  <div className="mt-2 flex items-center justify-between rounded-lg border border-border bg-muted/30 p-2.5 transition-colors hover:bg-muted/50">
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-highlight/10 text-xs font-bold text-highlight">
+                                        {order.employee
+                                          ? `${order.employee.first_name[0]}${order.employee.last_name[0]}`
+                                          : '?'}
+                                      </div>
+                                      <p className="font-semibold text-foreground">
+                                        {order.employee
+                                          ? `${order.employee.first_name} ${order.employee.last_name}`
+                                          : 'Not assigned'}
+                                      </p>
+                                    </div>
                                     <Button
                                       onClick={() => setSelectedBayForReassignment(bay.bay_id)}
                                       size="sm"
                                       variant="ghost"
-                                      className="text-foreground"
+                                      className="h-8 gap-2 text-highlight hover:bg-highlight/10 hover:text-highlight"
                                     >
-                                      Change
+                                      <UserPlus className="h-3.5 w-3.5" />
+                                      <span className="hidden sm:inline">Change</span>
                                     </Button>
                                   </div>
                                 </div>

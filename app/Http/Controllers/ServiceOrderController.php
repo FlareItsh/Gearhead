@@ -391,7 +391,7 @@ class ServiceOrderController extends Controller
 
             return response()->json([
                 'message' => 'Employee assigned successfully',
-                'order' => $order->load('details.service', 'user', 'bay'),
+                'order' => $order->load(['details.serviceVariant.service', 'user', 'bay', 'employee']),
             ]);
         } catch (\Exception $e) {
             return response()->json([
