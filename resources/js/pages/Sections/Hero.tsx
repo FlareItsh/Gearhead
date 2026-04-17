@@ -202,10 +202,6 @@ export default function HeroSection() {
                             transform: translateX(-50%);
                         }
                     }
-
-                    .carousel-track-brands:hover {
-                        animation-play-state: paused;
-                    }
                 `}</style>
       </div>
     </section>
