@@ -1,8 +1,9 @@
-import { dashboard, home, login, register } from '@/routes'
+import { dashboard, login, register } from '@/routes'
 import { type SharedData } from '@/types'
 import { Link, usePage } from '@inertiajs/react'
 import { Menu, Moon, Sun, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { route } from 'ziggy-js'
 import { Button } from './ui/button'
 
 type NavLink = {
@@ -26,7 +27,13 @@ export default function Header({ navLinks }: HeaderProps) {
   const { auth } = usePage().props as unknown as SharedData
   const [isOpen, setIsOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const saved = localStorage.getItem('appearance')
+    if (saved === 'light') return false
+    if (saved === 'dark') return true
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
   const hash = typeof window !== 'undefined' ? window.location.hash : ''
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/'
 
@@ -39,10 +46,12 @@ export default function Header({ navLinks }: HeaderProps) {
 
     if (newTheme === 'dark') {
       html.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+      localStorage.setItem('appearance', 'dark')
+      setIsDarkMode(true)
     } else {
       html.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      localStorage.setItem('appearance', 'light')
+      setIsDarkMode(false)
     }
   }
 
@@ -95,7 +104,12 @@ export default function Header({ navLinks }: HeaderProps) {
   }, [linksToUse])
 
   const isActiveLink = (link: NavLink) => {
-    // If link has a section, check if it's the active section
+    // If we're on a route page, use route-based matching only
+    if (currentPath !== '/' && link.section) {
+      return currentPath === `/${link.section}`
+    }
+
+    // If link has a section and we're on home, check if it's the active section
     if (link.section) {
       return link.section === activeSection
     }
@@ -117,7 +131,7 @@ export default function Header({ navLinks }: HeaderProps) {
       <nav className="mx-auto flex max-w-[95rem] items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link
-          href={home()}
+          href={route('home')}
           className="flex-shrink-0"
         >
           <img
@@ -129,15 +143,21 @@ export default function Header({ navLinks }: HeaderProps) {
 
         {/* Desktop Nav */}
         <ul className="hidden items-center gap-5 rounded-md bg-secondary px-1 py-1 font-medium text-secondary-foreground md:flex">
-          {linksToUse.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className={linkClasses(isActiveLink(link))}
-            >
-              <li>{link.label}</li>
-            </a>
-          ))}
+          {linksToUse.map((link) => {
+            const isGuest = !auth.user
+            const isOnServicesPage = currentPath.includes('/services')
+            const href = isGuest && isOnServicesPage ? route('home') + link.href : link.href
+
+            return (
+              <a
+                key={link.label}
+                href={href}
+                className={linkClasses(isActiveLink(link))}
+              >
+                <li>{link.label}</li>
+              </a>
+            )
+          })}
         </ul>
 
         {/* Desktop Buttons */}
@@ -220,21 +240,27 @@ export default function Header({ navLinks }: HeaderProps) {
           {/* Sidebar Links */}
           <nav className="flex-1 overflow-y-auto p-4">
             <ul className="flex flex-col gap-2">
-              {linksToUse.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className={
-                      isActiveLink(link)
-                        ? 'block rounded-md bg-tertiary px-4 py-3 font-bold text-highlight transition-colors'
-                        : 'block rounded-md px-4 py-3 text-foreground transition-colors hover:bg-secondary hover:text-highlight'
-                    }
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
+              {linksToUse.map((link) => {
+                const isGuest = !auth.user
+                const isOnServicesPage = currentPath.includes('/services')
+                const href = isGuest && isOnServicesPage ? route('home') + link.href : link.href
+
+                return (
+                  <li key={link.label}>
+                    <a
+                      href={href}
+                      onClick={() => setIsOpen(false)}
+                      className={
+                        isActiveLink(link)
+                          ? 'block rounded-md bg-tertiary px-4 py-3 font-bold text-highlight transition-colors'
+                          : 'block rounded-md px-4 py-3 text-foreground transition-colors hover:bg-secondary hover:text-highlight'
+                      }
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
 
@@ -278,6 +304,15 @@ export default function Header({ navLinks }: HeaderProps) {
                 </Link>
               ) : (
                 <>
+                  <Link href="/services">
+                    <Button
+                      variant="highlight"
+                      className="w-full"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Book Now
+                    </Button>
+                  </Link>
                   <Link href={login()}>
                     <Button
                       variant="outline"

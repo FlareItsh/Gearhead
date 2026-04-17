@@ -172,7 +172,7 @@ export default function InventoryPage() {
       // However, creating a new URL object is safer.
 
       let finalUrl = endpoint
-      let finalParams = { ...params }
+      const finalParams = { ...params }
 
       if (url) {
         // If we have a URL, extract the page and use base endpoint with our current filters

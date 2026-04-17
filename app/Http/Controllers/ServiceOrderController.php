@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ServiceVariant;
+use App\Models\User;
 use App\Repositories\Contracts\BayRepositoryInterface;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ServiceOrderController extends Controller
 {
@@ -221,7 +225,7 @@ class ServiceOrderController extends Controller
     }
 
     /**
-     * Book services for the authenticated user.
+     * Book services for the authenticated user or guest.
      * Creates a service order with multiple service details.
      */
     public function book(Request $request)
@@ -230,7 +234,6 @@ class ServiceOrderController extends Controller
             'order_date' => [
                 'required',
                 'date_format:Y-m-d H:i',
-                'after_or_equal:now',
                 function ($attribute, $value, $fail) {
                     $date = \Carbon\Carbon::parse($value);
                     $time = $date->format('H:i');
@@ -242,9 +245,41 @@ class ServiceOrderController extends Controller
             ],
             'variant_ids' => 'required|array|min:1',
             'variant_ids.*' => 'required|integer|exists:service_variants,service_variant',
+            'guest_info' => 'nullable|array',
+            'guest_info.name' => 'required_with:guest_info|string|min:2',
+            'guest_info.email' => 'required_with:guest_info|email',
+            'guest_info.phone' => 'required_with:guest_info|string|min:10',
+            'guest_info.vehicleModel' => 'nullable|string',
         ]);
 
         $user = $request->user();
+
+        // Handle guest booking
+        if (! $user && isset($validated['guest_info'])) {
+            $guestInfo = $validated['guest_info'];
+
+            // Try to find existing user by email
+            $user = User::where('email', $guestInfo['email'])->first();
+
+            // Create guest user if doesn't exist
+            if (! $user) {
+                // Parse name into first and last name
+                $nameParts = explode(' ', trim($guestInfo['name']), 2);
+                $firstName = $nameParts[0];
+                $lastName = $nameParts[1] ?? '';
+
+                $user = User::create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $guestInfo['email'],
+                    'phone_number' => $guestInfo['phone'],
+                    'password' => Hash::make(Str::random(16)),
+                    'role' => 'customer',
+                    'permissions' => [],
+                ]);
+            }
+        }
+
         if (! $user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
@@ -259,7 +294,20 @@ class ServiceOrderController extends Controller
         ];
 
         // Retrieve variants to get their service_id
-        $variants = \App\Models\ServiceVariant::whereIn('service_variant', $validated['variant_ids'])->get()->keyBy('service_variant');
+        $variants = ServiceVariant::whereIn('service_variant', $validated['variant_ids'])->get()->keyBy('service_variant');
+
+        // Check if a booking already exists for this user at the same date/time
+        $existingOrder = $this->repo->findByUserAndDate($user->user_id, $validated['order_date']);
+        if ($existingOrder) {
+            // Check if it has the same services
+            $existingDetails = $existingOrder->details->pluck('service_variant')->sort()->values();
+            $requestedVariants = collect($validated['variant_ids'])->sort()->values();
+
+            if ($existingDetails->toArray() === $requestedVariants->toArray()) {
+                // Return the existing booking
+                return response()->json($existingOrder, 200);
+            }
+        }
 
         // Map variant_ids to details format expected by createWithDetails
         $details = [];
@@ -281,10 +329,6 @@ class ServiceOrderController extends Controller
         }
     }
 
-    /**
-     * Create a service order from the registry with customer and services.
-     * Automatically assigns to a bay and marks it as occupied.
-     */
     public function createFromRegistry(Request $request)
     {
         if (! $request->user() || ! $request->user()->hasPermission('add_queue')) {

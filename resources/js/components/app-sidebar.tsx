@@ -149,20 +149,19 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
   let adminNavItems = mainNavItems
   if (currentRole === 'admin' && Array.isArray(userPermissions)) {
     const permissionMap: Record<string, string> = {
-      'Dashboard': 'view_dashboard',
-      'Registry': 'view_registry',
-      'Bookings': 'view_bookings',
-      'Bays': 'view_bays',
-      'Services': 'view_services',
-      'Inventory': 'view_inventory',
+      Dashboard: 'view_dashboard',
+      Registry: 'view_registry',
+      Bookings: 'view_bookings',
+      Bays: 'view_bays',
+      Services: 'view_services',
+      Inventory: 'view_inventory',
       'Pullout Requests': 'view_pullout_requests',
-      'Users': 'view_users',
-      'Employees': 'view_employees',
-      'Transactions': 'view_transactions',
-      'Reports': 'view_reports',
+      Employees: 'view_employees',
+      Transactions: 'view_transactions',
+      Reports: 'view_reports',
     }
-    
-    adminNavItems = mainNavItems.filter(item => {
+
+    adminNavItems = mainNavItems.filter((item) => {
       const requiredPerm = permissionMap[item.title]
       if (!requiredPerm) return true // no permission map defined, allow
       return userPermissions.includes(requiredPerm)

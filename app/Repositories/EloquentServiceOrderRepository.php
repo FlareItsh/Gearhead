@@ -19,6 +19,14 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         return ServiceOrder::find($id);
     }
 
+    public function findByUserAndDate(int $userId, string $orderDate): ?ServiceOrder
+    {
+        return ServiceOrder::where('user_id', $userId)
+            ->where('order_date', $orderDate)
+            ->with('details')
+            ->first();
+    }
+
     public function create(array $data): ServiceOrder
     {
         return ServiceOrder::create($data);
@@ -133,7 +141,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->whereIn('so.status', ['pending', 'in_progress'])
-            ->whereRaw('DATE(so.order_date) = CURDATE()')
+            ->whereRaw('DATE(so.order_date) >= CURDATE()')
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),

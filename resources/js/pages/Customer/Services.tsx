@@ -3,7 +3,10 @@ import HeadingSmall from '@/components/heading-small'
 import { Button } from '@/components/ui/button'
 import Calendar from '@/components/ui/calendar'
 import AppLayout from '@/layouts/app-layout'
-import { Head, usePage } from '@inertiajs/react'
+import GuestLayout from '@/layouts/guest-layout'
+import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
+import { register } from '@/routes'
+import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
 import { AlertCircle, CheckCircle2, ChevronDown, Clock, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -14,7 +17,7 @@ const breadcrumbs = [{ title: 'Services', href: '/services' }]
 interface ServiceVariant {
   service_variant: number
   size: string
-  price: number | string
+  price: number
   estimated_duration: number
   enabled: boolean
 }
@@ -32,13 +35,22 @@ interface SelectedService extends Service {
   selectedVariant: ServiceVariant
 }
 
+interface User {
+  user_id: number
+  name: string
+  email: string
+  role: string
+}
+
 export default function Services() {
   const pageProps = usePage().props as unknown as {
     services?: Service[]
     categories?: string[]
     selectedCategory?: string
+    auth?: { user: User | null }
   }
 
+  const auth = pageProps.auth ?? { user: null }
   const services = pageProps.services ?? []
   const categories = pageProps.categories ?? []
 
@@ -257,7 +269,6 @@ export default function Services() {
 
       // Convert time to proper format with selected date
       // selectedTime is like "3:00 PM"
-      const [yearStr, monthStr, dayStr] = selectedDate.split('-')
       const [timeStr, period] = selectedTime.split(' ')
       const [hourStr, minuteStr] = timeStr.split(':')
       let hour = parseInt(hourStr)
@@ -277,10 +288,12 @@ export default function Services() {
       console.log('Sending booking with order_date:', orderDate)
       console.log('Sending booking with variant_ids:', variantIds)
 
-      const response = await axios.post('/api/bookings/book', {
+      const bookingData: Record<string, unknown> = {
         order_date: orderDate,
         variant_ids: variantIds,
-      })
+      }
+
+      const response = await axios.post('/api/bookings/book', bookingData)
 
       // Success - clear selections and close modal
       setSelectedServices([])
@@ -311,8 +324,39 @@ export default function Services() {
     }
   }
 
+  const handleGuestBooking = (timeOverride?: string) => {
+    const timeToUse = timeOverride || selectedTime
+
+    // Create pending booking object - map services to the required interface
+    const pending: PendingBooking = {
+      services: selectedServices.map((s) => ({
+        service_name: s.service_name,
+        selectedVariant: {
+          service_variant: s.selectedVariant.service_variant,
+          size: s.selectedVariant.size,
+          price: Number(s.selectedVariant.price),
+          estimated_duration: s.selectedVariant.estimated_duration,
+        },
+      })),
+      date: selectedDate,
+      time: timeToUse,
+      guestInfo: null, // No guest info for direct register flow
+      totalPrice,
+    }
+
+    // Save to localStorage
+    savePendingBooking(pending)
+
+    // Close the services modal and redirect to register
+    setIsModalOpen(false)
+    router.visit(register())
+  }
+
+  const LayoutComponent = auth.user ? AppLayout : GuestLayout
+  const layoutProps = auth.user ? { breadcrumbs } : {}
+
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
+    <LayoutComponent {...layoutProps}>
       <Head title="Services" />
 
       {/* Main Content (unchanged) */}
@@ -412,7 +456,7 @@ export default function Services() {
               </span>
             </div>
             <div>
-              <span className="text-primary/70">Total amount:</span>{' '}
+              <span className="text-primary/70 dark:text-primary/90">Total amount:</span>{' '}
               <strong className="text-primary">₱{totalPrice.toLocaleString()}</strong>
             </div>
           </div>
@@ -498,7 +542,7 @@ export default function Services() {
                   {/* Total (Mobile only, or kept here if prefered, but usually better at bottom) */}
                   <div className="flex min-h-[80px] items-center justify-between border-t border-border/30 bg-muted/20 px-5 py-4">
                     <span className="text-base font-medium text-foreground">Total</span>
-                    <span className="text-2xl font-bold text-foreground">
+                    <span className="text-2xl font-bold text-foreground dark:text-white">
                       ₱{totalPrice.toLocaleString()}
                     </span>
                   </div>
@@ -570,6 +614,10 @@ export default function Services() {
                                   onClick={() => {
                                     setSelectedTime(time)
                                     setIsTimeDropdownOpen(false)
+                                    // For guests, proceed directly to register page
+                                    if (!auth.user) {
+                                      handleGuestBooking(time)
+                                    }
                                   }}
                                   className={`block w-full px-4 py-3 text-left transition-colors hover:bg-primary/10 ${
                                     selectedTime === time
@@ -781,6 +829,6 @@ export default function Services() {
           </div>
         </div>
       )}
-    </AppLayout>
+    </LayoutComponent>
   )
 }

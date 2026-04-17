@@ -17,7 +17,10 @@ class ServiceVariantFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'service_id' => \App\Models\Service::factory(),
+            'size' => $this->faker->randomElement(['S', 'M', 'L', 'XL', 'XXL']),
+            'price' => $this->faker->numberBetween(150, 500),
+            'estimated_duration' => $this->faker->numberBetween(15, 120),
         ];
     }
 }

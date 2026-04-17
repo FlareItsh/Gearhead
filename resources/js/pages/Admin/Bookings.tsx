@@ -105,7 +105,7 @@ export default function AdminBookings() {
       }
 
       let finalUrl = endpoint
-      let finalParams = { ...params }
+      const finalParams = { ...params }
 
       if (url) {
         const urlObj = new URL(url)
