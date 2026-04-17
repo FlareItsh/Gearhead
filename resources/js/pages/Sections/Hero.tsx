@@ -156,7 +156,7 @@ export default function HeroSection() {
       </div>
 
       {/* BRANDS MARQUEE */}
-      <div className="absolute bottom-0 z-20 w-full overflow-hidden bg-muted/50 py-4 backdrop-blur-sm sm:py-6 dark:border-[#222] dark:bg-[#111]/80">
+      <div className="absolute bottom-0 z-20 w-full overflow-hidden py-4 sm:py-6">
         <div className="carousel-track carousel-track-brands">
           {[...brands, ...brands, ...brands, ...brands].map((brand, i) => (
             <img
