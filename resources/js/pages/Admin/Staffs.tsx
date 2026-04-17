@@ -14,6 +14,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -36,8 +42,8 @@ import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { ChevronDownIcon, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 // ---------- Interfaces ----------
@@ -84,10 +90,6 @@ export default function Staffs() {
   const [perPage, setPerPage] = useState(10)
   const [loading, setLoading] = useState(true)
   const { hasPermission } = usePermissions()
-
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [suggestions, setSuggestions] = useState<Staff[]>([])
-  const searchRef = useRef<HTMLDivElement>(null)
 
   // Add / Edit Form state
   const [addForm, setAddForm] = useState({
@@ -173,26 +175,6 @@ export default function Staffs() {
     return () => clearTimeout(timer)
   }, [search, filter, perPage])
 
-  // Suggestions (simplified - fetches directly or filters current page?)
-  // For simplicity, we might just filter current loaded data or remove suggestions if not checking API.
-  // The original implementation filtered local list.
-  // With pagination, suggestions should ideally come from API.
-  // For now, I'll remove suggestions logic or keep it searching on CURRENT page only?
-  // I will just search on CURRENT loaded data for suggestions.
-  useEffect(() => {
-    if (search.length > 0 && staffData?.data) {
-      const matches = staffData.data.filter((s) => {
-        const fullName = `${s.firstName} ${s.middleName ?? ''} ${s.lastName}`.toLowerCase()
-        return fullName.includes(search.toLowerCase())
-      })
-      setSuggestions(matches.slice(0, 5))
-      setShowSuggestions(true)
-    } else {
-      setSuggestions([])
-      setShowSuggestions(false)
-    }
-  }, [search, staffData])
-
   const formatPhone = (value: string) => value.replace(/\D/g, '').slice(0, 11)
 
   const resetAddForm = () =>
@@ -203,6 +185,7 @@ export default function Staffs() {
       phone: '',
       address: '',
     })
+
   const resetEditForm = () => {
     setEditingStaff(null)
     setEditForm({
@@ -213,11 +196,6 @@ export default function Staffs() {
       address: '',
       status: 'Active',
     })
-  }
-
-  const handleSuggestionClick = (staff: Staff) => {
-    setSearch(`${staff.firstName} ${staff.middleName ?? ''} ${staff.lastName}`)
-    setShowSuggestions(false)
   }
 
   // ---------- CRUD Handlers ----------
@@ -418,43 +396,38 @@ export default function Staffs() {
 
         {/* ... search ... */
         /* Keeping search card logic, it uses search state which is fine */}
-        <Card className="border border-border/70 bg-background">
-          <CardContent className="p-4 text-foreground">
-            {/* ... Search input ... */}
-            <div
-              ref={searchRef}
-              className="relative w-full"
-            >
-              <Label className="mb-1 block text-sm">Search Employees</Label>
-              <div className="relative">
-                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <Input
-                  placeholder="Search by name or phone..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onFocus={() => search.length > 0 && setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  className="pl-10"
-                />
-                {/* Suggestions Dropdown */}
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="custom-scrollbar absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-background shadow-lg">
-                    {suggestions.map((staff) => {
-                      const fullName = `${staff.firstName} ${staff.middleName ?? ''} ${staff.lastName}`
-                      return (
-                        <div
-                          key={staff.id}
-                          className="cursor-pointer border-b border-border/50 p-3 last:border-b-0 hover:bg-accent/50"
-                          onClick={() => handleSuggestionClick(staff)}
-                        >
-                          <div className="font-medium text-foreground">{fullName}</div>
-                          <div className="text-xs text-muted-foreground">{staff.phone}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+        <Card className="border border-border/50 bg-background text-foreground shadow-sm">
+          <CardContent className="flex flex-col gap-4 p-5">
+            <div className="flex items-center justify-between gap-4 text-foreground">
+              <h2 className="text-lg font-bold tracking-tight">Search Employees</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
+                  {filter === 'All' ? 'Filter by: All Status' : `Status: ${filter}`}
+                  <ChevronDownIcon className="ml-2 h-4 w-4" />
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent className="w-40 border border-border bg-background shadow-md text-foreground">
+                  {['All', 'Active', 'Inactive', 'Absent'].map((f) => (
+                    <DropdownMenuItem
+                      key={f}
+                      onClick={() => setFilter(f as typeof filter)}
+                      className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20 cursor-pointer"
+                    >
+                      {f === 'All' ? 'All Status' : f}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="relative w-full">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search employees by name or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 border-border/50 bg-background pl-10 text-foreground"
+              />
             </div>
           </CardContent>
         </Card>
@@ -469,30 +442,6 @@ export default function Staffs() {
                   (staffData?.total || 0) !== 1 ? 's' : ''
                 }`}
               />
-
-              <Select
-                value={filter}
-                onValueChange={(value) => setFilter(value as typeof filter)}
-              >
-                <SelectTrigger className="w-[180px] bg-background text-foreground border border-border shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
-                  <SelectValue placeholder="Filter by: All" />
-                </SelectTrigger>
-
-                <SelectContent className="bg-background text-foreground border border-border shadow-md">
-                  <SelectItem value="All" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
-                    All
-                  </SelectItem>
-                  <SelectItem value="Active" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
-                    Active
-                  </SelectItem>
-                  <SelectItem value="Inactive" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
-                    Inactive
-                  </SelectItem>
-                  <SelectItem value="Absent" className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
-                    Absent
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {loading ? (

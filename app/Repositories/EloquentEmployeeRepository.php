@@ -21,7 +21,6 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%");
             });
         }
@@ -37,12 +36,11 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
                     'first_name' => $employee->first_name,
                     'last_name' => $employee->last_name,
                     'middle_name' => $employee->middle_name,
-                    'email' => $employee->email,
                     'phone_number' => $employee->phone_number,
                     'address' => $employee->address,
                     'status' => ucfirst($employee->status),
                     'date_hired' => optional($employee->date_hired)->format('Y-m-d'),
-                    'role' => $employee->role,
+                    'role' => $employee->role ?? 'Employee',
                     'assigned_status' => $employee->assigned_status,
                     'created_at' => $employee->created_at,
                     'updated_at' => $employee->updated_at,
