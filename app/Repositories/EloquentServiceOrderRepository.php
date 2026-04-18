@@ -157,7 +157,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getAllBookings(?string $startDate = null, ?string $endDate = null)
+    public function getAllBookings(?string $startDate = null, ?string $endDate = null, ?string $sortBy = 'order_date', ?string $sortOrder = 'asc')
     {
         $query = DB::table('service_orders as so')
             ->join('users as u', 'u.user_id', '=', 'so.user_id')
@@ -182,11 +182,11 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         }
 
         return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
-            ->orderByDesc('so.order_date')
+            ->orderBy($sortBy === 'customer_name' ? 'u.last_name' : $sortBy, $sortOrder)
             ->get();
     }
 
-    public function getPaginatedBookings(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null, ?string $status = null)
+    public function getPaginatedBookings(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null, ?string $status = null, ?string $sortBy = 'order_date', ?string $sortOrder = 'asc')
     {
         $query = DB::table('service_orders as so')
             ->join('users as u', 'u.user_id', '=', 'so.user_id')
@@ -221,7 +221,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         }
 
         return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
-            ->orderByDesc('so.order_date')
+            ->orderBy($sortBy === 'customer_name' ? 'u.last_name' : $sortBy, $sortOrder)
             ->paginate($perPage);
     }
 

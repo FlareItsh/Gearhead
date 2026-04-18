@@ -48,12 +48,12 @@ interface ServiceOrderRepositoryInterface
      * @param  string|null  $endDate  Y-m-d format
      * @return \Illuminate\Support\Collection
      */
-    public function getAllBookings(?string $startDate = null, ?string $endDate = null);
+    public function getAllBookings(?string $startDate = null, ?string $endDate = null, ?string $sortBy = 'order_date', ?string $sortOrder = 'asc');
 
     /**
      * Get paginated bookings with filters.
      */
-    public function getPaginatedBookings(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null, ?string $status = null);
+    public function getPaginatedBookings(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null, ?string $status = null, ?string $sortBy = 'order_date', ?string $sortOrder = 'asc');
 
     /**
      * Delete all service order details for a service order.

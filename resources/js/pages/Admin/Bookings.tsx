@@ -59,6 +59,7 @@ export default function AdminBookings() {
   >('All')
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
+  const [sortValue, setSortValue] = useState('earliest')
   const [isLoading, setIsLoading] = useState(true)
   const [perPage, setPerPage] = useState(10)
 
@@ -90,13 +91,23 @@ export default function AdminBookings() {
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [startDate, endDate, searchValue, statusFilter, perPage])
+  }, [startDate, endDate, searchValue, statusFilter, perPage, sortValue])
 
   const loadBookings = async (url?: string) => {
     try {
       setIsLoading(true)
       const endpoint = url || '/api/service-orders/bookings'
+      const sortParams = (
+        {
+          earliest: { sort_by: 'order_date', sort_order: 'asc' },
+          newest: { sort_by: 'order_date', sort_order: 'desc' },
+          name_asc: { sort_by: 'customer_name', sort_order: 'asc' },
+          price_desc: { sort_by: 'total_price', sort_order: 'desc' },
+        } as const
+      )[sortValue as keyof typeof sortParams] || { sort_by: 'order_date', sort_order: 'asc' }
+
       const params: any = {
+        ...sortParams,
         per_page: perPage,
         search: searchValue,
         start_date: startDate,
@@ -228,14 +239,34 @@ export default function AdminBookings() {
               <h2 className="text-lg font-semibold">Search</h2>
             </div>
 
-            <div className="relative w-full">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
-              <Input
-                placeholder="Search bookings..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="w-full pl-10"
-              />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search bookings..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="w-full pl-10"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-sm font-medium text-muted-foreground">Sort by:</span>
+                <Select
+                  value={sortValue}
+                  onValueChange={setSortValue}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="earliest">Earliest Booking</SelectItem>
+                    <SelectItem value="newest">Newest Booking</SelectItem>
+                    <SelectItem value="name_asc">Customer Name (A-Z)</SelectItem>
+                    <SelectItem value="price_desc">Price (High to Low)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
