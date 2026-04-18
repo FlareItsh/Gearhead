@@ -117,6 +117,8 @@ export default function Registry({
   const [selectedReassignEmployeeId, setSelectedReassignEmployeeId] = useState<string>('')
   const [isAssigning, setIsAssigning] = useState(false)
 
+  const isAllBaysFull = bays.length > 0 && bays.every((bay) => bay.status !== 'available')
+
   useEffect(() => {
     // Map initial orders
     const ordersMap = new Map()
@@ -439,7 +441,7 @@ export default function Registry({
             description="Manage and monitor bays for carwash services"
           />
 
-          {hasPermission('add_queue') && (
+          {hasPermission('add_queue') && isAllBaysFull && (
             <Button
               variant="highlight"
               size="lg"
