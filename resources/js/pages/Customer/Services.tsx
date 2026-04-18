@@ -182,44 +182,27 @@ export default function Services() {
     const now = new Date()
     const isToday = selectedDate === now.toISOString().split('T')[0]
 
-    let hour = 6
-    let minute = 30
-
-    // If today, adjust start time based on current time
-    if (isToday) {
-      const currentHour = now.getHours()
-      const currentMinute = now.getMinutes()
-
-      // If current time is past 6:30 AM
-      if (currentHour > 6 || (currentHour === 6 && currentMinute >= 30)) {
-        hour = currentHour
-        minute = currentMinute
-
-        // Round up to next 30-min slot
-        if (minute > 0) {
-          minute = minute < 30 ? 30 : 60
-        }
-        if (minute === 60) {
-          hour += 1
-          minute = 0
-        }
-
-        // Add 1-hour buffer
-        hour += 1
-      }
-    }
-
     const slots: string[] = []
+    let hour = 6
+    let minute = 0
 
-    // Generate slots from start time until 10:00 PM
     while (hour < 22 || (hour === 22 && minute === 0)) {
       const isPM = hour >= 12
       const displayHour = hour % 12 === 0 ? 12 : hour % 12
       const period = isPM ? 'PM' : 'AM'
       const timeStr = `${displayHour}:${minute === 0 ? '00' : '30'} ${period}`
 
-      // Only add if it's 6:30 AM or later (double check for safety)
-      if (hour > 6 || (hour === 6 && minute >= 30)) {
+      // Check if this slot is in the future if it's today
+      let shouldAdd = true
+      if (isToday) {
+        const slotTime = new Date(now)
+        slotTime.setHours(hour, minute, 0, 0)
+        if (slotTime <= now) {
+          shouldAdd = false
+        }
+      }
+
+      if (shouldAdd) {
         slots.push(timeStr)
       }
 
@@ -229,9 +212,6 @@ export default function Services() {
         minute = 0
         hour += 1
       }
-
-      // Stop at 10:00 PM (22:00)
-      if (hour > 22) break
     }
 
     return slots
