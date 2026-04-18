@@ -189,6 +189,11 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
     [topServices],
   )
 
+  const upcomingAppointments = useMemo(
+    () => pendingOrders.filter((order) => order.status !== 'in_progress'),
+    [pendingOrders],
+  )
+
   const AreaLegend = memo((props: any) => (
     <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground">
       {props.payload?.map((entry: any, i: number) => (
@@ -349,7 +354,7 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                   title="Upcoming Appointments"
                   description="Today's scheduled services"
                 />
-                {pendingOrders.length === 0 ? (
+                {upcomingAppointments.length === 0 ? (
                   <div className="py-12 text-center">
                     <CalendarDays className="mx-auto mb-3 h-12 w-12 text-muted-foreground opacity-40" />
                     <p className="text-lg font-medium text-muted-foreground">
@@ -368,7 +373,7 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pendingOrders.map((order, index) => (
+                        {upcomingAppointments.map((order, index) => (
                           <TableRow key={`${order.service_order_id}-${index}`}>
                             <TableCell className="font-medium">{order.customer_name}</TableCell>
                             <TableCell className="text-sm">
