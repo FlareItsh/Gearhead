@@ -363,7 +363,7 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                     <p className="text-sm text-muted-foreground">Enjoy the quiet moment!</p>
                   </div>
                 ) : (
-                  <div className="custom-scrollbar overflow-x-auto">
+                  <div className="custom-scrollbar h-[250px] overflow-x-auto overflow-y-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -400,7 +400,9 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                   title="Queue Line"
                   description="Customers waiting for service"
                 />
-                <QueueLineTable />
+                <div className="custom-scrollbar h-[250px] overflow-y-auto">
+                  <QueueLineTable />
+                </div>
               </CardContent>
             </Card>
 
@@ -411,7 +413,9 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
                   title="Low Stock Items"
                   description="Supplies running low"
                 />
-                <LowStockTable supplies={lowStockSupplies} />
+                <div className="custom-scrollbar h-[250px] overflow-y-auto">
+                  <LowStockTable supplies={lowStockSupplies} />
+                </div>
               </CardContent>
             </Card>
           </div>
