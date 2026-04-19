@@ -18,13 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { CreditCard, Download, PhilippinePeso, Search } from 'lucide-react'
+import { CreditCard, Download, Eye, PhilippinePeso, Search } from 'lucide-react'
 import { memo, useEffect, useState } from 'react'
 import { usePermissions } from '@/hooks/use-permissions'
 
@@ -175,12 +181,25 @@ const TransactionRow = memo(({ item }: { item: Transaction | SupplyPurchase }) =
               <span className="text-xs text-muted-foreground">Ref: {item.gcash_reference}</span>
             )}
             {item.gcash_screenshot && (
-              <button
-                onClick={() => window.open(`/${item.gcash_screenshot}`, '_blank')}
-                className="text-xs text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                📷 {item.gcash_screenshot.split('/').pop()}
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => window.open(`/${item.gcash_screenshot}`, '_blank')}
+                      className="flex w-fit items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      <Eye className="h-3 w-3" />
+                      <span>{item.gcash_screenshot.split('/').pop()}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="bg-primary text-primary-foreground"
+                  >
+                    View GCash Receipt
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         ) : (
@@ -655,14 +674,23 @@ export default function Transactions({ transactions }: TransactionsProps) {
                     />
                   </div>
                   {hasPermission('export_transactions_pdf') && (
-                    <Button
-                      onClick={handleExport}
-                      variant="secondary"
-                      className="gap-2 whitespace-nowrap"
-                    >
-                      <Download className="h-4 w-4" />
-                      Export PDF
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={handleExport}
+                            variant="secondary"
+                            className="gap-2 whitespace-nowrap"
+                          >
+                            <Download className="h-4 w-4" />
+                            Export PDF
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-primary text-primary-foreground">
+                          Download transactions as PDF
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </div>
               </div>

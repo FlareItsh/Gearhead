@@ -34,6 +34,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
@@ -1030,26 +1036,44 @@ export default function InventoryPage() {
                                 <Badge variant={variant}>{status}</Badge>
                               </TableCell>
                               <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-2">
                                   {hasPermission('edit_inventory_item') && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => openEditModal(supply)}
-                                      title="Edit Item"
-                                    >
-                                      <Edit2 className="h-4 w-4" />
-                                    </Button>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => openEditModal(supply)}
+                                          >
+                                            <Edit2 className="h-4 w-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-primary text-primary-foreground">
+                                          Edit Item
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => openLedger(supply)}
-                                    className="text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10"
-                                    title="View Ledger"
-                                  >
-                                    <History className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => openLedger(supply)}
+                                          className="text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10"
+                                        >
+                                          <History className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="bg-primary text-primary-foreground">
+                                        View Item Ledger
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                              </TableCell>
                             </TableRow>
                           )
                         })}
@@ -1091,25 +1115,85 @@ export default function InventoryPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex flex-col gap-2 mt-2 shrink-0">
-                            {hasPermission('edit_inventory_item') && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditModal(supply)}
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openLedger(supply)}
-                              className="text-yellow-500"
-                            >
-                              <History className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <div className="flex justify-end gap-2">
+                                    {hasPermission('view_inventory_ledger') && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8 hover:bg-highlight hover:text-black"
+                                              onClick={() => openLedger(supply)}
+                                            >
+                                              <History className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="bg-primary text-primary-foreground">
+                                            View Item History
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+
+                                    {hasPermission('edit_inventory_item') && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8 hover:bg-highlight hover:text-black"
+                                              onClick={() => openEditModal(supply)}
+                                            >
+                                              <Edit2 className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="bg-primary text-primary-foreground">
+                                            Edit Item
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+
+                                    {hasPermission('delete_inventory_item') && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8 hover:border-red-500 hover:bg-red-500 hover:text-white"
+                                              onClick={() => {
+                                                setConfirmMessage(
+                                                  `Are you sure you want to delete "${supply.supply_name}"?`,
+                                                )
+                                                setOnConfirmAction(() => async () => {
+                                                  try {
+                                                    await axios.delete(
+                                                      `/api/supplies/${supply.supply_id}`,
+                                                    )
+                                                    loadSupplies()
+                                                    toast.success('Item deleted successfully!')
+                                                    loadAllSupplies()
+                                                  } catch (err) {
+                                                    console.error(err)
+                                                    toast.error('Failed to delete item')
+                                                  }
+                                                })
+                                                setConfirmOpen(true)
+                                              }}
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="bg-destructive text-destructive-foreground">
+                                            Delete Item
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
                         </div>
                       </div>
                     )

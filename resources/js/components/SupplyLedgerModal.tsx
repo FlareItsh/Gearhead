@@ -106,9 +106,9 @@ export default function SupplyLedgerModal({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="flex max-h-[95vh] flex-col overflow-hidden p-0 sm:max-w-6xl">
+      <DialogContent className="flex max-h-[95vh] flex-col overflow-hidden bg-background p-0 sm:max-w-6xl border border-border shadow-2xl">
         {/* Header Section with Integrated Filters */}
-        <div className="border-b bg-muted/30 p-6 pb-4">
+        <div className="border-b bg-muted p-6 pb-4">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
               <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
@@ -159,7 +159,7 @@ export default function SupplyLedgerModal({
 
         {/* Table Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
-          <div className="rounded-xl border border-border/50 bg-card/50 shadow-sm backdrop-blur-subtle">
+          <div className="rounded-xl border border-border bg-card shadow-sm">
             {loading ? (
               <div className="flex h-[400px] flex-col items-center justify-center gap-3">
                 <div className="relative h-12 w-12 text-yellow-500">

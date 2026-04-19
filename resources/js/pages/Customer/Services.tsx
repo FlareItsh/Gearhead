@@ -1,14 +1,11 @@
-import Heading from '@/components/heading'
-import HeadingSmall from '@/components/heading-small'
 import { Button } from '@/components/ui/button'
-import Calendar from '@/components/ui/calendar'
 import AppLayout from '@/layouts/app-layout'
 import GuestLayout from '@/layouts/guest-layout'
 import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
 import { register } from '@/routes'
 import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
-import { AlertCircle, CalendarDays, CheckCircle2, ChevronDown, Clock, History, Star, Wrench, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronDown, Clock, Star, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -111,6 +108,26 @@ export default function Services() {
     }
   }, [isTimeDropdownOpen])
 
+  // Handle service pre-selection from query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const serviceName = params.get('service')
+
+    if (serviceName && services.length > 0) {
+      const matchedService = services.find(
+        (s) => s.service_name.toLowerCase() === serviceName.toLowerCase(),
+      )
+      if (matchedService) {
+        setSelectedServiceForModal(matchedService)
+        setIsVariantModalOpen(true)
+
+        // Clear the param from URL without refreshing
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+      }
+    }
+  }, [services])
+
   useEffect(() => {
     if (selectedServices.length > 0) {
       localStorage.setItem('selectedServices', JSON.stringify(selectedServices))
@@ -193,7 +210,7 @@ export default function Services() {
 
     const slots: string[] = []
     let hour = 6
-    let minute = 0
+    let minute = 30 // Start at 6:30 AM
 
     while (hour < 22 || (hour === 22 && minute === 0)) {
       const isPM = hour >= 12
@@ -231,6 +248,12 @@ export default function Services() {
       setModalType('warning')
       setModalMessage('Please select a time and at least one service')
       setShowModal(true)
+      return
+    }
+
+    // Redirect to registration if not logged in
+    if (!auth.user) {
+      handleGuestBooking()
       return
     }
 
@@ -348,23 +371,22 @@ export default function Services() {
     <LayoutComponent {...layoutProps}>
       <Head title="Services" />
 
-      <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 pb-32 md:p-6 md:pb-32 lg:p-8 lg:pb-32 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
+      <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 pb-32 duration-700 animate-in fade-in slide-in-from-bottom-4 md:p-6 md:pb-32 lg:p-8 lg:pb-32">
         {/* --- Unified Hero Section --- */}
         <section className="relative overflow-hidden rounded-[2.5rem] border border-border/40 bg-muted/20 shadow-xl transition-all duration-700">
           <div className="absolute inset-0 z-0">
-            <img 
-              src="/images/hero-bg.jpg" 
-              alt="Premium Car Care" 
+            <img
+              src="/images/hero-bg.jpg"
+              alt="Premium Car Care"
               className="h-full w-full object-cover opacity-20 mix-blend-overlay"
               onError={(e) => (e.currentTarget.style.display = 'none')}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           </div>
-          
+
           <div className="relative z-10 flex flex-col gap-4 px-8 py-10 md:max-w-3xl md:px-12 md:py-14">
             <div className="space-y-1.5">
-              <h1 className="text-3xl font-black tracking-tight md:text-5xl text-foreground">
+              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-5xl">
                 Our <span className="text-highlight italic">Services</span>
               </h1>
               <p className="text-sm font-medium text-muted-foreground/80 md:text-base">
@@ -378,16 +400,18 @@ export default function Services() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Choose Category</h2>
-              <div className="h-px flex-1 bg-border/20 mx-4" />
+              <h2 className="text-xs font-black tracking-widest text-muted-foreground/60 uppercase">
+                Choose Category
+              </h2>
+              <div className="mx-4 h-px flex-1 bg-border/20" />
             </div>
             <div className="custom-scrollbar flex w-full gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`whitespace-nowrap rounded-full px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${
-                  selectedCategory === 'All' 
-                  ? 'bg-highlight text-black shadow-md shadow-highlight/10' 
-                  : 'bg-white border border-border/40 text-muted-foreground hover:border-highlight/40 dark:bg-card'
+                className={`rounded-full px-6 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all ${
+                  selectedCategory === 'All'
+                    ? 'bg-highlight text-black shadow-md shadow-highlight/10'
+                    : 'border border-border/40 bg-white text-muted-foreground hover:border-highlight/40 dark:bg-card'
                 }`}
               >
                 All
@@ -396,10 +420,10 @@ export default function Services() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`whitespace-nowrap rounded-full px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${
-                    selectedCategory === cat 
-                    ? 'bg-highlight text-black shadow-md shadow-highlight/10' 
-                    : 'bg-white border border-border/40 text-muted-foreground hover:border-highlight/40 dark:bg-card'
+                  className={`rounded-full px-6 py-2.5 text-xs font-black tracking-widest whitespace-nowrap uppercase transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-highlight text-black shadow-md shadow-highlight/10'
+                      : 'border border-border/40 bg-white text-muted-foreground hover:border-highlight/40 dark:bg-card'
                   }`}
                 >
                   {cat}
@@ -421,7 +445,7 @@ export default function Services() {
                       <Star className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-foreground tracking-tight uppercase">
+                      <h3 className="text-lg font-black tracking-tight text-foreground uppercase">
                         {s.service_name}
                       </h3>
                       <p className="mt-2 line-clamp-2 text-xs font-medium text-muted-foreground/70">
@@ -441,8 +465,10 @@ export default function Services() {
                         </span>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">From</p>
-                        <p className="text-lg font-black text-foreground tracking-tighter">
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/40 uppercase">
+                          From
+                        </p>
+                        <p className="text-lg font-black tracking-tighter text-foreground">
                           {s.variants.length > 0
                             ? `₱${Math.min(...s.variants.map((v) => Number(v.price))).toLocaleString()}`
                             : 'N/A'}
@@ -452,7 +478,7 @@ export default function Services() {
 
                     <Button
                       variant="highlight"
-                      className="h-10 w-full rounded-xl font-black uppercase tracking-widest text-xs"
+                      className="h-10 w-full rounded-xl text-xs font-black tracking-widest uppercase"
                       onClick={() => {
                         setSelectedServiceForModal(s)
                         setIsVariantModalOpen(true)
@@ -464,8 +490,8 @@ export default function Services() {
                 </div>
               ))
             ) : (
-              <div className="col-span-full py-20 flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/40 bg-muted/5">
-                <AlertCircle className="h-10 w-10 text-muted-foreground/20 mb-4" />
+              <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/40 bg-muted/5 py-20">
+                <AlertCircle className="mb-4 h-10 w-10 text-muted-foreground/20" />
                 <p className="font-bold text-muted-foreground">No services found.</p>
               </div>
             )}
@@ -475,19 +501,23 @@ export default function Services() {
 
       {/* --- Unified Floating Footer --- */}
       {selectedServices.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 w-full max-w-md px-4">
+        <div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-md -translate-x-1/2 px-4">
           <div className="flex items-center justify-between rounded-2xl border border-border bg-white p-3 shadow-2xl dark:bg-card">
             <div className="flex items-center gap-3 pl-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-highlight text-sm font-black text-black">
                 {selectedServices.length}
               </div>
               <div className="leading-none">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Estimate</p>
-                <p className="text-lg font-black text-foreground tracking-tighter">₱{totalPrice.toLocaleString()}</p>
+                <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                  Total Estimate
+                </p>
+                <p className="text-lg font-black tracking-tighter text-foreground">
+                  ₱{totalPrice.toLocaleString()}
+                </p>
               </div>
             </div>
             <Button
-              className="bg-black hover:bg-black/90 text-white rounded-xl px-6 font-black uppercase tracking-widest text-xs h-11 dark:bg-highlight dark:text-black"
+              className="h-11 rounded-xl bg-black px-6 text-xs font-black tracking-widest text-white uppercase hover:bg-black/90 dark:bg-highlight dark:text-black"
               onClick={() => setIsModalOpen(true)}
             >
               Checkout <ChevronDown className="ml-2 h-4 w-4" />
@@ -498,37 +528,54 @@ export default function Services() {
 
       {/* --- Normalized Booking Modal --- */}
       {isModalOpen && (
-        <div className={`fixed inset-0 z-[1000] flex items-center justify-center p-4 transition-all duration-400 ${isClosingCheckout ? 'opacity-0' : 'bg-black/60 backdrop-blur-md'}`}>
-          <div className="fixed inset-0" onClick={closeCheckoutModal} />
-          <div className={`relative w-full max-w-lg rounded-[2.5rem] border border-border/40 bg-white shadow-2xl transition-all duration-400 dark:bg-card ${isClosingCheckout ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}>
-            <div className="border-b border-border/40 p-6 flex items-center justify-between">
+        <div
+          className={`fixed inset-0 z-[1000] flex items-center justify-center p-4 transition-all duration-400 ${isClosingCheckout ? 'opacity-0' : 'bg-black/60 backdrop-blur-md'}`}
+        >
+          <div
+            className="fixed inset-0"
+            onClick={closeCheckoutModal}
+          />
+          <div
+            className={`relative w-full max-w-lg rounded-[2.5rem] border border-border/40 bg-white shadow-2xl transition-all duration-400 dark:bg-card ${isClosingCheckout ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
+          >
+            <div className="flex items-center justify-between border-b border-border/40 p-6">
               <div>
-                <h2 className="text-xl font-black tracking-tight text-foreground">Confirm Selection</h2>
-                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Review your car care session</p>
+                <h2 className="text-xl font-black tracking-tight text-foreground">
+                  Confirm Selection
+                </h2>
+                <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                  Review your car care session
+                </p>
               </div>
-              <button 
-                onClick={closeCheckoutModal} 
-                className="rounded-full p-2.5 bg-secondary/80 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
+              <button
+                onClick={closeCheckoutModal}
+                className="rounded-full bg-secondary/80 p-2.5 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-6 pt-0 space-y-5 mt-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="custom-scrollbar mt-4 max-h-[70vh] space-y-5 overflow-y-auto p-6 pt-0">
               <div className="space-y-3">
                 {selectedServices.map((s, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="group relative flex items-center justify-between rounded-2xl border border-border/10 bg-white/50 p-4 transition-all hover:bg-white dark:bg-muted/5 dark:hover:bg-muted/10"
                   >
                     <div>
-                      <h4 className="font-black text-sm uppercase text-foreground leading-tight">{s.service_name}</h4>
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{s.selectedVariant.size} • {s.selectedVariant.estimated_duration}m</p>
+                      <h4 className="text-sm leading-tight font-black text-foreground uppercase">
+                        {s.service_name}
+                      </h4>
+                      <p className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">
+                        {s.selectedVariant.size} • {s.selectedVariant.estimated_duration}m
+                      </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <p className="font-black text-base text-foreground">₱{Number(s.selectedVariant.price).toLocaleString()}</p>
-                      <button 
-                        onClick={() => removeService(s)} 
+                      <p className="text-base font-black text-foreground">
+                        ₱{Number(s.selectedVariant.price).toLocaleString()}
+                      </p>
+                      <button
+                        onClick={() => removeService(s)}
                         className="rounded-full p-1.5 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-90"
                       >
                         <X className="h-4 w-4" />
@@ -538,13 +585,15 @@ export default function Services() {
                 ))}
               </div>
 
-              <div className="space-y-5 pt-4 border-t border-border/20">
+              <div className="space-y-5 border-t border-border/20 pt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Desired Date</label>
+                    <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                      Desired Date
+                    </label>
                     <div className="relative">
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         className="w-full rounded-xl border-border/40 bg-white p-3 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
@@ -552,14 +601,23 @@ export default function Services() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Estimated Time</label>
+                    <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                      Estimated Time
+                    </label>
                     <select
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
                       className="w-full rounded-xl border-border/40 bg-white p-3 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
                     >
                       <option value="">Select Time</option>
-                      {availableTimeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                      {availableTimeSlots.map((t) => (
+                        <option
+                          key={t}
+                          value={t}
+                        >
+                          {t}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -567,10 +625,14 @@ export default function Services() {
                 <div className="rounded-2xl border border-border/50 bg-muted/40 p-6 shadow-inner dark:bg-muted/10">
                   <div className="flex items-end justify-between">
                     <div className="space-y-0.5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Total Amount</p>
-                      <p className="text-3xl font-black text-foreground leading-none">₱{totalPrice.toLocaleString()}</p>
+                      <p className="text-[10px] font-black tracking-widest text-muted-foreground/80 uppercase">
+                        Total Amount
+                      </p>
+                      <p className="text-3xl leading-none font-black text-foreground">
+                        ₱{totalPrice.toLocaleString()}
+                      </p>
                     </div>
-                    <div className="rounded-xl bg-highlight/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-highlight border border-highlight/20">
+                    <div className="rounded-xl border border-highlight/20 bg-highlight/10 px-3 py-1.5 text-[10px] font-black tracking-widest text-highlight uppercase">
                       Quote
                     </div>
                   </div>
@@ -578,7 +640,7 @@ export default function Services() {
 
                 <Button
                   variant="highlight"
-                  className="w-full h-13 rounded-xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-highlight/30 transition-all hover:scale-[1.02] active:scale-95 disabled:grayscale"
+                  className="h-13 w-full rounded-xl text-sm font-black tracking-widest uppercase shadow-2xl shadow-highlight/30 transition-all hover:scale-[1.02] active:scale-95 disabled:grayscale"
                   disabled={selectedServices.length === 0 || !selectedTime || isBooking}
                   onClick={handleBook}
                 >
@@ -592,45 +654,63 @@ export default function Services() {
 
       {/* --- Normalized Variant Modal --- */}
       {isVariantModalOpen && selectedServiceForModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
-          <div className="fixed inset-0" onClick={() => setIsVariantModalOpen(false)} />
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300">
+          <div
+            className="fixed inset-0"
+            onClick={() => setIsVariantModalOpen(false)}
+          />
           <div className="relative w-full max-w-md rounded-[2.5rem] border border-border/40 bg-white shadow-2xl dark:bg-card">
-            <div className="border-b border-border/40 p-8 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-border/40 p-8">
               <div>
-                <h3 className="text-2xl font-black text-foreground">{selectedServiceForModal.service_name}</h3>
-                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Select your vehicle size</p>
+                <h3 className="text-2xl font-black text-foreground">
+                  {selectedServiceForModal.service_name}
+                </h3>
+                <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                  Select your vehicle size
+                </p>
               </div>
-              <button 
-                onClick={() => setIsVariantModalOpen(false)} 
-                className="rounded-full p-3 bg-secondary/80 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
+              <button
+                onClick={() => setIsVariantModalOpen(false)}
+                className="rounded-full bg-secondary/80 p-3 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-8 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="custom-scrollbar max-h-[60vh] space-y-4 overflow-y-auto p-8">
               {selectedServiceForModal.variants.map((variant) => {
-                const active = isSelected(selectedServiceForModal.service_id, variant.service_variant)
+                const active = isSelected(
+                  selectedServiceForModal.service_id,
+                  variant.service_variant,
+                )
                 return (
                   <button
                     key={variant.service_variant}
                     onClick={() => toggleService(selectedServiceForModal, variant)}
-                    className={`flex items-center justify-between w-full rounded-2xl border p-5 transition-all text-left shadow-sm ${
-                      active 
-                      ? 'border-highlight bg-highlight/5 ring-1 ring-highlight' 
-                      : 'border-border/40 bg-white hover:border-highlight/20 dark:bg-muted/5'
+                    className={`flex w-full items-center justify-between rounded-2xl border p-5 text-left shadow-sm transition-all ${
+                      active
+                        ? 'border-highlight bg-highlight/5 ring-1 ring-highlight'
+                        : 'border-border/40 bg-white hover:border-highlight/20 dark:bg-muted/5'
                     }`}
                   >
                     <div>
-                      <p className="font-black text-base uppercase text-foreground leading-tight">{variant.size}</p>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{variant.estimated_duration} mins</p>
+                      <p className="text-base leading-tight font-black text-foreground uppercase">
+                        {variant.size}
+                      </p>
+                      <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                        {variant.estimated_duration} mins
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-black text-lg text-foreground">₱{Number(variant.price).toLocaleString()}</p>
+                      <p className="text-lg font-black text-foreground">
+                        ₱{Number(variant.price).toLocaleString()}
+                      </p>
                       {active && (
                         <div className="mt-1 flex items-center justify-end gap-1">
                           <CheckCircle2 className="h-3 w-3 text-highlight" />
-                          <span className="text-[10px] font-black text-highlight uppercase tracking-widest">Selected</span>
+                          <span className="text-[10px] font-black tracking-widest text-highlight uppercase">
+                            Selected
+                          </span>
                         </div>
                       )}
                     </div>
@@ -644,22 +724,39 @@ export default function Services() {
 
       {/* --- Unified Status Modal --- */}
       {showModal && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 transition-all duration-300 bg-black/80 backdrop-blur-xl">
-          <div className="fixed inset-0" onClick={() => setShowModal(false)} />
-          <div className="relative w-full max-w-sm rounded-[2.5rem] border border-border/40 bg-background p-10 shadow-3xl text-center">
-            <div className="flex justify-center mb-8">
-              {modalType === 'success' && <div className="rounded-3xl bg-emerald-500/10 p-6 text-emerald-500 shadow-lg shadow-emerald-500/20"><CheckCircle2 className="h-12 w-12" /></div>}
-              {modalType === 'error' && <div className="rounded-3xl bg-destructive/10 p-6 text-destructive shadow-lg shadow-destructive/20"><AlertCircle className="h-12 w-12" /></div>}
-              {modalType === 'warning' && <div className="rounded-3xl bg-orange-500/10 p-6 text-orange-500 shadow-lg shadow-orange-500/20"><AlertCircle className="h-12 w-12" /></div>}
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-xl transition-all duration-300">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowModal(false)}
+          />
+          <div className="shadow-3xl relative w-full max-w-sm rounded-[2.5rem] border border-border/40 bg-background p-10 text-center">
+            <div className="mb-8 flex justify-center">
+              {modalType === 'success' && (
+                <div className="rounded-3xl bg-emerald-500/10 p-6 text-emerald-500 shadow-lg shadow-emerald-500/20">
+                  <CheckCircle2 className="h-12 w-12" />
+                </div>
+              )}
+              {modalType === 'error' && (
+                <div className="rounded-3xl bg-destructive/10 p-6 text-destructive shadow-lg shadow-destructive/20">
+                  <AlertCircle className="h-12 w-12" />
+                </div>
+              )}
+              {modalType === 'warning' && (
+                <div className="rounded-3xl bg-orange-500/10 p-6 text-orange-500 shadow-lg shadow-orange-500/20">
+                  <AlertCircle className="h-12 w-12" />
+                </div>
+              )}
             </div>
-            <h3 className="text-3xl font-black mb-3 uppercase tracking-tighter text-foreground">
+            <h3 className="mb-3 text-3xl font-black tracking-tighter text-foreground uppercase">
               {modalType === 'success' ? 'Brilliant!' : modalType === 'error' ? 'Oops!' : 'Wait!'}
             </h3>
-            <p className="text-sm font-medium text-muted-foreground mb-10 leading-relaxed px-2">{modalMessage}</p>
-            <Button 
-                onClick={() => setShowModal(false)} 
-                className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95" 
-                variant={modalType === 'success' ? 'highlight' : 'destructive'}
+            <p className="mb-10 px-2 text-sm leading-relaxed font-medium text-muted-foreground">
+              {modalMessage}
+            </p>
+            <Button
+              onClick={() => setShowModal(false)}
+              className="h-14 w-full rounded-2xl font-black tracking-widest uppercase shadow-xl transition-all hover:scale-105 active:scale-95"
+              variant={modalType === 'success' ? 'highlight' : 'destructive'}
             >
               Got it
             </Button>
@@ -669,4 +766,3 @@ export default function Services() {
     </LayoutComponent>
   )
 }
-

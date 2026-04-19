@@ -118,9 +118,10 @@ const CustomerDashboard: React.FC = () => {
 
       const res = await axios.get(route('bookings.upcoming'))
       setUpcomingBookings(res.data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to confirm booking:', error)
-      toast.error('Failed to confirm booking. Please try again.')
+      const message = error.response?.data?.message || 'Failed to confirm booking. Please try again.'
+      toast.error(message)
     } finally {
       setIsConfirming(false)
     }

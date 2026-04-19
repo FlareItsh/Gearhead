@@ -48,7 +48,6 @@ export default function Register() {
         {...RegisteredUserController.store.form()}
         resetOnSuccess={['password', 'password_confirmation']}
         disableWhileProcessing
-        onSuccess={() => (window.location.href = login.url())}
         className="flex flex-col gap-6"
       >
         {({ processing, errors }) => (

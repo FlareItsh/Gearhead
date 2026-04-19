@@ -186,7 +186,7 @@ export default function LP_Services() {
                                     {/* Button */}
                                     <div className="px-6 pt-4 pb-8">
                                         <Link
-                                            href="/services"
+                                            href={`/services?service=${encodeURIComponent(card.title)}`}
                                             className="block"
                                         >
                                             <Button
