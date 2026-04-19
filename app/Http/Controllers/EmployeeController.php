@@ -189,29 +189,40 @@ class EmployeeController extends Controller
     /**
      * Get commissions for an employee
      */
-    public function commissions(int $id)
+    public function commissions(Request $request, int $id)
     {
         $employee = $this->employees->find($id);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
         
-        $completedOrders = \App\Models\ServiceOrder::where('employee_id', $id)
+        $query = \App\Models\ServiceOrder::where('employee_id', $id)
             ->where('status', 'completed')
             ->with(['details.serviceVariant.service', 'user'])
-            ->orderByDesc('order_date')
-            ->get()
+            ->orderByDesc('order_date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('order_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        }
+            
+        $completedOrders = $query->get()
             ->map(function ($order) use ($employee) {
+                // Adjusting calculation to match detail prices if available
                 $subtotal = $order->details->sum(function ($detail) {
-                    return $detail->quantity * $detail->serviceVariant->price;
+                    $price = $detail->serviceVariant ? (float) $detail->serviceVariant->price : 0;
+                    return (float) ($detail->quantity ?? 1) * $price;
                 });
 
                 return [
                     'id' => $order->service_order_id,
                     'date' => $order->order_date->format('Y-m-d H:i'),
-                    'customer' => $order->user->full_name,
+                    'customer' => $order->user ? $order->user->full_name : 'Walk-in',
                     'services' => $order->details->map(function ($detail) {
-                        return $detail->serviceVariant->service->service_name;
+                        return $detail->serviceVariant && $detail->serviceVariant->service 
+                            ? $detail->serviceVariant->service->service_name 
+                            : 'Unknown Service';
                     })->join(', '),
                     'total_amount' => $subtotal,
-                    'commission_amount' => $subtotal * ($employee->commission_percentage / 100),
+                    'commission_amount' => $subtotal * ((float) $employee->commission_percentage / 100),
                 ];
             });
 
@@ -219,7 +230,7 @@ class EmployeeController extends Controller
             'employee' => $employee->full_name,
             'commission_percentage' => (float) $employee->commission_percentage,
             'orders' => $completedOrders,
-            'total_commission' => $completedOrders->sum('commission_amount'),
+            'total_commission' => (float) $completedOrders->sum('commission_amount'),
         ]);
     }
 }

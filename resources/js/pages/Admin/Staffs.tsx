@@ -115,6 +115,9 @@ export default function Staffs() {
 
   // Commission modal state
   const [showCommissionModal, setShowCommissionModal] = useState(false)
+  const [selectedStaffIdForCommission, setSelectedStaffIdForCommission] = useState<number | null>(null)
+  const [commissionStartDate, setCommissionStartDate] = useState<string>('')
+  const [commissionEndDate, setCommissionEndDate] = useState<string>('')
   const [commissionData, setCommissionData] = useState<{
     employee: string
     commission_percentage: number
@@ -122,6 +125,18 @@ export default function Staffs() {
     total_commission: number
   } | null>(null)
   const [loadingCommissions, setLoadingCommissions] = useState(false)
+
+  // Helper to get current month range
+  const getCurrentMonthRange = () => {
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    
+    const format = (date: Date) => 
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      
+    return { start: format(firstDay), end: format(lastDay) }
+  }
 
   // Load Staffs
   const loadStaffs = async (url?: string) => {
@@ -271,20 +286,40 @@ export default function Staffs() {
     }
   }
 
-  const openCommissions = async (id: number) => {
+  const loadCommissions = async () => {
+    if (!selectedStaffIdForCommission) return
+
     try {
       setLoadingCommissions(true)
-      setShowCommissionModal(true)
-      const res = await axios.get(`/api/staffs/${id}/commissions`)
+      const res = await axios.get(`/api/staffs/${selectedStaffIdForCommission}/commissions`, {
+        params: {
+          start_date: commissionStartDate,
+          end_date: commissionEndDate,
+        }
+      })
       setCommissionData(res.data)
     } catch (error) {
       console.error(error)
       toast.error('Failed to load commission data')
-      setShowCommissionModal(false)
     } finally {
       setLoadingCommissions(false)
     }
   }
+
+  const openCommissions = async (id: number) => {
+    const { start, end } = getCurrentMonthRange()
+    setSelectedStaffIdForCommission(id)
+    setCommissionStartDate(start)
+    setCommissionEndDate(end)
+    setShowCommissionModal(true)
+    // loadCommissions will be triggered by useEffect
+  }
+
+  useEffect(() => {
+    if (showCommissionModal && selectedStaffIdForCommission) {
+      loadCommissions()
+    }
+  }, [showCommissionModal, selectedStaffIdForCommission, commissionStartDate, commissionEndDate])
 
   /* Removed filteredStaff memo */
 
@@ -842,15 +877,36 @@ export default function Staffs() {
               <DialogContent className="sm:max-w-none w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all">
                 <div className="p-5">
                   <DialogHeader className="mb-4">
-                    <DialogTitle className="text-xl">
-                      Staff <span className="text-highlight">Commissions</span>
-                    </DialogTitle>
-                    <DialogDescription className="text-xs text-muted-foreground/80">
-                      Earned commissions for{' '}
-                      <span className="font-semibold text-foreground">
-                        {commissionData?.employee}
-                      </span>
-                    </DialogDescription>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <DialogTitle className="text-xl">
+                          Staff <span className="text-highlight">Commissions</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground/80">
+                          Earned commissions for{' '}
+                          <span className="font-semibold text-foreground">
+                            {commissionData?.employee}
+                          </span>
+                        </DialogDescription>
+                      </div>
+
+                      {/* Date Filter */}
+                      <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 p-2">
+                        <Input
+                          type="date"
+                          value={commissionStartDate}
+                          onChange={(e) => setCommissionStartDate(e.target.value)}
+                          className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
+                        />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">to</span>
+                        <Input
+                          type="date"
+                          value={commissionEndDate}
+                          onChange={(e) => setCommissionEndDate(e.target.value)}
+                          className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
+                        />
+                      </div>
+                    </div>
                   </DialogHeader>
 
                   <div className="mb-4 grid grid-cols-2 gap-3">
