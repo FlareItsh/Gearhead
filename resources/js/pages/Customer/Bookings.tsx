@@ -388,7 +388,7 @@ export default function Bookings({
                     <SelectItem
                       key={pageSize}
                       value={pageSize.toString()}
-                      className="rounded-lg transition-colors hover:bg-secondary"
+                      className="rounded-lg transition-colors hover:bg-secondary text-foreground"
                     >
                       {pageSize}
                     </SelectItem>

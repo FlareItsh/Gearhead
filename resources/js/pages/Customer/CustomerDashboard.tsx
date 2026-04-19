@@ -62,7 +62,7 @@ const CustomerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = () => {
       axios.get(route('payments.user'))
-        .then((res) => setPayments(res.data))
+        .then((res) => setPayments(res.data.paginated.data))
         .catch((err) => console.error('Payments error:', err))
 
       axios.get(route('bookings.upcoming'))

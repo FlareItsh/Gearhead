@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\PaymentRepositoryInterface;
-
 use App\Models\Payment;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -63,7 +62,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->select(
                 'p.payment_id',
                 'so.order_date as date',
-                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services'),
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
                 'p.amount',
                 'p.payment_method',
                 'p.gcash_reference',
@@ -81,6 +80,40 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             )
             ->orderByDesc('p.created_at')
             ->get();
+    }
+
+    /**
+     * Get paginated payments for a specific user.
+     */
+    public function getPaginatedPaymentsForUser(int $userId, int $perPage)
+    {
+        return DB::table('payments as p')
+            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
+            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->where('so.user_id', $userId)
+            ->select(
+                'p.payment_id',
+                'so.order_date as date',
+                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                'p.amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                'p.created_at',
+                'p.updated_at'
+            )
+            ->groupBy(
+                'p.payment_id',
+                'so.order_date',
+                'p.amount',
+                'p.payment_method',
+                'p.gcash_reference',
+                'p.created_at',
+                'p.updated_at'
+            )
+            ->orderByDesc('p.created_at')
+            ->paginate($perPage);
     }
 
     /**
@@ -307,7 +340,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->leftJoin('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->leftJoin('services as s', 'sv.service_id', '=', 's.service_id')
             ->leftJoin('employees as e', 'p.employee_id', '=', 'e.employee_id')
-            ->whereBetween('p.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereBetween('p.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->select(
                 'p.payment_id',
                 'p.amount',
@@ -344,7 +377,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 return [
                     'payment_id' => $transaction->payment_id,
                     'date' => $transaction->order_date ?? date('Y-m-d', strtotime($transaction->payment_date)),
-                    'customer' => $transaction->first_name . ' ' . $transaction->last_name,
+                    'customer' => $transaction->first_name.' '.$transaction->last_name,
                     'services' => $transaction->services ?? 'N/A',
                     'amount' => (float) $transaction->amount,
                     'payment_method' => ucfirst($transaction->payment_method),
@@ -399,14 +432,14 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             );
 
         if ($search) {
-             $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where(DB::raw("CONCAT(u.first_name, ' ', u.last_name)"), 'like', "%{$search}%")
-                  ->orWhere('p.gcash_reference', 'like', "%{$search}%");
+                    ->orWhere('p.gcash_reference', 'like', "%{$search}%");
             });
         }
 
         if ($startDate && $endDate) {
-            $query->whereBetween('p.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            $query->whereBetween('p.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         }
 
         return $query->orderBy('p.created_at', 'desc')
@@ -415,7 +448,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 return [
                     'payment_id' => $transaction->payment_id,
                     'date' => $transaction->order_date ?? date('Y-m-d', strtotime($transaction->payment_date)),
-                    'customer' => $transaction->first_name . ' ' . $transaction->last_name,
+                    'customer' => $transaction->first_name.' '.$transaction->last_name,
                     'services' => $transaction->services ?? 'N/A',
                     'amount' => (float) $transaction->amount,
                     'payment_method' => ucfirst($transaction->payment_method),

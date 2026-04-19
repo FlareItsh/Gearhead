@@ -73,4 +73,9 @@ interface PaymentRepositoryInterface
      * Get paginated transactions.
      */
     public function getPaginatedTransactions(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null);
+
+    /**
+     * Get paginated payments for a specific user.
+     */
+    public function getPaginatedPaymentsForUser(int $userId, int $perPage);
 }

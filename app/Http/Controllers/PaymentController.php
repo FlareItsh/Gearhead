@@ -92,13 +92,32 @@ class PaymentController extends Controller
         return response()->json(['payments_count' => $count]);
     }
 
-    // New method to get payments for current logged-in user
-    public function indexForCurrentUser()
+    // Method to get payments for current logged-in user
+    public function indexForCurrentUser(Request $request)
     {
         $userId = Auth::id();
-        $payments = $this->repo->getPaymentsForUser($userId);
+        $perPage = (int) $request->query('per_page', 10);
+        $export = $request->query('export') === 'true';
 
-        return response()->json($payments);
+        if ($export) {
+            $payments = $this->repo->getPaymentsForUser($userId);
+
+            return response()->json($payments);
+        }
+
+        $payments = $this->repo->getPaginatedPaymentsForUser($userId, $perPage);
+
+        // Add summary stats
+        $totalSpent = $this->repo->totalSpent($userId);
+        $totalCount = $this->repo->countByUserId($userId);
+
+        return response()->json([
+            'paginated' => $payments,
+            'summary' => [
+                'total_spent' => $totalSpent,
+                'total_count' => $totalCount,
+            ],
+        ]);
     }
 
     /**
