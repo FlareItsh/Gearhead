@@ -141,7 +141,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->whereIn('so.status', ['pending', 'in_progress'])
-            ->whereDate('so.order_date', '>=', now()->toDateString())
+            ->whereDate('so.order_date', '>=', now('Asia/Manila')->toDateString())
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
@@ -275,7 +275,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
 
     public function getTodayBookings()
     {
-        $today = now()->format('Y-m-d');
+        $today = now('Asia/Manila')->format('Y-m-d');
 
         return DB::table('service_orders as so')
             ->join('users as u', 'so.user_id', '=', 'u.user_id')
@@ -361,7 +361,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             $query->where('status', 'in_progress')
                 ->orWhere(function ($q) {
                     $q->where('status', 'pending')
-                        ->whereDate('order_date', now()->toDateString());
+                        ->whereDate('order_date', now('Asia/Manila')->toDateString());
                 });
         })
             ->with([

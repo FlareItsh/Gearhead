@@ -46,8 +46,28 @@ export default function Bookings() {
   const [selectedStatus, setSelectedStatus] = useState(initialStatus)
 
   const filteredBookings = useMemo(() => {
-    if (selectedStatus === 'all') return bookings
-    return bookings.filter((b) => b.order_status === selectedStatus)
+    const list = selectedStatus === 'all' ? bookings : bookings.filter((b) => b.order_status === selectedStatus)
+
+    return [...list].sort((a, b) => {
+      // Pending always on top
+      if (a.order_status === 'pending' && b.order_status !== 'pending') {
+        return -1
+      }
+      if (a.order_status !== 'pending' && b.order_status === 'pending') {
+        return 1
+      }
+
+      // In progress second
+      if (a.order_status === 'in_progress' && b.order_status !== 'in_progress') {
+        return -1
+      }
+      if (a.order_status !== 'in_progress' && b.order_status === 'in_progress') {
+        return 1
+      }
+
+      // Otherwise sort by date (newest first)
+      return new Date(b.order_date).getTime() - new Date(a.order_date).getTime()
+    })
   }, [bookings, selectedStatus])
 
   // View Details modal state

@@ -32,7 +32,7 @@ class CancelMissedBookings extends Command
 
         $missedBookings = ServiceOrder::where('status', 'pending')
             ->where('order_type', 'R')
-            ->whereDate('order_date', '<', now()->toDateString())
+            ->whereDate('order_date', '<', now('Asia/Manila')->toDateString())
             ->get();
 
         if ($missedBookings->isEmpty()) {
