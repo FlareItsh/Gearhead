@@ -35,14 +35,20 @@ class CustomerController extends Controller
 
     public function bookings(Request $request, BookingRepository $bookings)
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        $status = $request->query('status', 'all'); // optional filter
+        $status = $request->query('status', 'all');
+        $perPage = (int) $request->query('per_page', 9);
 
-        $allBookings = $bookings->getBookingsByUser((int) $user->user_id, 'all');
+        // Get paginated bookings
+        $paginatedBookings = $bookings->getBookingsByUser((int) $user->user_id, $status, $perPage);
 
         return Inertia::render('Customer/Bookings', [
-            'bookings' => $allBookings,
-            'selectedStatus' => $status,
+            'bookings' => $paginatedBookings,
+            'filters' => [
+                'status' => $status,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -60,6 +66,7 @@ class CustomerController extends Controller
      */
     public function dashboard(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
         $userId = $user->user_id ?? $user->id ?? null;
         $count = 0;
@@ -96,9 +103,10 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function cancelBooking(int $id)
+    public function cancelBooking(Request $request, int $id)
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = $request->user();
 
         // Find the booking using repository
         $booking = $this->serviceOrders->findById($id);
@@ -196,7 +204,10 @@ class CustomerController extends Controller
 
     public function update(Request $request, int $id)
     {
-        if (! $request->user() || ! $request->user()->hasPermission('edit_user')) {
+        /** @var \App\Models\User $authUser */
+        $authUser = $request->user();
+
+        if (! $authUser || ! $authUser->hasPermission('edit_user')) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
@@ -219,7 +230,7 @@ class CustomerController extends Controller
         ]);
 
         // Verify admin password
-        if (! Hash::check($validated['admin_password'], $request->user()->password)) {
+        if (! Hash::check($validated['admin_password'], $authUser->password)) {
             return response()->json([
                 'message' => 'Incorrect admin password provided.',
             ], 403);

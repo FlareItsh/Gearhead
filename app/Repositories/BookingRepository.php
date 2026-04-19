@@ -9,7 +9,7 @@ class BookingRepository
     /**
      * Get all bookings for a user with services and payment info
      */
-    public function getBookingsByUser(int $userId, ?string $status = null)
+    public function getBookingsByUser(int $userId, ?string $status = null, int $perPage = 9)
     {
         $query = DB::table('service_orders')
             ->join('service_order_details', 'service_orders.service_order_id', '=', 'service_order_details.service_order_id')
@@ -37,7 +37,9 @@ class BookingRepository
             $query->where('service_orders.status', $status);
         }
 
-        // Order by most recent first
-        return $query->orderByDesc('service_orders.order_date')->get();
+        // Order by status (pending first, in_progress second) then by most recent date
+        return $query->orderByRaw("FIELD(service_orders.status, 'pending', 'in_progress', 'completed', 'cancelled') ASC")
+            ->orderByDesc('service_orders.order_date')
+            ->paginate($perPage);
     }
 }
