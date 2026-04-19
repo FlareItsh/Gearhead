@@ -8,7 +8,7 @@ import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
 import { register } from '@/routes'
 import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
-import { AlertCircle, CheckCircle2, ChevronDown, Clock, X } from 'lucide-react'
+import { AlertCircle, CalendarDays, CheckCircle2, ChevronDown, Clock, History, Star, Wrench, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -339,476 +339,291 @@ export default function Services() {
     <LayoutComponent {...layoutProps}>
       <Head title="Services" />
 
-      {/* Main Content (unchanged) */}
-      <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <Heading
-          title="Services & Pricing"
-          description="Explore our Gearhead Carwash services"
-        />
+      <div className="flex h-full flex-1 flex-col gap-6 p-4 pb-32 md:p-6 md:pb-32 lg:p-8 lg:pb-32 animate-in fade-in duration-500">
+        
+        {/* --- Unified Hero Section --- */}
+        <section className="relative overflow-hidden rounded-[2rem] border border-border/40 bg-muted/20 shadow-lg">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/images/hero-bg.jpg" 
+              alt="Premium Car Care" 
+              className="h-full w-full object-cover opacity-20 mix-blend-overlay"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+          </div>
+          
+          <div className="relative z-10 flex flex-col gap-3 px-8 py-10 md:max-w-2xl md:px-12 md:py-12">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black tracking-tight md:text-4xl text-foreground">
+                Our <span className="text-highlight italic">Services</span>
+              </h1>
+              <p className="max-w-md text-sm font-medium leading-relaxed text-muted-foreground/80 md:text-base">
+                Select the perfect treatment for your vehicle. Premium care, professional results.
+              </p>
+            </div>
+          </div>
+        </section>
 
-        {/* Category Buttons */}
-        <div className="custom-scrollbar flex w-full gap-4 overflow-x-auto">
-          <Button
-            variant={selectedCategory === 'All' ? 'highlight' : 'default'}
-            className="text-lg"
-            onClick={() => setSelectedCategory('All')}
-          >
-            All
-          </Button>
-          {categories.map((cat) => {
-            const isActive = cat === selectedCategory
-            return (
-              <Button
-                key={cat}
-                variant={isActive ? 'highlight' : 'default'}
-                className="text-lg"
-                onClick={() => setSelectedCategory(cat)}
+        {/* --- Category & Filter Section --- */}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Choose Category</h2>
+              <div className="h-px flex-1 bg-border/20 mx-4" />
+            </div>
+            <div className="custom-scrollbar flex w-full gap-2 overflow-x-auto pb-2">
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className={`whitespace-nowrap rounded-full px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${
+                  selectedCategory === 'All' 
+                  ? 'bg-highlight text-black shadow-md shadow-highlight/10' 
+                  : 'bg-white border border-border/40 text-muted-foreground hover:border-highlight/40 dark:bg-card'
+                }`}
               >
-                {cat}
-              </Button>
-            )
-          })}
-        </div>
+                All
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`whitespace-nowrap rounded-full px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${
+                    selectedCategory === cat 
+                    ? 'bg-highlight text-black shadow-md shadow-highlight/10' 
+                    : 'bg-white border border-border/40 text-muted-foreground hover:border-highlight/40 dark:bg-card'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        {/* Services Grid */}
-        <div className="mb-5 p-2">
-          <h4 className="mb-2 text-2xl font-bold">Services - {selectedCategory}</h4>
-          <div className="custom-scrollbar h-[60vh] overflow-y-auto">
+          {/* --- Services Grid --- */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredServices.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-4">
-                {filteredServices.map((s) => {
-                  return (
-                    <div
-                      key={s.service_id}
-                      className="flex w-sm flex-col justify-between gap-5 rounded-sm border p-4"
-                    >
-                      <HeadingSmall
-                        title={`${s.service_name}`}
-                        description={s.description}
-                      />
+              filteredServices.map((s) => (
+                <div
+                  key={s.service_id}
+                  className="group flex flex-col justify-between rounded-3xl border border-border/40 bg-white p-6 transition-all hover:-translate-y-1 hover:border-highlight/40 hover:shadow-xl dark:bg-card"
+                >
+                  <div className="space-y-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-highlight/10 text-highlight">
+                      <Star className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-foreground tracking-tight uppercase">
+                        {s.service_name}
+                      </h3>
+                      <p className="mt-2 line-clamp-2 text-xs font-medium text-muted-foreground/70">
+                        {s.description}
+                      </p>
+                    </div>
+                  </div>
 
-                      <hr className="border-gray-400/50" />
-
-                      <div className="flex justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>
-                            {s.variants.length > 0
-                              ? `${Math.min(...s.variants.map((v) => v.estimated_duration))}-${Math.max(...s.variants.map((v) => v.estimated_duration))} mins`
-                              : 'N/A'}
-                          </span>
-                        </div>
-                        <p className="font-bold">
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center justify-between border-t border-border/10 pt-4">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground/60">
+                        <Clock className="h-3.5 w-3.5 text-highlight" />
+                        <span>
                           {s.variants.length > 0
-                            ? `Starts at ₱${Math.min(...s.variants.map((v) => Number(v.price))).toLocaleString()}`
+                            ? `${Math.min(...s.variants.map((v) => v.estimated_duration))}m+`
+                            : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">From</p>
+                        <p className="text-lg font-black text-foreground tracking-tighter">
+                          {s.variants.length > 0
+                            ? `₱${Math.min(...s.variants.map((v) => Number(v.price))).toLocaleString()}`
                             : 'N/A'}
                         </p>
                       </div>
-
-                      <Button
-                        variant="highlight"
-                        className="mt-4 w-full"
-                        onClick={() => {
-                          setSelectedServiceForModal(s)
-                          setIsVariantModalOpen(true)
-                        }}
-                      >
-                        Select Size
-                      </Button>
                     </div>
-                  )
-                })}
-              </div>
+
+                    <Button
+                      variant="highlight"
+                      className="h-10 w-full rounded-xl font-black uppercase tracking-widest text-xs"
+                      onClick={() => {
+                        setSelectedServiceForModal(s)
+                        setIsVariantModalOpen(true)
+                      }}
+                    >
+                      View Options
+                    </Button>
+                  </div>
+                </div>
+              ))
             ) : (
-              <p className="text-muted-foreground">No services available.</p>
+              <div className="col-span-full py-20 flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/40 bg-muted/5">
+                <AlertCircle className="h-10 w-10 text-muted-foreground/20 mb-4" />
+                <p className="font-bold text-muted-foreground">No services found.</p>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Floating Footer */}
+      {/* --- Unified Floating Footer --- */}
       {selectedServices.length > 0 && (
-        <div className="absolute right-0 bottom-1 left-0 mx-auto my-4 flex w-md max-w-lg items-center justify-between rounded-lg border border-border/20 bg-highlight p-3 shadow-2xl">
-          <div className="flex items-center gap-5">
-            <div className="relative h-7 w-7 rounded-full bg-primary">
-              <span className="absolute inset-0 flex items-center justify-center text-lg font-medium text-white">
+        <div className="fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 w-full max-w-md px-4">
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-white p-3 shadow-2xl dark:bg-card">
+            <div className="flex items-center gap-3 pl-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-highlight text-sm font-black text-black">
                 {selectedServices.length}
-              </span>
-            </div>
-            <div>
-              <span className="text-primary/70 dark:text-primary/90">Total amount:</span>{' '}
-              <strong className="text-primary">₱{totalPrice.toLocaleString()}</strong>
-            </div>
-          </div>
-          <Button
-            variant="default"
-            onClick={() => setIsModalOpen(true)}
-          >
-            View Selected Services
-          </Button>
-        </div>
-      )}
-
-      {/* MODAL WITH SMART TIME PICKER */}
-      {isModalOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm duration-200 animate-in fade-in"
-            onClick={() => setIsModalOpen(false)}
-          />
-
-          <div className="pointer-events-none fixed inset-0 z-[9999] flex items-end justify-center p-4 pb-8 sm:items-center">
-            <div
-              className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl duration-300 animate-in fade-in slide-in-from-bottom-12 zoom-in-95"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Content Grid */}
-              <div className="grid gap-0 md:grid-cols-2">
-                {/* Left Column: Services List */}
-                <div className="flex flex-col border-b border-border/30 md:border-b-0">
-                  <div className="flex items-center justify-between border-b border-border/30 px-5 py-4">
-                    <h2 className="text-xl font-bold">
-                      Selected Services{' '}
-                      <span className="text-yellow-600">({selectedServices.length})</span>
-                    </h2>
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="rounded-lg p-1.5 transition hover:bg-muted/70 md:hidden"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <div
-                    className="custom-scrollbar flex-1 overflow-y-auto p-5"
-                    style={{ maxHeight: 'calc(100vh - 300px)' }}
-                  >
-                    <div className="space-y-3">
-                      {selectedServices.map((s) => (
-                        <div
-                          key={`${s.service_name}-${s.selectedVariant.size}`}
-                          className="flex items-center justify-between rounded-xl border border-border/40 p-4 shadow-sm"
-                        >
-                          <div className="flex-1 pr-3">
-                            <p className="font-semibold text-foreground">
-                              {s.service_name}{' '}
-                              <span className="text-sm text-muted-foreground">
-                                ({s.selectedVariant.size})
-                              </span>
-                            </p>
-                            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Clock className="h-3.5 w-3.5" />
-                              {s.selectedVariant.estimated_duration} mins
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg font-bold">
-                              ₱{Number(s.selectedVariant.price).toLocaleString()}
-                            </span>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => removeService(s)}
-                              className="h-8 px-3 text-xs"
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Total (Mobile only, or kept here if prefered, but usually better at bottom) */}
-                  <div className="flex min-h-[80px] items-center justify-between border-t border-border/30 bg-muted/20 px-5 py-4">
-                    <span className="text-base font-medium text-foreground">Total</span>
-                    <span className="text-2xl font-bold text-foreground dark:text-white">
-                      ₱{totalPrice.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right Column: Date & Time */}
-                <div className="flex flex-col bg-muted/10 p-5">
-                  {/* Mobile close button is in left col, desktop close can be here or omitted if clicking outside works */}
-                  <div className="mb-2 hidden justify-end md:flex">
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="rounded-lg p-1.5 transition hover:bg-muted/70"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-5">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-foreground">
-                        Select Date
-                      </label>
-                      <div className="mb-6 flex justify-center">
-                        <Calendar
-                          selectedDate={selectedDate}
-                          onSelect={(date: string) => {
-                            setSelectedDate(date)
-                            setSelectedTime('') // Reset time when date changes
-                          }}
-                          minDate={new Date().toISOString().split('T')[0]}
-                        />
-                      </div>
-
-                      <label className="mb-2 block text-sm font-medium text-foreground">
-                        Preferred Time
-                      </label>
-                      <div
-                        className="relative"
-                        ref={dropdownRef}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
-                          className={`w-full rounded-lg border bg-background px-4 py-4 pr-12 text-base font-medium transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none ${
-                            selectedTime
-                              ? 'border-primary/70 bg-primary/5'
-                              : 'border-border hover:border-primary/40'
-                          }`}
-                        >
-                          {selectedTime ? selectedTime : 'Choose available time...'}
-                        </button>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                          <ChevronDown
-                            className={`h-5 w-5 text-muted-foreground transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
-                          />
-                        </div>
-
-                        {isTimeDropdownOpen && (
-                          <div
-                            className={`custom-scrollbar absolute right-0 left-0 z-50 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-lg ${
-                              dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
-                            }`}
-                          >
-                            {availableTimeSlots.length > 0 ? (
-                              availableTimeSlots.map((time) => (
-                                <button
-                                  key={time}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedTime(time)
-                                    setIsTimeDropdownOpen(false)
-                                    // For guests, proceed directly to register page
-                                    if (!auth.user) {
-                                      handleGuestBooking(time)
-                                    }
-                                  }}
-                                  className={`block w-full px-4 py-3 text-left transition-colors hover:bg-primary/10 ${
-                                    selectedTime === time
-                                      ? 'bg-primary/20 font-semibold text-primary'
-                                      : 'text-foreground'
-                                  }`}
-                                >
-                                  {time} {time === availableTimeSlots[0] && '(Earliest available)'}
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                No available times
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {selectedTime && (
-                        <p className="mt-3 flex items-center gap-2 text-sm font-medium text-emerald-600">
-                          <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          Booking scheduled for{' '}
-                          <strong>
-                            {selectedDate} at {selectedTime}
-                          </strong>
-                        </p>
-                      )}
-                      {availableTimeSlots.length === 0 && (
-                        <p className="mt-3 text-sm font-medium text-orange-600">
-                          Gearhead is closed for this date. Please select another date!
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
               </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 border-t border-border/30 bg-background/80 px-5 py-4">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1"
-                >
-                  Continue Selecting
-                </Button>
-                <Button
-                  size="lg"
-                  variant="highlight"
-                  className="flex-1 font-bold"
-                  disabled={selectedServices.length === 0 || !selectedTime || isBooking}
-                  onClick={handleBook}
-                >
-                  {isBooking
-                    ? 'Booking...'
-                    : selectedTime
-                      ? `Book at ${selectedTime}`
-                      : 'Proceed to Booking'}
-                </Button>
+              <div className="leading-none">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Estimate</p>
+                <p className="text-lg font-black text-foreground tracking-tighter">₱{totalPrice.toLocaleString()}</p>
               </div>
             </div>
-          </div>
-        </>
-      )}
-
-      {/* Status Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="relative w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-2xl">
-            {/* Close button */}
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            {/* Icon */}
-            <div className="mb-4 flex justify-center">
-              {modalType === 'success' && (
-                <div className="rounded-full bg-emerald-100 p-3">
-                  <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-                </div>
-              )}
-              {modalType === 'error' && (
-                <div className="rounded-full bg-destructive/10 p-3">
-                  <AlertCircle className="h-8 w-8 text-destructive" />
-                </div>
-              )}
-              {modalType === 'warning' && (
-                <div className="rounded-full bg-orange-100 p-3">
-                  <AlertCircle className="h-8 w-8 text-orange-600" />
-                </div>
-              )}
-            </div>
-
-            {/* Title */}
-            <h3 className="mb-2 text-center text-xl font-bold">
-              {modalType === 'success' && 'Success!'}
-              {modalType === 'error' && 'Error'}
-              {modalType === 'warning' && 'Attention'}
-            </h3>
-
-            {/* Message */}
-            <p className="mb-6 text-center text-muted-foreground">{modalMessage}</p>
-
-            {/* OK Button */}
             <Button
-              onClick={() => setShowModal(false)}
-              className="w-full"
-              variant={modalType === 'success' ? 'default' : 'destructive'}
+              className="bg-black hover:bg-black/90 text-white rounded-xl px-6 font-black uppercase tracking-widest text-xs h-11 dark:bg-highlight dark:text-black"
+              onClick={() => setIsModalOpen(true)}
             >
-              OK
+              Checkout <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
       )}
-      {/* Variant Selection Modal */}
-      {isVariantModalOpen && selectedServiceForModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in"
-          onClick={() => setIsVariantModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-2xl animate-in slide-in-from-bottom-5 zoom-in-95"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-start justify-between">
+
+      {/* --- Normalized Booking Modal --- */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-3xl border border-border bg-white shadow-2xl dark:bg-card">
+            <div className="border-b border-border/40 p-6 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold">{selectedServiceForModal.service_name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {selectedServiceForModal.description}
-                </p>
+                <h2 className="text-xl font-black tracking-tight">Confirm Selection</h2>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Review your car care session</p>
               </div>
-              <button
-                onClick={() => setIsVariantModalOpen(false)}
-                className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <button onClick={() => setIsModalOpen(false)} className="rounded-full p-2 hover:bg-muted"><X className="h-5 w-5" /></button>
             </div>
 
-            <hr className="my-4 border-border/50" />
-
-            <div className="space-y-4">
-              <p className="font-semibold">Select Size:</p>
-              <div className="custom-scrollbar max-h-[50vh] space-y-3 overflow-y-auto pr-2">
-                {selectedServiceForModal.variants.map((variant) => {
-                  const active = isSelected(
-                    selectedServiceForModal.service_id,
-                    variant.service_variant,
-                  )
-                  return (
-                    <div
-                      key={variant.service_variant}
-                      className="flex items-center justify-between rounded-lg border border-border/60 bg-background p-3 shadow-sm transition-all hover:border-primary/50"
-                    >
-                      <div>
-                        <p className="text-base font-bold">{variant.size}</p>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>{variant.estimated_duration} mins</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold">
-                          ₱{Number(variant.price).toLocaleString()}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="highlight"
-                          className={
-                            active
-                              ? 'border-transparent bg-green-600 font-bold text-white hover:bg-green-700'
-                              : 'min-w-[70px] font-bold'
-                          }
-                          onClick={() => toggleService(selectedServiceForModal, variant)}
-                        >
-                          {active ? 'Added' : 'Add'}
-                        </Button>
-                      </div>
+            <div className="p-6 space-y-6">
+              <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
+                {selectedServices.map((s, idx) => (
+                  <div key={idx} className="flex items-center justify-between rounded-2xl border border-border/40 bg-muted/10 p-4">
+                    <div>
+                      <h4 className="font-black text-sm uppercase">{s.service_name}</h4>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">{s.selectedVariant.size} • {s.selectedVariant.estimated_duration}m</p>
                     </div>
-                  )
-                })}
+                    <div className="flex items-center gap-3">
+                      <p className="font-black text-sm">₱{Number(s.selectedVariant.price).toLocaleString()}</p>
+                      <button onClick={() => removeService(s)} className="text-muted-foreground hover:text-destructive"><X className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground">Date</label>
+                    <input 
+                      type="date" 
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="w-full rounded-xl border-border/40 bg-muted/20 p-3 text-sm font-bold focus:ring-highlight"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground">Time</label>
+                    <select
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="w-full rounded-xl border-border/40 bg-muted/20 p-3 text-sm font-bold focus:ring-highlight"
+                    >
+                      <option value="">Select Time</option>
+                      {availableTimeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-black p-5 text-white dark:bg-white dark:text-black">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-widest opacity-60">Total Amount</span>
+                    <span className="text-2xl font-black tracking-tighter">₱{totalPrice.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="highlight"
+                  className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-highlight/20"
+                  disabled={selectedServices.length === 0 || !selectedTime || isBooking}
+                  onClick={handleBook}
+                >
+                  {isBooking ? 'Processing...' : 'Book Appointment'}
+                </Button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
-            <div className="mt-6 flex justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => setIsVariantModalOpen(false)}
-              >
-                Done
-              </Button>
+      {/* --- Normalized Variant Modal --- */}
+      {isVariantModalOpen && selectedServiceForModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsVariantModalOpen(false)} />
+          <div className="relative w-full max-w-md rounded-3xl border border-border bg-white shadow-2xl dark:bg-card">
+            <div className="border-b border-border/40 p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black">{selectedServiceForModal.service_name}</h3>
+                <p className="text-xs font-bold text-muted-foreground uppercase">Select your vehicle size</p>
+              </div>
+              <button onClick={() => setIsVariantModalOpen(false)} className="rounded-full p-2 hover:bg-muted"><X className="h-5 w-5" /></button>
             </div>
+
+            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {selectedServiceForModal.variants.map((variant) => {
+                const active = isSelected(selectedServiceForModal.service_id, variant.service_variant)
+                return (
+                  <button
+                    key={variant.service_variant}
+                    onClick={() => toggleService(selectedServiceForModal, variant)}
+                    className={`flex items-center justify-between w-full rounded-2xl border p-4 transition-all text-left ${
+                      active 
+                      ? 'border-highlight bg-highlight/5 ring-1 ring-highlight' 
+                      : 'border-border/40 bg-white hover:border-highlight/20 dark:bg-card/50'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-black text-sm uppercase">{variant.size}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">{variant.estimated_duration} mins</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-sm">₱{Number(variant.price).toLocaleString()}</p>
+                      {active && <span className="text-[10px] font-black text-highlight uppercase tracking-widest">Added</span>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Unified Status Modal --- */}
+      {showModal && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="relative w-full max-w-sm rounded-3xl border border-border bg-white p-8 shadow-2xl text-center dark:bg-card">
+            <div className="flex justify-center mb-4">
+              {modalType === 'success' && <div className="rounded-full bg-emerald-500/10 p-4 text-emerald-500"><CheckCircle2 className="h-10 w-10" /></div>}
+              {modalType === 'error' && <div className="rounded-full bg-destructive/10 p-4 text-destructive"><AlertCircle className="h-10 w-10" /></div>}
+              {modalType === 'warning' && <div className="rounded-full bg-orange-500/10 p-4 text-orange-500"><AlertCircle className="h-10 w-10" /></div>}
+            </div>
+            <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">
+              {modalType === 'success' ? 'Brilliant!' : modalType === 'error' ? 'Oops!' : 'Wait!'}
+            </h3>
+            <p className="text-sm font-medium text-muted-foreground mb-6">{modalMessage}</p>
+            <Button onClick={() => setShowModal(false)} className="w-full h-12 rounded-xl font-black uppercase tracking-widest" variant={modalType === 'success' ? 'highlight' : 'destructive'}>
+              Got it
+            </Button>
           </div>
         </div>
       )}
     </LayoutComponent>
   )
 }
+

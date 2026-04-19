@@ -136,29 +136,29 @@ const CustomerDashboard: React.FC = () => {
       <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 md:p-6 lg:p-8 animate-in fade-in duration-700">
         
         {/* --- Hero Section --- */}
-        <section className="relative overflow-hidden rounded-3xl bg-secondary/30 shadow-2xl">
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-border/40 bg-muted/20 shadow-xl transition-all duration-700">
           <div className="absolute inset-0 z-0">
             <img 
               src="/images/dashboard-hero.png" 
               alt="Premium Car Care" 
-              className="h-full w-full object-cover opacity-60 dark:opacity-40"
+              className="h-full w-full object-cover opacity-30 mix-blend-overlay dark:opacity-20"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           </div>
           
-          <div className="relative z-10 flex flex-col gap-4 px-6 py-8 md:max-w-3xl md:px-10 md:py-12">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl text-foreground">
-                Welcome back, <span className="text-highlight">{firstName}</span>
+          <div className="relative z-10 flex flex-col gap-4 px-8 py-10 md:max-w-3xl md:px-12 md:py-14">
+            <div className="space-y-1.5">
+              <h1 className="text-3xl font-black tracking-tight md:text-4xl lg:text-5xl text-foreground">
+                Welcome back, <span className="text-highlight italic">{firstName}</span>
               </h1>
-              <p className="max-w-md text-base text-muted-foreground md:text-lg">
+              <p className="max-w-md text-base leading-relaxed text-muted-foreground/90 md:text-lg">
                 Your vehicle deserves the best. Ready for your next shine?
               </p>
             </div>
             
-            <div className="flex flex-wrap gap-4">
+            <div className="mt-2 flex flex-wrap gap-4">
               <Link href="/services">
-                <Button className="h-11 bg-highlight px-6 text-base font-bold text-black hover:scale-105 transition-transform">
+                <Button className="h-12 bg-highlight px-8 text-base font-black text-black shadow-lg shadow-highlight/20 hover:scale-105 transition-all">
                   <CalendarDays className="mr-2 h-4 w-4" /> Book Now
                 </Button>
               </Link>
@@ -170,67 +170,67 @@ const CustomerDashboard: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-12">
           
           {/* Loyalty Progress Card - Takes more space */}
-          <div className="relative col-span-12 overflow-hidden rounded-2xl border bg-card p-6 shadow-sm transition-all hover:shadow-md md:col-span-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="relative col-span-12 overflow-hidden rounded-[2.5rem] border border-border/50 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-card md:col-span-8 p-8">
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h4 className="text-xl font-bold flex items-center gap-2 text-foreground">
-                  <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" /> 
+                <h4 className="text-2xl font-black flex items-center gap-2 text-foreground">
+                  <Star className="h-6 w-6 fill-highlight text-highlight" /> 
                   Loyalty Rewards
                 </h4>
-                <p className="text-sm text-muted-foreground">Every 9th wash is on us!</p>
+                <p className="text-sm font-medium text-muted-foreground/80">Every 9th wash is on us!</p>
               </div>
               <div className="text-right">
-                <span className="text-3xl font-black text-highlight">{loyaltyProgress}</span>
-                <span className="text-lg font-medium text-muted-foreground"> / {loyaltyTarget}</span>
+                <span className="text-4xl font-black text-foreground">{loyaltyProgress}</span>
+                <span className="text-xl font-bold text-muted-foreground/40"> / {loyaltyTarget}</span>
               </div>
             </div>
 
-            <div className="relative h-4 w-full overflow-hidden rounded-full bg-secondary">
+            <div className="relative h-5 w-full overflow-hidden rounded-full bg-secondary shadow-inner">
               <div 
-                className="h-full bg-highlight transition-all duration-1000 ease-out" 
+                className="h-full bg-highlight transition-all duration-1000 ease-out shadow-lg" 
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
 
-            <div className="mt-6 grid grid-cols-9 gap-2">
+            <div className="mt-8 grid grid-cols-9 gap-3">
               {Array.from({ length: 9 }).map((_, i) => (
                 <div 
                   key={i} 
-                  className={`flex h-8 items-center justify-center rounded-lg border transition-all ${
+                  className={`flex h-10 items-center justify-center rounded-xl border-2 transition-all ${
                     i < loyaltyProgress 
-                      ? 'border-highlight bg-highlight/20 text-highlight shadow-sm shadow-highlight/20' 
-                      : 'border-dashed border-muted-foreground/30 text-muted-foreground/30'
+                      ? 'border-highlight/50 bg-highlight/20 text-highlight shadow-sm' 
+                      : 'border-dashed border-muted-foreground/20 text-muted-foreground/20'
                   }`}
                 >
-                  <Wrench className={`h-4 w-4 ${i < loyaltyProgress ? 'animate-pulse' : ''}`} />
+                  <Wrench className={`h-5 w-5 ${i < loyaltyProgress ? 'animate-bounce' : ''}`} />
                 </div>
               ))}
             </div>
             
-            <p className="mt-4 text-center text-sm font-medium text-muted-foreground">
-              {loyaltyTarget - loyaltyProgress} more bookings until your next reward!
+            <p className="mt-6 text-center text-sm font-bold text-muted-foreground/70 italic text-highlight">
+              ✨ {loyaltyTarget - loyaltyProgress} more bookings until your next reward!
             </p>
           </div>
 
           {/* Quick Stats Column */}
           <div className="col-span-12 flex flex-col gap-4 md:col-span-4">
-             <div className="group flex flex-1 items-center gap-4 rounded-2xl border bg-card p-6 transition-all hover:border-highlight/50 hover:shadow-sm">
-                <div className="rounded-xl bg-blue-500/10 p-3 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+             <div className="group flex flex-1 items-center gap-4 rounded-[2.5rem] border border-border/40 bg-white p-6 transition-all hover:-translate-y-1 hover:border-highlight/50 hover:shadow-xl dark:bg-card">
+                <div className="rounded-2xl bg-blue-500/10 p-4 text-blue-500 transition-all group-hover:scale-110">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground leading-none mb-1">Total Services</p>
-                  <h3 className="text-2xl font-bold text-foreground">{paymentsCount}</h3>
+                  <p className="text-xs font-black text-muted-foreground/60 tracking-widest uppercase mb-1">Total Services</p>
+                  <h3 className="text-3xl font-black text-foreground">{paymentsCount}</h3>
                 </div>
              </div>
              
-             <div className="group flex flex-1 items-center gap-4 rounded-2xl border bg-card p-6 transition-all hover:border-highlight/50 hover:shadow-sm">
-                <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+             <div className="group flex flex-1 items-center gap-4 rounded-[2.5rem] border border-border/40 bg-white p-6 transition-all hover:-translate-y-1 hover:border-highlight/50 hover:shadow-xl dark:bg-card">
+                <div className="rounded-2xl bg-emerald-500/10 p-4 text-emerald-500 transition-all group-hover:scale-110">
                   <HandCoins className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground leading-none mb-1">Total Savings</p>
-                  <h3 className="text-2xl font-bold text-foreground">₱{totalSpent.toLocaleString()}</h3>
+                  <p className="text-xs font-black text-muted-foreground/60 tracking-widest uppercase mb-1">Total Savings</p>
+                  <h3 className="text-3xl font-black text-foreground">₱{totalSpent.toLocaleString()}</h3>
                 </div>
              </div>
           </div>
@@ -255,17 +255,17 @@ const CustomerDashboard: React.FC = () => {
                 upcomingBookings.map((booking) => (
                   <div 
                     key={String(booking.service_order_id)} 
-                    className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card p-5 transition-all hover:border-highlight/40 hover:shadow-md"
+                    className="group relative flex flex-col overflow-hidden rounded-[2.5rem] border border-border/40 bg-white p-6 transition-all duration-300 hover:-translate-y-2 hover:border-highlight/50 hover:shadow-2xl dark:bg-card"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex gap-4">
-                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-highlight/10 text-highlight">
-                            <Timer className="h-6 w-6" />
+                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-highlight/10 text-highlight transition-all group-hover:rotate-6 group-hover:scale-110">
+                            <Timer className="h-7 w-7" />
                          </div>
                          <div>
-                            <h5 className="text-lg font-bold text-foreground">{booking.service_names || 'Carwash Service'}</h5>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <CalendarDays className="h-3 w-3" />
+                            <h5 className="text-xl font-black text-foreground leading-tight">{booking.service_names || 'Carwash Service'}</h5>
+                            <p className="mt-1 text-sm font-bold text-muted-foreground/70 flex items-center gap-1.5 transition-colors group-hover:text-foreground">
+                              <CalendarDays className="h-4 w-4 text-highlight" />
                               {new Date(String(booking.order_date)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </p>
                          </div>
@@ -274,17 +274,19 @@ const CustomerDashboard: React.FC = () => {
                           booking.status === 'pending' ? 'warning' : 
                           booking.status === 'in_progress' ? 'info' : 
                           booking.status === 'completed' ? 'success' : 'destructive'
-                        }>
-                        {booking.status.toUpperCase()}
+                        }
+                        className="px-3 py-1 text-[10px] font-black tracking-widest uppercase shadow-sm"
+                      >
+                        {booking.status}
                       </Badge>
                     </div>
                     
-                    <div className="mt-4 flex items-center justify-between border-t pt-4">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Estimate:</span> 
-                        <span className="ml-1 font-bold">₱{Number(booking.total_amount).toLocaleString()}</span>
+                    <div className="mt-6 flex items-center justify-between border-t border-border/20 pt-4">
+                      <div className="text-xs font-black tracking-widest text-muted-foreground/60 uppercase">
+                        Estimate: 
+                        <span className="ml-2 text-lg font-black text-foreground normal-case tracking-normal">₱{Number(booking.total_amount).toLocaleString()}</span>
                       </div>
-                      <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">
+                      <span className="text-[10px] font-black tracking-widest text-muted-foreground bg-secondary px-3 py-1.5 rounded-xl uppercase">
                         {booking.order_type === 'R' ? 'Reservation' : 'Walk-in'}
                       </span>
                     </div>
@@ -309,33 +311,38 @@ const CustomerDashboard: React.FC = () => {
               <History className="h-4 w-4 text-muted-foreground" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {recentPayments.length > 0 ? (
                 recentPayments.map((payment) => (
                   <div 
                     key={String(payment.payment_id)} 
-                    className="flex flex-col rounded-2xl border bg-secondary/15 p-4 transition-all hover:bg-secondary/25"
+                    className="group relative flex flex-col rounded-[2rem] border border-border/40 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-highlight/30 hover:shadow-xl dark:bg-card"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                        <CheckCircle2 className="h-5 w-5" />
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 transition-all group-hover:scale-105">
+                        <CheckCircle2 className="h-6 w-6" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h6 className="text-sm font-bold text-foreground">{payment.services || 'General Service'}</h6>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(String(payment.date)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        <h6 className="text-base font-black text-foreground leading-tight leading-none uppercase tracking-tighter">
+                          {payment.services || 'General Service'}
+                        </h6>
+                        <p className="mt-1 text-xs font-bold text-muted-foreground/70 flex items-center gap-1">
+                          <History className="h-3 w-3" />
+                          {new Date(String(payment.date)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
                     </div>
                     
-                    <div className="mt-3 flex items-center justify-between border-t border-muted/20 pt-3">
-                       <span className="text-xs font-medium text-muted-foreground">Status: Completed</span>
-                       <span className="text-sm font-bold text-foreground">₱{Number(payment.amount).toLocaleString()}</span>
+                    <div className="mt-4 flex items-center justify-between border-t border-border/20 pt-4">
+                       <span className="text-[10px] font-black tracking-widest text-muted-foreground uppercase bg-secondary px-2.5 py-1 rounded-lg">Status: Completed</span>
+                       <span className="text-xl font-black text-foreground antialiased tracking-tighter">₱{Number(payment.amount).toLocaleString()}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-sm text-muted-foreground py-8">No recent activity found.</p>
+                <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed py-12 text-center bg-white/50 dark:bg-card/50">
+                  <p className="text-sm font-medium text-muted-foreground">No recent activity found.</p>
+                </div>
               )}
               
               {recentPayments.length > 0 && (

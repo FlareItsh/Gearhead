@@ -318,7 +318,7 @@ export default function Bookings({
                       <div className="flex items-end justify-between border-t border-muted/20 pt-5">
                         <div className="space-y-1">
                           <p className="text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
-                            Estimated Total
+                            Total
                           </p>
                           <p className="text-2xl font-black text-foreground">
                             ₱{b.total_amount.toLocaleString()}
@@ -427,7 +427,7 @@ export default function Bookings({
                 {/* Close Button */}
                 <button
                   onClick={closeModal}
-                  className="absolute top-6 right-6 rounded-full bg-secondary/80 p-2.5 text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:rotate-90 active:scale-90"
+                  className="absolute top-6 right-6 rounded-full bg-secondary/80 p-2.5 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground active:scale-90"
                 >
                   <X className="h-5 w-5" />
                 </button>
