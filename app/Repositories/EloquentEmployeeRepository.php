@@ -42,6 +42,7 @@ class EloquentEmployeeRepository implements EmployeeRepositoryInterface
                     'date_hired' => optional($employee->date_hired)->format('Y-m-d'),
                     'role' => $employee->role ?? 'Employee',
                     'assigned_status' => $employee->assigned_status,
+                    'commission_percentage' => (float) $employee->commission_percentage,
                     'created_at' => $employee->created_at,
                     'updated_at' => $employee->updated_at,
                 ];

@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -38,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head } from '@inertiajs/react'
@@ -63,6 +63,7 @@ interface Staff {
   assignedStatus: 'available' | 'assigned' | 'on_leave'
   dateHired: string
   role: 'Admin' | 'Employee'
+  commissionPercentage: number
 }
 
 interface PaginatedLink {
@@ -93,11 +94,9 @@ export default function Staffs() {
 
   // Add / Edit Form state
   const [addForm, setAddForm] = useState({
-    firstName: '',
-    lastName: '',
-    middleName: '',
     phone: '',
     address: '',
+    commissionPercentage: '',
   })
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null)
   const [editForm, setEditForm] = useState({
@@ -107,11 +106,22 @@ export default function Staffs() {
     phone: '',
     address: '',
     status: 'Active' as Staff['status'],
+    commissionPercentage: '',
   })
 
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null)
+
+  // Commission modal state
+  const [showCommissionModal, setShowCommissionModal] = useState(false)
+  const [commissionData, setCommissionData] = useState<{
+    employee: string
+    commission_percentage: number
+    orders: any[]
+    total_commission: number
+  } | null>(null)
+  const [loadingCommissions, setLoadingCommissions] = useState(false)
 
   // Load Staffs
   const loadStaffs = async (url?: string) => {
@@ -150,6 +160,7 @@ export default function Staffs() {
         assignedStatus: s.assigned_status,
         dateHired: s.date_hired,
         role: s.role || 'Employee',
+        commissionPercentage: s.commission_percentage || 0,
       }))
 
       setStaffData({
@@ -184,6 +195,7 @@ export default function Staffs() {
       middleName: '',
       phone: '',
       address: '',
+      commissionPercentage: '',
     })
 
   const resetEditForm = () => {
@@ -195,6 +207,7 @@ export default function Staffs() {
       phone: '',
       address: '',
       status: 'Active',
+      commissionPercentage: '',
     })
   }
 
@@ -220,6 +233,7 @@ export default function Staffs() {
     setEditForm({
       ...staff,
       middleName: staff.middleName ?? '',
+      commissionPercentage: staff.commissionPercentage.toString(),
     })
   }
 
@@ -254,6 +268,21 @@ export default function Staffs() {
     } finally {
       setShowDeleteModal(false)
       setDeletingStaffId(null)
+    }
+  }
+
+  const openCommissions = async (id: number) => {
+    try {
+      setLoadingCommissions(true)
+      setShowCommissionModal(true)
+      const res = await axios.get(`/api/staffs/${id}/commissions`)
+      setCommissionData(res.data)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load commission data')
+      setShowCommissionModal(false)
+    } finally {
+      setLoadingCommissions(false)
     }
   }
 
@@ -297,7 +326,10 @@ export default function Staffs() {
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>
-                    Add <span className="font-semibold text-yellow-400 dark:text-highlight">Employee</span>
+                    Add{' '}
+                    <span className="font-semibold text-yellow-400 dark:text-highlight">
+                      Employee
+                    </span>
                   </DialogTitle>
                 </DialogHeader>
 
@@ -369,6 +401,21 @@ export default function Staffs() {
                       }
                     />
                   </div>
+                  {/* commission % */}
+                  <div>
+                    <Label>Commission Percentage (%)</Label>
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      value={addForm.commissionPercentage}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          commissionPercentage: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
 
                 <DialogFooter className="flex justify-end gap-3">
@@ -406,12 +453,12 @@ export default function Staffs() {
                   <ChevronDownIcon className="ml-2 h-4 w-4" />
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="w-40 border border-border bg-background shadow-md text-foreground">
+                <DropdownMenuContent className="w-40 border border-border bg-background text-foreground shadow-md">
                   {['All', 'Active', 'Inactive', 'Absent'].map((f) => (
                     <DropdownMenuItem
                       key={f}
                       onClick={() => setFilter(f as typeof filter)}
-                      className="text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20 cursor-pointer"
+                      className="cursor-pointer text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20"
                     >
                       {f === 'All' ? 'All Status' : f}
                     </DropdownMenuItem>
@@ -579,6 +626,21 @@ export default function Staffs() {
                                             }
                                           />
                                         </div>
+                                        {/* commission % */}
+                                        <div>
+                                          <Label>Commission Percentage (%)</Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="0.00"
+                                            value={editForm.commissionPercentage}
+                                            onChange={(e) =>
+                                              setEditForm({
+                                                ...editForm,
+                                                commissionPercentage: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
                                         {/*status*/}
                                         <div>
                                           <Label>Status</Label>
@@ -588,7 +650,9 @@ export default function Staffs() {
                                                 <div className="w-full">
                                                   <Select
                                                     value={editForm.status}
-                                                    disabled={editingStaff?.assignedStatus === 'assigned'}
+                                                    disabled={
+                                                      editingStaff?.assignedStatus === 'assigned'
+                                                    }
                                                     onValueChange={(value) =>
                                                       setEditForm({
                                                         ...editForm,
@@ -601,7 +665,9 @@ export default function Staffs() {
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                       <SelectItem value="Active">Active</SelectItem>
-                                                      <SelectItem value="Inactive">Inactive</SelectItem>
+                                                      <SelectItem value="Inactive">
+                                                        Inactive
+                                                      </SelectItem>
                                                       <SelectItem value="Absent">Absent</SelectItem>
                                                     </SelectContent>
                                                   </Select>
@@ -609,7 +675,10 @@ export default function Staffs() {
                                               </TooltipTrigger>
                                               {editingStaff?.assignedStatus === 'assigned' && (
                                                 <TooltipContent>
-                                                  <p>Status cannot be changed while assigned to a service.</p>
+                                                  <p>
+                                                    Status cannot be changed while assigned to a
+                                                    service.
+                                                  </p>
                                                 </TooltipContent>
                                               )}
                                             </Tooltip>
@@ -638,6 +707,42 @@ export default function Staffs() {
                                     </DialogContent>
                                   </Dialog>
                                 )}
+
+                                {/* Commissions Action */}
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => openCommissions(staff.id)}
+                                        className="text-highlight hover:text-highlight/80"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="lucide lucide-dollar-sign h-4 w-4"
+                                        >
+                                          <line
+                                            x1="12"
+                                            x2="12"
+                                            y1="2"
+                                            y2="22"
+                                          />
+                                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                        </svg>
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>View Commissions</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
 
                                 {/*delete*/}
                                 {hasPermission('delete_employee') && (
@@ -725,6 +830,210 @@ export default function Staffs() {
                   >
                     Delete
                   </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Commission Modal */}
+            <Dialog
+              open={showCommissionModal}
+              onOpenChange={setShowCommissionModal}
+            >
+              <DialogContent className="sm:max-w-none w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all">
+                <div className="p-5">
+                  <DialogHeader className="mb-4">
+                    <DialogTitle className="text-xl">
+                      Staff <span className="text-highlight">Commissions</span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground/80">
+                      Earned commissions for{' '}
+                      <span className="font-semibold text-foreground">
+                        {commissionData?.employee}
+                      </span>
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <Card className="border-border/50 bg-gradient-to-br from-highlight/5 to-transparent shadow-none">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
+                              Rate
+                            </p>
+                            <p className="text-xl font-black text-highlight">
+                              {commissionData?.commission_percentage}%
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-highlight/10 p-2 text-highlight">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="m15 5 4 4" />
+                              <path d="M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13" />
+                              <path d="m8 6 2-2" />
+                              <path d="m2 22 7-7" />
+                              <path d="M11 20.3 20.3 11" />
+                              <path d="m11 11 9 9" />
+                            </svg>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 bg-gradient-to-br from-green-500/5 to-transparent shadow-none">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
+                              Total
+                            </p>
+                            <p className="text-xl font-black text-green-500">
+                              ₱
+                              {commissionData?.total_commission.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                              })}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-green-500/10 p-2 text-green-500">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <line
+                                x1="12"
+                                y1="2"
+                                x2="12"
+                                y2="22"
+                              />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="mb-2">
+                    <HeadingSmall
+                      title="Completed Jobs"
+                      description="Historical record"
+                    />
+                  </div>
+
+                  <div className="overflow-hidden rounded-lg border border-border/50 bg-muted/10">
+                    <div className="max-h-[350px] overflow-y-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm shadow-sm">
+                          <TableRow className="hover:bg-transparent border-border/30">
+                            <TableHead className="w-[150px] min-w-[150px] py-3 px-4 text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                              Date
+                            </TableHead>
+                            <TableHead className="w-[150px] min-w-[150px] py-3 px-4 text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                              Customer
+                            </TableHead>
+                            <TableHead className="w-auto py-3 px-4 text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                              Services
+                            </TableHead>
+                            <TableHead className="w-[120px] min-w-[120px] py-3 px-4 text-right text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                              Total
+                            </TableHead>
+                            <TableHead className="w-[120px] min-w-[120px] py-3 px-4 text-right text-[11px] font-bold tracking-tight text-highlight uppercase whitespace-nowrap">
+                              Comm.
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {loadingCommissions ? (
+                            <TableRow>
+                              <TableCell
+                                colSpan={5}
+                                className="py-12 text-center"
+                              >
+                                <div className="flex flex-col items-center gap-2">
+                                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-highlight border-t-transparent" />
+                                  <p className="text-xs text-muted-foreground">Loading...</p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : !commissionData?.orders || commissionData.orders.length === 0 ? (
+                            <TableRow>
+                              <TableCell
+                                colSpan={5}
+                                className="py-12 text-center"
+                              >
+                                <p className="text-xs text-muted-foreground italic">
+                                  No completed orders found.
+                                </p>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            commissionData.orders.map((order) => (
+                              <TableRow
+                                key={order.id}
+                                className="border-border/10 transition-colors hover:bg-highlight/5 group"
+                              >
+                                <TableCell className="px-4 py-3 text-[11px] text-muted-foreground tabular-nums whitespace-nowrap font-medium">
+                                  {order.date}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-sm font-bold whitespace-nowrap">
+                                  {order.customer}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex flex-wrap gap-1.5 min-w-[200px]">
+                                    {order.services.split(',').map((s: string, idx: number) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-block rounded border border-border/20 bg-muted/30 px-1.5 py-0.5 text-[10px] text-muted-foreground/90 whitespace-nowrap"
+                                      >
+                                        {s.trim()}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap tabular-nums">
+                                  ₱{order.total_amount.toLocaleString()}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-right text-sm font-black whitespace-nowrap text-highlight tabular-nums">
+                                  ₱
+                                  {order.commission_amount.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="border-t border-border/30 bg-muted/5 p-4">
+                  <DialogClose asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-w-[80px] border-border/50 text-xs font-semibold"
+                    >
+                      Close
+                    </Button>
+                  </DialogClose>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

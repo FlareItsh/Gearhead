@@ -50,6 +50,7 @@ class EmployeeController extends Controller
             'lastName' => 'required|string',
             'phone' => 'required|string',
             'address' => 'required|string',
+            'commissionPercentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $employee = $this->employees->create([
@@ -59,6 +60,7 @@ class EmployeeController extends Controller
             'phone_number' => $request->phone,
             'address' => $request->address,
             'status' => 'active',
+            'commission_percentage' => $request->commissionPercentage ?? 0,
             'date_hired' => now(),
         ]);
 
@@ -90,6 +92,7 @@ class EmployeeController extends Controller
             'phone' => 'required|string',
             'address' => 'required|string',
             'status' => 'required|in:Active,Inactive,Absent',
+            'commissionPercentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $currentEmployee = $this->employees->find($id);
@@ -108,6 +111,7 @@ class EmployeeController extends Controller
             'phone_number' => $request->phone,
             'address' => $request->address,
             'status' => strtolower($request->status),
+            'commission_percentage' => $request->commissionPercentage ?? 0,
         ]);
 
         return response()->json([
@@ -180,5 +184,42 @@ class EmployeeController extends Controller
         }
 
         return response()->json($this->employees->all());
+    }
+
+    /**
+     * Get commissions for an employee
+     */
+    public function commissions(int $id)
+    {
+        $employee = $this->employees->find($id);
+        
+        $completedOrders = \App\Models\ServiceOrder::where('employee_id', $id)
+            ->where('status', 'completed')
+            ->with(['details.serviceVariant.service', 'user'])
+            ->orderByDesc('order_date')
+            ->get()
+            ->map(function ($order) use ($employee) {
+                $subtotal = $order->details->sum(function ($detail) {
+                    return $detail->quantity * $detail->serviceVariant->price;
+                });
+
+                return [
+                    'id' => $order->service_order_id,
+                    'date' => $order->order_date->format('Y-m-d H:i'),
+                    'customer' => $order->user->full_name,
+                    'services' => $order->details->map(function ($detail) {
+                        return $detail->serviceVariant->service->service_name;
+                    })->join(', '),
+                    'total_amount' => $subtotal,
+                    'commission_amount' => $subtotal * ($employee->commission_percentage / 100),
+                ];
+            });
+
+        return response()->json([
+            'employee' => $employee->full_name,
+            'commission_percentage' => (float) $employee->commission_percentage,
+            'orders' => $completedOrders,
+            'total_commission' => $completedOrders->sum('commission_amount'),
+        ]);
     }
 }

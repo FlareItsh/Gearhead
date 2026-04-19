@@ -32,6 +32,7 @@ class Employee extends Model
         'address',
         'status',
         'assigned_status',
+        'commission_percentage',
         'date_hired',
         'employment_ended_at',
     ];
