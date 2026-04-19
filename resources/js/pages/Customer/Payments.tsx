@@ -207,7 +207,7 @@ export default function Payments() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payment History" />
             
-            <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 duration-700 animate-in fade-in slide-in-from-bottom-4 md:p-6 lg:p-8">
+            <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* Header Section */}
                 <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                     <Heading

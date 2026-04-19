@@ -62,7 +62,7 @@ const CustomerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = () => {
       axios.get(route('payments.user'))
-        .then((res) => setPayments(res.data.paginated.data))
+        .then((res) => setPayments(res.data?.paginated?.data || []))
         .catch((err) => console.error('Payments error:', err))
 
       axios.get(route('bookings.upcoming'))
@@ -133,7 +133,7 @@ const CustomerDashboard: React.FC = () => {
         onConfirm={handleConfirmBooking}
       />
 
-      <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 md:p-6 lg:p-8 animate-in fade-in duration-700">
+      <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* --- Hero Section --- */}
         <section className="relative overflow-hidden rounded-[2.5rem] border border-border/40 bg-muted/20 shadow-xl transition-all duration-700">
@@ -148,11 +148,11 @@ const CustomerDashboard: React.FC = () => {
           
           <div className="relative z-10 flex flex-col gap-4 px-8 py-10 md:max-w-3xl md:px-12 md:py-14">
             <div className="space-y-1.5">
-              <h1 className="text-3xl font-black tracking-tight md:text-4xl lg:text-5xl text-foreground">
-                Welcome back, <span className="text-highlight italic">{firstName}</span>
+              <h1 className="text-3xl font-black tracking-tight md:text-5xl text-foreground">
+                Welcome back, <span className="text-highlight italic">{firstName}!</span>
               </h1>
-              <p className="max-w-md text-base leading-relaxed text-muted-foreground/90 md:text-lg">
-                Your vehicle deserves the best. Ready for your next shine?
+              <p className="text-sm font-medium text-muted-foreground/80 md:text-base">
+                Ready to make your machine shine today?
               </p>
             </div>
             

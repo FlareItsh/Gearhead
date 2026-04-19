@@ -220,7 +220,7 @@ export default function Bookings({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="My Bookings" />
 
-      <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 duration-700 animate-in fade-in slide-in-from-bottom-4 md:p-6 lg:p-8">
+      <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Header Section */}
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <Heading
@@ -258,157 +258,156 @@ export default function Bookings({
           </div>
         </div>
 
-        {/* Bookings List Section */}
-        <div className="custom-scrollbar min-h-[500px] flex-1 overflow-y-auto">
-          {bookings.data.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {bookings.data.map((b, index) => {
-                const config = getStatusConfig(b.order_status)
-                const StatusIcon = config.icon
+        {/* Content Section */}
+        <div className="flex flex-1 flex-col overflow-hidden rounded-[2.5rem] border border-border/40 bg-white shadow-2xl dark:bg-card/50">
+          <div className="custom-scrollbar flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            {bookings.data.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {bookings.data.map((b, index) => {
+                  const config = getStatusConfig(b.order_status)
+                  const StatusIcon = config.icon
 
-                return (
-                  <div
-                    key={b.service_order_id}
-                    className="group relative flex flex-col overflow-hidden rounded-3xl border border-sidebar-border/50 bg-background transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 hover:-translate-y-2 hover:border-primary/20 hover:shadow-2xl hover:shadow-black/10 dark:hover:shadow-white/5"
-                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
-                  >
-                    {/* Status Accent Bar */}
+                  return (
                     <div
-                      className={`absolute top-0 left-0 h-1.5 w-full ${config.bg.replace('/10', '')} opacity-80`}
-                    />
+                      key={b.service_order_id}
+                      className="group relative flex flex-col overflow-hidden rounded-3xl border border-border/10 bg-white transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 hover:-translate-y-2 hover:border-highlight/20 hover:shadow-2xl dark:bg-muted/5"
+                      style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                    >
+                      {/* Status Accent Bar */}
+                      <div
+                        className={`absolute top-0 left-0 h-1.5 w-full ${config.bg.replace('/10', '')} opacity-80`}
+                      />
 
-                    <div className="flex flex-1 flex-col p-6">
-                      <div className="mb-4 flex items-start justify-between">
-                        <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.bg} ${config.color}`}
-                        >
-                          <StatusIcon className="h-6 w-6" />
-                        </div>
-                        <Badge
-                          variant={config.variant}
-                          className="px-3 py-1 font-bold tracking-wider uppercase"
-                        >
-                          {config.label}
-                        </Badge>
-                      </div>
-
-                      <div className="mb-6 flex-1">
-                        <h4 className="mb-2 text-xl leading-tight font-extrabold text-foreground transition-all group-hover:tracking-tight group-hover:text-primary">
-                          {b.services || 'General Service'}
-                        </h4>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground/80">
-                          <div className="flex items-center gap-1.5 font-bold transition-colors group-hover:text-foreground">
-                            <CalendarDays className="h-4 w-4 text-muted-foreground/60 transition-colors group-hover:text-primary" />
-                            {new Date(b.order_date).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </div>
-                          <div className="flex items-center gap-1.5 font-bold transition-colors group-hover:text-foreground">
-                            <Clock className="h-4 w-4 text-muted-foreground/60 transition-colors group-hover:text-primary" />
-                            {new Date(b.order_date).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-end justify-between border-t border-muted/20 pt-5">
-                        <div className="space-y-1">
-                          <p className="text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
-                            Total
-                          </p>
-                          <p className="text-2xl font-black text-foreground">
-                            ₱{b.total_amount.toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openModal(b)}
-                            className="h-10 rounded-xl px-4 font-bold hover:bg-secondary/50"
+                      <div className="flex flex-1 flex-col p-6">
+                        <div className="mb-4 flex items-start justify-between">
+                          <div
+                            className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.bg} ${config.color}`}
                           >
-                            Details
-                          </Button>
-                          {canCancel(b.order_status) && (
+                            <StatusIcon className="h-6 w-6" />
+                          </div>
+                          <Badge
+                            variant={config.variant}
+                            className="px-3 py-1 font-bold tracking-wider uppercase"
+                          >
+                            {config.label}
+                          </Badge>
+                        </div>
+
+                        <div className="mb-6 flex-1 text-left">
+                          <h4 className="mb-2 text-xl leading-tight font-black text-foreground transition-all">
+                            {b.services || 'General Service'}
+                          </h4>
+                          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground/80">
+                            <div className="flex items-center gap-1.5 font-bold">
+                              <CalendarDays className="h-4 w-4 text-highlight" />
+                              {new Date(b.order_date).toLocaleDateString('en-PH', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </div>
+                            <div className="flex items-center gap-1.5 font-bold">
+                              <Clock className="h-4 w-4 text-highlight" />
+                              {new Date(b.order_date).toLocaleTimeString('en-PH', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-end justify-between border-t border-muted/20 pt-5">
+                          <div className="space-y-1 text-left">
+                            <p className="text-xs font-black tracking-widest text-muted-foreground/60 uppercase">
+                              Total
+                            </p>
+                            <p className="text-2xl font-black text-foreground">
+                              ₱{b.total_amount.toLocaleString()}
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
-                              variant="destructive"
-                              onClick={() => openCancelModal(b)}
-                              className="h-10 rounded-xl px-4 font-bold"
+                              variant="outline"
+                              onClick={() => openModal(b)}
+                              className="h-10 rounded-xl px-4 font-black hover:bg-secondary/50"
                             >
-                              Cancel
+                              Details
                             </Button>
-                          )}
+                            {canCancel(b.order_status) && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => openCancelModal(b)}
+                                className="h-10 rounded-xl px-4 font-black"
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="mb-6 rounded-full bg-secondary/30 p-8 text-muted-foreground/50">
-                <History className="h-16 w-16" />
+                  )
+                })}
               </div>
-              <h3 className="mb-2 text-2xl font-bold text-foreground">No bookings found</h3>
-              <p className="mb-8 max-w-md text-muted-foreground">
-                {selectedStatus === 'all'
-                  ? "You haven't made any bookings yet. Ready to give your car some love?"
-                  : `You don't have any bookings with status "${selectedStatus}".`}
-              </p>
-              <Link href="/services">
-                <Button className="h-12 rounded-2xl bg-highlight px-8 font-black text-black transition-transform hover:scale-105 active:scale-95">
-                  Book A Service Now
-                </Button>
-              </Link>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="mb-6 rounded-full bg-secondary/30 p-8 text-muted-foreground/50">
+                  <History className="h-16 w-16" />
+                </div>
+                <h3 className="mb-2 text-2xl font-black text-foreground">No bookings found</h3>
+                <p className="mb-8 max-w-md text-muted-foreground font-medium">
+                  {selectedStatus === 'all'
+                    ? "You haven't made any bookings yet. Ready to give your car some love?"
+                    : `You don't have any bookings with status "${selectedStatus}".`}
+                </p>
+                <Link href="/services">
+                  <Button className="h-14 rounded-2xl bg-highlight px-8 font-black text-black shadow-lg shadow-highlight/20 transition-all hover:scale-105 active:scale-95">
+                    Book A Service Now
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Bar */}
+          {bookings.data.length > 0 && (
+            <div className="flex flex-col items-center justify-between gap-6 px-10 py-8 md:flex-row border-t border-border/20 bg-muted/10">
+              <div className="flex items-center gap-5">
+                <span className="text-xs font-black tracking-widest text-muted-foreground/60 uppercase">Rows per page</span>
+                <Select
+                  value={perPage.toString()}
+                  onValueChange={handlePerPageChange}
+                >
+                  <SelectTrigger className="h-10 w-[80px] rounded-xl border-border/40 bg-white font-black dark:bg-card">
+                    <SelectValue placeholder={perPage} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/40 bg-white font-bold dark:bg-card">
+                    {[6, 9, 12, 15, 30].map((pageSize) => (
+                      <SelectItem
+                        key={pageSize}
+                        value={pageSize.toString()}
+                        className="rounded-lg transition-colors hover:bg-secondary text-foreground"
+                      >
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs font-bold text-muted-foreground/40">
+                  Displaying {bookings.data.length} of {bookings.total} records
+                </span>
+              </div>
+
+              <Pagination
+                links={bookings.links}
+                onPageChange={handlePageChange}
+              />
             </div>
           )}
         </div>
-
-        {/* Global Pagination Section - Admin Style */}
-        {bookings.data.length > 0 && (
-          <div className="mt-8 flex flex-col items-center justify-between gap-6 border-t border-muted/20 pt-8 md:flex-row">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-muted-foreground">Rows per page</span>
-              <Select
-                value={perPage.toString()}
-                onValueChange={handlePerPageChange}
-              >
-                <SelectTrigger className="h-10 w-[80px] rounded-xl border-border/50 bg-secondary/20 font-bold">
-                  <SelectValue placeholder={perPage} />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-border/50 bg-background font-bold shadow-2xl">
-                  {[6, 9, 12, 15, 30].map((pageSize) => (
-                    <SelectItem
-                      key={pageSize}
-                      value={pageSize.toString()}
-                      className="rounded-lg transition-colors hover:bg-secondary text-foreground"
-                    >
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span className="text-sm font-medium text-muted-foreground">
-                Showing{' '}
-                {bookings.total > 0 ? (bookings.current_page - 1) * bookings.per_page + 1 : 0} to{' '}
-                {Math.min(bookings.current_page * bookings.per_page, bookings.total)} of{' '}
-                {bookings.total}
-              </span>
-            </div>
-
-            <Pagination
-              links={bookings.links}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
 
         {/* View Details Modal */}
         {modalOpen && selectedBooking && (
@@ -420,7 +419,7 @@ export default function Bookings({
             >
               {/* Modal Header/Glow */}
               <div
-                className={`absolute top-0 left-0 h-1 w-full ${getStatusConfig(selectedBooking.order_status).bg.replace('/10', '')}`}
+                className={`absolute top-0 left-0 h-1.5 w-full ${getStatusConfig(selectedBooking.order_status).bg.replace('/10', '')}`}
               />
 
               <div className="p-8 md:p-10">
@@ -443,7 +442,7 @@ export default function Bookings({
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-foreground">Booking Details</h3>
-                    <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                    <p className="text-xs font-black tracking-widest text-muted-foreground/40 uppercase">
                       ID #{selectedBooking.service_order_id.toString().padStart(5, '0')}
                     </p>
                   </div>
@@ -452,18 +451,18 @@ export default function Bookings({
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
+                      <div className="flex items-center gap-2 text-xs font-black tracking-widest text-muted-foreground/40 uppercase text-left">
                         <Tag className="h-3.5 w-3.5" /> Services
                       </div>
-                      <p className="text-sm leading-snug font-bold text-foreground">
+                      <p className="text-sm leading-snug font-bold text-foreground text-left">
                         {selectedBooking.services}
                       </p>
                     </div>
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
+                      <div className="flex items-center gap-2 text-xs font-black tracking-widest text-muted-foreground/40 uppercase text-left">
                         <Calendar className="h-3.5 w-3.5" /> Date & Time
                       </div>
-                      <p className="text-sm font-bold text-foreground">
+                      <p className="text-sm font-bold text-foreground text-left">
                         {new Date(selectedBooking.order_date).toLocaleString()}
                       </p>
                     </div>
@@ -471,35 +470,35 @@ export default function Bookings({
 
                   <div className="grid grid-cols-2 gap-6 border-b border-muted/20 pb-6">
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
+                      <div className="flex items-center gap-2 text-xs font-black tracking-widest text-muted-foreground/40 uppercase text-left">
                         <Info className="h-3.5 w-3.5" /> Order Type
                       </div>
-                      <p className="text-sm font-bold text-foreground">
+                      <p className="text-sm font-bold text-foreground text-left">
                         {selectedBooking.order_type === 'W' ? 'Walk-in' : 'Reservation'}
                       </p>
                     </div>
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
+                      <div className="flex items-center gap-2 text-xs font-black tracking-widest text-muted-foreground/40 uppercase text-left">
                         <CreditCard className="h-3.5 w-3.5" /> Payment
                       </div>
-                      <p className="text-sm font-bold text-foreground">
+                      <p className="text-sm font-bold text-foreground text-left">
                         {selectedBooking.payment_method || 'Unspecified'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-3xl border border-border/50 bg-muted/40 p-6 shadow-inner">
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase">
+                  <div className="flex items-center justify-between rounded-[2rem] border border-border/50 bg-muted/40 p-6 shadow-inner dark:bg-muted/10">
+                    <div className="space-y-1 text-left">
+                      <p className="text-[10px] font-black tracking-widest text-muted-foreground/80 uppercase">
                         Total Amount
                       </p>
-                      <p className="text-3xl font-black text-foreground">
+                      <p className="text-4xl font-black text-foreground leading-none">
                         ₱{selectedBooking.total_amount.toLocaleString()}
                       </p>
                     </div>
                     <Badge
                       variant={getStatusConfig(selectedBooking.order_status).variant}
-                      className="px-4 py-1.5 text-xs font-black tracking-widest uppercase shadow-sm"
+                      className="px-5 py-2 text-[10px] font-black tracking-widest uppercase shadow-lg shadow-black/10"
                     >
                       {getStatusConfig(selectedBooking.order_status).label}
                     </Badge>
@@ -510,14 +509,14 @@ export default function Bookings({
                   <Button
                     variant="outline"
                     onClick={closeModal}
-                    className="h-12 flex-1 rounded-2xl border-2 border-primary/20 font-black transition-all hover:bg-primary/5 active:scale-95"
+                    className="h-14 flex-1 rounded-2xl border-2 border-primary/20 font-black transition-all hover:bg-primary/5 active:scale-95"
                   >
                     Close
                   </Button>
                   {canCancel(selectedBooking.order_status) && (
                     <Button
                       variant="destructive"
-                      className="h-12 flex-1 rounded-2xl font-black transition-transform active:scale-95"
+                      className="h-14 flex-1 rounded-2xl font-black transition-transform active:scale-95"
                       onClick={() => openCancelModal(selectedBooking)}
                     >
                       Cancel Booking
@@ -541,8 +540,8 @@ export default function Bookings({
                 <AlertCircle className="h-10 w-10" />
               </div>
 
-              <h3 className="mb-2 text-2xl font-black text-foreground">Cancel Booking?</h3>
-              <p className="mb-8 text-muted-foreground">
+              <h3 className="mb-2 text-2xl font-black text-foreground text-center">Cancel Booking?</h3>
+              <p className="mb-8 text-muted-foreground text-center">
                 This will remove your reservation for{' '}
                 <span className="font-bold text-foreground">{bookingToCancel.services}</span>. This
                 action cannot be undone.
@@ -552,14 +551,14 @@ export default function Bookings({
                 <Button
                   variant="secondary"
                   onClick={closeCancelModal}
-                  className="h-12 flex-1 rounded-2xl font-black transition-transform active:scale-95"
+                  className="h-14 flex-1 rounded-2xl font-black transition-transform active:scale-95"
                 >
                   No, Keep it
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={confirmCancel}
-                  className="h-12 flex-1 rounded-2xl font-black shadow-lg shadow-rose-500/20 transition-transform hover:bg-rose-600 active:scale-95"
+                  className="h-14 flex-1 rounded-2xl font-black shadow-lg shadow-rose-500/20 transition-transform hover:bg-rose-600 active:scale-95"
                 >
                   Yes, Cancel
                 </Button>
