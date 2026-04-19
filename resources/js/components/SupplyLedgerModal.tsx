@@ -158,8 +158,8 @@ export default function SupplyLedgerModal({
         </div>
 
         {/* Table Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="rounded-xl border bg-card shadow-sm">
+        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+          <div className="rounded-xl border border-border/50 bg-card/50 shadow-sm backdrop-blur-subtle">
             {loading ? (
               <div className="flex h-[400px] flex-col items-center justify-center gap-3">
                 <div className="relative h-12 w-12 text-yellow-500">

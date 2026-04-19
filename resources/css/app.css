@@ -76,10 +76,10 @@
   --foreground: oklch(0.145 0 0); /* main text */
 
   /* === Surfaces === */
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
 
   /* === Primary === */
   --primary: oklch(0.205 0 0); /* dark neutral for buttons/accents */
@@ -106,8 +106,8 @@
   --destructive: oklch(0.65 0.25 25); /* soft red tone */
   --destructive-foreground: oklch(0.145 0 0); /* readable dark text */
 
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.9 0 0);
   --ring: oklch(0.439 0 0);
 
   /* === Charts (Updated: No yellow, better contrast) === */
