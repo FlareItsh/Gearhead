@@ -195,6 +195,8 @@ export default function SupplyLedgerModal({
                           className={`rounded-full border-none px-3 py-1 font-semibold ${
                             entry.type === 'Purchase'
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : entry.type === 'Return'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
                               : 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
                           }`}
                         >
@@ -224,7 +226,7 @@ export default function SupplyLedgerModal({
                         ) : ''}
                       </TableCell>
                       <TableCell className="py-4 text-right">
-                        {entry.type !== 'Pullout' && entry.reference_no && (
+                        {entry.type === 'Purchase' && entry.reference_no && (
                           <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-bold text-muted-foreground">
                             {entry.reference_no}
                           </code>

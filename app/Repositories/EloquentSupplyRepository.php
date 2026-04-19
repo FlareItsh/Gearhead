@@ -104,7 +104,30 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
                 'pullout_requests.pullout_request_id as reference_no',
             ]);
 
-        return $purchases->unionAll($pullouts)
+        $returns = DB::table('pullout_request_details')
+            ->join('pullout_requests', 'pullout_request_details.pullout_request_id', '=', 'pullout_requests.pullout_request_id')
+            ->join('employees', 'pullout_requests.employee_id', '=', 'employees.employee_id')
+            ->where('pullout_request_details.supply_id', $supplyId)
+            ->where('pullout_request_details.is_returned', true)
+            ->when($start_date, function ($query, $start_date) {
+                return $query->whereDate('pullout_request_details.returned_at', '>=', $start_date);
+            })
+            ->when($end_date, function ($query, $end_date) {
+                return $query->whereDate('pullout_request_details.returned_at', '<=', $end_date);
+            })
+            ->select([
+                'pullout_request_details.returned_at as date',
+                DB::raw("'Return' as type"),
+                DB::raw('NULL as supplier_name'),
+                DB::raw("CONCAT(employees.first_name, ' ', employees.last_name) as employee_name"),
+                'pullout_request_details.quantity as qty_in',
+                DB::raw('0 as qty_out'),
+                'pullout_requests.pullout_request_id as reference_no',
+            ]);
+
+        return $purchases
+            ->unionAll($pullouts)
+            ->unionAll($returns)
             ->orderBy('date', 'desc')
             ->get();
     }
