@@ -122,13 +122,14 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
     public function getSummaryByDateRange(string $startDate, string $endDate): array
     {
         // 1. Revenue & Payment Counts
-        $paymentStats = DB::table('payments')
-            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+        $paymentStats = DB::table('payments as p')
+            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
+            ->whereBetween('so.order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->selectRaw('
-                COALESCE(SUM(amount), 0) as total_amount, 
-                COUNT(*) as total_payments,
-                SUM(CASE WHEN payment_method = "cash" THEN 1 ELSE 0 END) as cash_transactions,
-                SUM(CASE WHEN payment_method = "gcash" THEN 1 ELSE 0 END) as gcash_transactions
+                COALESCE(SUM(p.amount), 0) as total_amount, 
+                COUNT(p.payment_id) as total_payments,
+                SUM(CASE WHEN p.payment_method = "cash" THEN 1 ELSE 0 END) as cash_transactions,
+                SUM(CASE WHEN p.payment_method = "gcash" THEN 1 ELSE 0 END) as gcash_transactions
             ')
             ->first();
 
@@ -189,11 +190,12 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
      */
     public function getFinancialSummaryByDateRange(string $startDate, string $endDate): array
     {
-        // Get revenue per day from payments
-        $revenueData = DB::table('payments')
-            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(amount), 0) as revenue')
-            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->groupByRaw('DATE(created_at)')
+        // Get revenue per day from payments (aligned with order date)
+        $revenueData = DB::table('payments as p')
+            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
+            ->selectRaw('DATE(so.order_date) as date, COALESCE(SUM(p.amount), 0) as revenue')
+            ->whereBetween('so.order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->groupByRaw('DATE(so.order_date)')
             ->pluck('revenue', 'date');
 
         // Get expenses per day from supply purchases
@@ -312,7 +314,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'e.first_name',
                 'e.last_name'
             )
-            ->orderBy('p.created_at', 'desc')
+            ->orderBy('so.order_date', 'desc')
             ->get()
             ->map(function ($transaction) {
                 return [
@@ -340,7 +342,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->leftJoin('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->leftJoin('services as s', 'sv.service_id', '=', 's.service_id')
             ->leftJoin('employees as e', 'p.employee_id', '=', 'e.employee_id')
-            ->whereBetween('p.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->whereBetween('so.order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->select(
                 'p.payment_id',
                 'p.amount',
@@ -371,7 +373,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'e.first_name',
                 'e.last_name'
             )
-            ->orderBy('p.created_at', 'desc')
+            ->orderBy('so.order_date', 'desc')
             ->get()
             ->map(function ($transaction) {
                 return [
@@ -439,10 +441,10 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
         }
 
         if ($startDate && $endDate) {
-            $query->whereBetween('p.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+            $query->whereBetween('so.order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         }
 
-        return $query->orderBy('p.created_at', 'desc')
+        return $query->orderBy('so.order_date', 'desc')
             ->paginate($perPage)
             ->through(function ($transaction) {
                 return [

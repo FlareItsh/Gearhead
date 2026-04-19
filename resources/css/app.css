@@ -83,7 +83,7 @@
 
   /* === Primary === */
   --primary: oklch(0.205 0 0); /* dark neutral for buttons/accents */
-  --primary-foreground: oklch(15.91% 0 0); /* white text */
+  --primary-foreground: oklch(0.985 0 0); /* white text */
   --primary-foreground-dark: oklch(15.91% 0 0);
   --primary-foreground-light: oklch(0.985 0 0); /* inverse of primary */
 

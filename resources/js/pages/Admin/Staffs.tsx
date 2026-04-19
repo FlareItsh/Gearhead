@@ -42,7 +42,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
-import { ChevronDownIcon, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronDownIcon, HandCoins, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -115,7 +115,9 @@ export default function Staffs() {
 
   // Commission modal state
   const [showCommissionModal, setShowCommissionModal] = useState(false)
-  const [selectedStaffIdForCommission, setSelectedStaffIdForCommission] = useState<number | null>(null)
+  const [selectedStaffIdForCommission, setSelectedStaffIdForCommission] = useState<number | null>(
+    null,
+  )
   const [commissionStartDate, setCommissionStartDate] = useState<string>('')
   const [commissionEndDate, setCommissionEndDate] = useState<string>('')
   const [commissionData, setCommissionData] = useState<{
@@ -131,10 +133,10 @@ export default function Staffs() {
     const now = new Date()
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
-    const format = (date: Date) => 
+
+    const format = (date: Date) =>
       `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-      
+
     return { start: format(firstDay), end: format(lastDay) }
   }
 
@@ -295,7 +297,7 @@ export default function Staffs() {
         params: {
           start_date: commissionStartDate,
           end_date: commissionEndDate,
-        }
+        },
       })
       setCommissionData(res.data)
     } catch (error) {
@@ -574,14 +576,23 @@ export default function Staffs() {
                                 {/* Edit Modal (Dialog) */}
                                 {hasPermission('edit_employee') && (
                                   <Dialog>
-                                    <DialogTrigger asChild>
-                                      <button
-                                        onClick={() => openEdit(staff)}
-                                        className=""
-                                      >
-                                        <Pencil className="h-4 w-4" />
-                                      </button>
-                                    </DialogTrigger>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <DialogTrigger asChild>
+                                            <button
+                                              onClick={() => openEdit(staff)}
+                                              className="text-foreground hover:text-foreground/80"
+                                            >
+                                              <Pencil className="h-4 w-4" />
+                                            </button>
+                                          </DialogTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Edit Employee</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
 
                                     <DialogContent className="sm:max-w-md">
                                       <DialogHeader>
@@ -751,26 +762,7 @@ export default function Staffs() {
                                         onClick={() => openCommissions(staff.id)}
                                         className="text-highlight hover:text-highlight/80"
                                       >
-                                        <svg
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          width="16"
-                                          height="16"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          className="lucide lucide-dollar-sign h-4 w-4"
-                                        >
-                                          <line
-                                            x1="12"
-                                            x2="12"
-                                            y1="2"
-                                            y2="22"
-                                          />
-                                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                        </svg>
+                                        <HandCoins className="h-4 w-4" />
                                       </button>
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -781,12 +773,21 @@ export default function Staffs() {
 
                                 {/*delete*/}
                                 {hasPermission('delete_employee') && (
-                                  <button
-                                    onClick={() => handleDelete(staff.id)}
-                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() => handleDelete(staff.id)}
+                                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Delete Employee</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 )}
                               </div>
                             </TableCell>
@@ -874,7 +875,7 @@ export default function Staffs() {
               open={showCommissionModal}
               onOpenChange={setShowCommissionModal}
             >
-              <DialogContent className="sm:max-w-none w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all">
+              <DialogContent className="w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all sm:max-w-none">
                 <div className="p-5">
                   <DialogHeader className="mb-4">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -898,7 +899,9 @@ export default function Staffs() {
                           onChange={(e) => setCommissionStartDate(e.target.value)}
                           className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
                         />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">to</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                          to
+                        </span>
                         <Input
                           type="date"
                           value={commissionEndDate}
@@ -995,21 +998,21 @@ export default function Staffs() {
                   <div className="overflow-hidden rounded-lg border border-border/50 bg-muted/10">
                     <div className="max-h-[350px] overflow-y-auto">
                       <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm shadow-sm">
-                          <TableRow className="hover:bg-transparent border-border/30">
-                            <TableHead className="w-[150px] min-w-[150px] py-3 px-4 text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                        <TableHeader className="sticky top-0 z-10 bg-background/95 shadow-sm backdrop-blur-sm">
+                          <TableRow className="border-border/30 hover:bg-transparent">
+                            <TableHead className="w-[150px] min-w-[150px] px-4 py-3 text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
                               Date
                             </TableHead>
-                            <TableHead className="w-[150px] min-w-[150px] py-3 px-4 text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                            <TableHead className="w-[150px] min-w-[150px] px-4 py-3 text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
                               Customer
                             </TableHead>
-                            <TableHead className="w-auto py-3 px-4 text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                            <TableHead className="w-auto px-4 py-3 text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
                               Services
                             </TableHead>
-                            <TableHead className="w-[120px] min-w-[120px] py-3 px-4 text-right text-[11px] font-bold tracking-tight uppercase whitespace-nowrap">
+                            <TableHead className="w-[120px] min-w-[120px] px-4 py-3 text-right text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
                               Total
                             </TableHead>
-                            <TableHead className="w-[120px] min-w-[120px] py-3 px-4 text-right text-[11px] font-bold tracking-tight text-highlight uppercase whitespace-nowrap">
+                            <TableHead className="w-[120px] min-w-[120px] px-4 py-3 text-right text-[11px] font-bold tracking-tight whitespace-nowrap text-highlight uppercase">
                               Comm.
                             </TableHead>
                           </TableRow>
@@ -1042,20 +1045,20 @@ export default function Staffs() {
                             commissionData.orders.map((order) => (
                               <TableRow
                                 key={order.id}
-                                className="border-border/10 transition-colors hover:bg-highlight/5 group"
+                                className="group border-border/10 transition-colors hover:bg-highlight/5"
                               >
-                                <TableCell className="px-4 py-3 text-[11px] text-muted-foreground tabular-nums whitespace-nowrap font-medium">
+                                <TableCell className="px-4 py-3 text-[11px] font-medium whitespace-nowrap text-muted-foreground tabular-nums">
                                   {order.date}
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-sm font-bold whitespace-nowrap">
                                   {order.customer}
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
-                                  <div className="flex flex-wrap gap-1.5 min-w-[200px]">
+                                  <div className="flex min-w-[200px] flex-wrap gap-1.5">
                                     {order.services.split(',').map((s: string, idx: number) => (
                                       <span
                                         key={idx}
-                                        className="inline-block rounded border border-border/20 bg-muted/30 px-1.5 py-0.5 text-[10px] text-muted-foreground/90 whitespace-nowrap"
+                                        className="inline-block rounded border border-border/20 bg-muted/30 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-muted-foreground/90"
                                       >
                                         {s.trim()}
                                       </span>

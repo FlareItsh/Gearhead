@@ -53,11 +53,12 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
             $dates[] = $date->format('Y-m-d');
         }
 
-        // Get revenue per day
-        $revenueData = DB::table('payments')
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as revenue')
-            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->groupByRaw('DATE(created_at)')
+        // Get revenue per day (aligned with service order date)
+        $revenueData = DB::table('payments as p')
+            ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
+            ->selectRaw('DATE(so.order_date) as date, SUM(p.amount) as revenue')
+            ->whereBetween('so.order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->groupByRaw('DATE(so.order_date)')
             ->pluck('revenue', 'date'); // ['2025-11-01' => 1000, ...]
 
         // Get expenses per day
