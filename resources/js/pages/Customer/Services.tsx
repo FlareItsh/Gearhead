@@ -501,62 +501,62 @@ export default function Services() {
         <div className={`fixed inset-0 z-[1000] flex items-center justify-center p-4 transition-all duration-400 ${isClosingCheckout ? 'opacity-0' : 'bg-black/60 backdrop-blur-md'}`}>
           <div className="fixed inset-0" onClick={closeCheckoutModal} />
           <div className={`relative w-full max-w-lg rounded-[2.5rem] border border-border/40 bg-white shadow-2xl transition-all duration-400 dark:bg-card ${isClosingCheckout ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}>
-            <div className="border-b border-border/40 p-8 flex items-center justify-between">
+            <div className="border-b border-border/40 p-6 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-foreground">Confirm Selection</h2>
+                <h2 className="text-xl font-black tracking-tight text-foreground">Confirm Selection</h2>
                 <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Review your car care session</p>
               </div>
               <button 
                 onClick={closeCheckoutModal} 
-                className="rounded-full p-3 bg-secondary/80 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
+                className="rounded-full p-2.5 bg-secondary/80 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-8 pt-0 space-y-8 mt-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              <div className="space-y-4">
+            <div className="p-6 pt-0 space-y-5 mt-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="space-y-3">
                 {selectedServices.map((s, idx) => (
                   <div 
                     key={idx} 
-                    className="group relative flex items-center justify-between rounded-3xl border border-border/10 bg-white/50 p-6 transition-all hover:bg-white dark:bg-muted/5 dark:hover:bg-muted/10"
+                    className="group relative flex items-center justify-between rounded-2xl border border-border/10 bg-white/50 p-4 transition-all hover:bg-white dark:bg-muted/5 dark:hover:bg-muted/10"
                   >
                     <div>
-                      <h4 className="font-black text-base uppercase text-foreground leading-tight">{s.service_name}</h4>
+                      <h4 className="font-black text-sm uppercase text-foreground leading-tight">{s.service_name}</h4>
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{s.selectedVariant.size} • {s.selectedVariant.estimated_duration}m</p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <p className="font-black text-lg text-foreground">₱{Number(s.selectedVariant.price).toLocaleString()}</p>
+                    <div className="flex items-center gap-3">
+                      <p className="font-black text-base text-foreground">₱{Number(s.selectedVariant.price).toLocaleString()}</p>
                       <button 
                         onClick={() => removeService(s)} 
-                        className="rounded-full p-2 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-90"
+                        className="rounded-full p-1.5 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-90"
                       >
-                        <X className="h-5 w-5" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-6 pt-4 border-t border-border/20">
+              <div className="space-y-5 pt-4 border-t border-border/20">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Desired Date</label>
                     <div className="relative">
                       <input 
                         type="date" 
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="w-full rounded-2xl border-border/40 bg-white p-4 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
+                        className="w-full rounded-xl border-border/40 bg-white p-3 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Estimated Time</label>
                     <select
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className="w-full rounded-2xl border-border/40 bg-white p-4 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
+                      className="w-full rounded-xl border-border/40 bg-white p-3 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
                     >
                       <option value="">Select Time</option>
                       {availableTimeSlots.map(t => <option key={t} value={t}>{t}</option>)}
@@ -564,13 +564,13 @@ export default function Services() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-border/50 bg-muted/40 p-8 shadow-inner dark:bg-muted/10">
+                <div className="rounded-2xl border border-border/50 bg-muted/40 p-6 shadow-inner dark:bg-muted/10">
                   <div className="flex items-end justify-between">
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Total Amount</p>
-                      <p className="text-4xl font-black text-foreground leading-none">₱{totalPrice.toLocaleString()}</p>
+                      <p className="text-3xl font-black text-foreground leading-none">₱{totalPrice.toLocaleString()}</p>
                     </div>
-                    <div className="rounded-2xl bg-highlight/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-highlight border border-highlight/20">
+                    <div className="rounded-xl bg-highlight/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-highlight border border-highlight/20">
                       Quote
                     </div>
                   </div>
@@ -578,7 +578,7 @@ export default function Services() {
 
                 <Button
                   variant="highlight"
-                  className="w-full h-16 rounded-[1.5rem] font-black uppercase tracking-widest text-base shadow-2xl shadow-highlight/30 transition-all hover:scale-[1.02] active:scale-95 disabled:grayscale"
+                  className="w-full h-13 rounded-xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-highlight/30 transition-all hover:scale-[1.02] active:scale-95 disabled:grayscale"
                   disabled={selectedServices.length === 0 || !selectedTime || isBooking}
                   onClick={handleBook}
                 >
