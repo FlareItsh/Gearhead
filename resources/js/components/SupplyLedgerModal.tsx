@@ -87,13 +87,18 @@ export default function SupplyLedgerModal({
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '—'
+    // Ensure the date string is treated as UTC if it doesn't have a timezone suffix
+    const utcDateString = dateString.includes('Z') || dateString.includes('+')
+      ? dateString
+      : dateString.replace(' ', 'T') + 'Z'
+
     return new Intl.DateTimeFormat('en-PH', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(new Date(dateString))
+    }).format(new Date(utcDateString))
   }
 
   return (

@@ -68,13 +68,13 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
             ->join('suppliers', 'supply_purchases.supplier_id', '=', 'suppliers.supplier_id')
             ->where('supply_purchase_details.supply_id', $supplyId)
             ->when($start_date, function ($query, $start_date) {
-                return $query->whereDate('supply_purchases.purchase_date', '>=', $start_date);
+                return $query->whereDate('supply_purchases.created_at', '>=', $start_date);
             })
             ->when($end_date, function ($query, $end_date) {
-                return $query->whereDate('supply_purchases.purchase_date', '<=', $end_date);
+                return $query->whereDate('supply_purchases.created_at', '<=', $end_date);
             })
             ->select([
-                'supply_purchases.purchase_date as date',
+                'supply_purchases.created_at as date',
                 DB::raw("'Purchase' as type"),
                 DB::raw("CONCAT(suppliers.first_name, ' ', suppliers.last_name) as supplier_name"),
                 DB::raw('NULL as employee_name'),
@@ -89,13 +89,13 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
             ->where('pullout_request_details.supply_id', $supplyId)
             ->where('pullout_requests.is_approve', true)
             ->when($start_date, function ($query, $start_date) {
-                return $query->whereDate(DB::raw('COALESCE(pullout_requests.approve_date, pullout_requests.date_time)'), '>=', $start_date);
+                return $query->whereDate('pullout_requests.created_at', '>=', $start_date);
             })
             ->when($end_date, function ($query, $end_date) {
-                return $query->whereDate(DB::raw('COALESCE(pullout_requests.approve_date, pullout_requests.date_time)'), '<=', $end_date);
+                return $query->whereDate('pullout_requests.created_at', '<=', $end_date);
             })
             ->select([
-                DB::raw('COALESCE(pullout_requests.approve_date, pullout_requests.date_time) as date'),
+                'pullout_requests.created_at as date',
                 DB::raw("'Pullout' as type"),
                 DB::raw('NULL as supplier_name'),
                 DB::raw("CONCAT(employees.first_name, ' ', employees.last_name) as employee_name"),
