@@ -175,7 +175,7 @@ export default function Bookings({
         return {
           icon: AlertCircle,
           variant: 'warning' as const,
-          label: 'Pending Approval',
+          label: 'Pending',
           color: 'text-amber-500',
           bg: 'bg-amber-500/10',
         }
@@ -269,7 +269,7 @@ export default function Bookings({
                 return (
                   <div
                     key={b.service_order_id}
-                    className="group relative flex flex-col overflow-hidden rounded-3xl border border-sidebar-border/50 bg-background transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-highlight/40 hover:shadow-2xl hover:shadow-highlight/5"
+                    className="group relative flex flex-col overflow-hidden rounded-3xl border border-sidebar-border/50 bg-background transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 hover:-translate-y-2 hover:border-primary/20 hover:shadow-2xl hover:shadow-black/10 dark:hover:shadow-white/5"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
                   >
                     {/* Status Accent Bar */}
@@ -293,20 +293,20 @@ export default function Bookings({
                       </div>
 
                       <div className="mb-6 flex-1">
-                        <h4 className="mb-2 text-xl leading-tight font-extrabold text-foreground transition-colors group-hover:text-highlight">
+                        <h4 className="mb-2 text-xl leading-tight font-extrabold text-foreground transition-all group-hover:tracking-tight group-hover:text-primary">
                           {b.services || 'General Service'}
                         </h4>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <CalendarDays className="h-4 w-4 text-highlight" />
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground/80">
+                          <div className="flex items-center gap-1.5 font-bold transition-colors group-hover:text-foreground">
+                            <CalendarDays className="h-4 w-4 text-muted-foreground/60 transition-colors group-hover:text-primary" />
                             {new Date(b.order_date).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
                             })}
                           </div>
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <Clock className="h-4 w-4 text-highlight" />
+                          <div className="flex items-center gap-1.5 font-bold transition-colors group-hover:text-foreground">
+                            <Clock className="h-4 w-4 text-muted-foreground/60 transition-colors group-hover:text-primary" />
                             {new Date(b.order_date).toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -427,7 +427,7 @@ export default function Bookings({
                 {/* Close Button */}
                 <button
                   onClick={closeModal}
-                  className="absolute top-6 right-6 rounded-full bg-secondary/50 p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  className="absolute top-6 right-6 rounded-full bg-secondary/80 p-2.5 text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:rotate-90 active:scale-90"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -488,18 +488,18 @@ export default function Bookings({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-3xl bg-secondary/30 p-6">
+                  <div className="flex items-center justify-between rounded-3xl border border-border/50 bg-muted/40 p-6 shadow-inner">
                     <div className="space-y-1">
-                      <p className="text-xs font-bold tracking-widest text-muted-foreground/60 uppercase">
+                      <p className="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase">
                         Total Amount
                       </p>
-                      <p className="text-3xl font-black text-highlight">
+                      <p className="text-3xl font-black text-foreground">
                         ₱{selectedBooking.total_amount.toLocaleString()}
                       </p>
                     </div>
                     <Badge
                       variant={getStatusConfig(selectedBooking.order_status).variant}
-                      className="px-4 py-1.5 text-xs font-black tracking-widest uppercase"
+                      className="px-4 py-1.5 text-xs font-black tracking-widest uppercase shadow-sm"
                     >
                       {getStatusConfig(selectedBooking.order_status).label}
                     </Badge>
@@ -508,9 +508,9 @@ export default function Bookings({
 
                 <div className="mt-10 flex gap-4">
                   <Button
-                    variant="secondary"
+                    variant="outline"
                     onClick={closeModal}
-                    className="h-12 flex-1 rounded-2xl font-black transition-transform active:scale-95"
+                    className="h-12 flex-1 rounded-2xl border-2 border-primary/20 font-black transition-all hover:bg-primary/5 active:scale-95"
                   >
                     Close
                   </Button>
