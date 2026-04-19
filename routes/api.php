@@ -139,6 +139,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('supplies.update');
     Route::post('/supplies/{id}/increment-stock', [SupplyController::class, 'incrementStock'])
         ->name('supplies.increment-stock');
+    Route::get('/supplies/{id}/ledger', [SupplyController::class, 'getLedger'])
+        ->name('supplies.ledger');
     Route::delete('/supplies/{id}', [SupplyController::class, 'destroy'])
         ->name('supplies.destroy');
 

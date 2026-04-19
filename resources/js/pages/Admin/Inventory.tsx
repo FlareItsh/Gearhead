@@ -40,12 +40,13 @@ import { Head } from '@inertiajs/react'
 import axios from 'axios'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { ChevronDownIcon, Download, Edit2, Search, Trash2 } from 'lucide-react'
+import { ChevronDownIcon, Download, Edit2, History, Search, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import Pagination from '@/components/Pagination'
 import { toast } from 'sonner'
 import { usePermissions } from '@/hooks/use-permissions'
+import SupplyLedgerModal from '@/components/SupplyLedgerModal'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Inventory', href: '/inventory' }]
 
@@ -139,6 +140,10 @@ export default function InventoryPage() {
     email: '',
   })
   const [supplierErrors, setSupplierErrors] = useState<Record<string, string>>({})
+
+  // Ledger state
+  const [showLedgerModal, setShowLedgerModal] = useState(false)
+  const [selectedLedgerItem, setSelectedLedgerItem] = useState<{ id: number; name: string } | null>(null)
 
   useEffect(() => {
     loadSupplies()
@@ -415,6 +420,11 @@ export default function InventoryPage() {
   const closeEditModal = () => {
     setShowEditModal(false)
     setTimeout(() => setEditItem(null), 300)
+  }
+
+  const openLedger = (supply: Supply) => {
+    setSelectedLedgerItem({ id: supply.supply_id, name: supply.supply_name })
+    setShowLedgerModal(true)
   }
 
   const downloadPDF = () => {
@@ -1020,16 +1030,26 @@ export default function InventoryPage() {
                                 <Badge variant={variant}>{status}</Badge>
                               </TableCell>
                               <TableCell className="text-center">
-                                {hasPermission('edit_inventory_item') && (
+                                  {hasPermission('edit_inventory_item') && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => openEditModal(supply)}
+                                      title="Edit Item"
+                                    >
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => openEditModal(supply)}
+                                    onClick={() => openLedger(supply)}
+                                    className="text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10"
+                                    title="View Ledger"
                                   >
-                                    <Edit2 className="h-4 w-4" />
+                                    <History className="h-4 w-4" />
                                   </Button>
-                                )}
-                              </TableCell>
+                                </TableCell>
                             </TableRow>
                           )
                         })}
@@ -1071,16 +1091,25 @@ export default function InventoryPage() {
                               </div>
                             </div>
                           </div>
-                          {hasPermission('edit_inventory_item') && (
+                          <div className="flex flex-col gap-2 mt-2 shrink-0">
+                            {hasPermission('edit_inventory_item') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditModal(supply)}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => openEditModal(supply)}
-                              className="mt-2 shrink-0"
+                              onClick={() => openLedger(supply)}
+                              className="text-yellow-500"
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <History className="h-4 w-4" />
                             </Button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     )
@@ -1256,6 +1285,13 @@ export default function InventoryPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        {/* LEDGER MODAL */}
+        <SupplyLedgerModal
+          open={showLedgerModal}
+          onOpenChange={setShowLedgerModal}
+          supplyId={selectedLedgerItem?.id || null}
+          supplyName={selectedLedgerItem?.name || null}
+        />
       </div>
     </AppLayout>
   )

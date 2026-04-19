@@ -93,4 +93,14 @@ class SupplyController extends Controller
 
         return response()->json(['message' => 'Deleted successfully'], 204);
     }
+
+    public function getLedger(Request $request, int $id)
+    {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $ledger = $this->repo->getLedger($id, $startDate, $endDate);
+
+        return response()->json($ledger);
+    }
 }

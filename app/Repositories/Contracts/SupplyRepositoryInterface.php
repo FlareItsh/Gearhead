@@ -17,4 +17,6 @@ interface SupplyRepositoryInterface
     public function incrementStock(int $id, float $quantity);
 
     public function delete(int $id);
+
+    public function getLedger(int $supplyId, ?string $start_date = null, ?string $end_date = null);
 }
