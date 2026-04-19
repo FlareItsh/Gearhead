@@ -141,7 +141,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
             ->join('services as s', 'sv.service_id', '=', 's.service_id')
             ->whereIn('so.status', ['pending', 'in_progress'])
-            ->whereRaw('DATE(so.order_date) >= CURDATE()')
+            ->whereDate('so.order_date', '>=', now()->toDateString())
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
@@ -287,6 +287,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                     ->where('ql.status', '=', 'waiting');
             })
             ->where('so.status', 'pending')
+            ->whereDate('so.order_date', $today)
             ->where(function ($query) {
                 $query->where('so.order_type', 'R')
                     ->orWhereNotNull('ql.queue_line_id');
@@ -356,7 +357,13 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
 
     public function getActiveOrders()
     {
-        return ServiceOrder::whereIn('status', ['pending', 'in_progress'])
+        return ServiceOrder::where(function ($query) {
+            $query->where('status', 'in_progress')
+                ->orWhere(function ($q) {
+                    $q->where('status', 'pending')
+                        ->whereDate('order_date', now()->toDateString());
+                });
+        })
             ->with([
                 'user:user_id,first_name,last_name,email,phone_number',
                 'details',
