@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head, Link, router } from '@inertiajs/react'
 import axios from 'axios'
-import { AlertCircle, Camera, CheckCircle2, Star, Upload, X } from 'lucide-react'
+import { AlertCircle, Camera, CheckCircle2, Star, Upload, X, QrCode } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 axios.defaults.withCredentials = true
@@ -48,11 +48,18 @@ interface ServiceOrder {
   employee_id?: number
 }
 
-interface Props {
-  bayId: number
+interface GcashSetting {
+  account_name: string
+  account_number: string
+  qr_code_url: string | null
 }
 
-export default function RegistryPayment({ bayId }: Props) {
+interface Props {
+  bayId: number
+  gcashSettings: GcashSetting | null
+}
+
+export default function RegistryPayment({ bayId, gcashSettings }: Props) {
   const [method, setMethod] = useState<'cash' | 'gcash'>('cash')
   const [reference, setReference] = useState('')
   const [paidAmount, setPaidAmount] = useState<number>(0)
@@ -529,6 +536,36 @@ export default function RegistryPayment({ bayId }: Props) {
                           className="mt-2"
                         />
                       </div>
+
+                      {gcashSettings && (
+                        <div className="flex flex-col items-center justify-center space-y-4 rounded-xl border-2 border-highlight/20 bg-highlight/5 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                          <div className="flex flex-col items-center space-y-1 text-center">
+                            <p className="text-xs font-bold uppercase tracking-wider text-highlight">Scan to Pay</p>
+                            <p className="text-xl font-black text-foreground">{gcashSettings.account_name}</p>
+                            <p className="font-medium text-highlight">{gcashSettings.account_number}</p>
+                          </div>
+                          
+                          {gcashSettings.qr_code_url ? (
+                            <div className="relative group p-3 bg-white rounded-2xl shadow-xl transition-all duration-300 hover:scale-105">
+                              <img 
+                                src={gcashSettings.qr_code_url} 
+                                alt="GCash QR Code" 
+                                className="h-64 w-64 object-contain rounded-lg"
+                              />
+                              <div className="absolute inset-0 bg-highlight/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-64 w-64 bg-muted/50 rounded-2xl border-2 border-dashed border-muted-foreground/25">
+                              <QrCode className="h-12 w-12 text-muted-foreground/40 mb-2" />
+                              <p className="text-xs text-muted-foreground font-medium">No QR Code Available</p>
+                            </div>
+                          )}
+                          
+                          <p className="text-[10px] text-muted-foreground text-center max-w-[200px]">
+                            Please scan the QR code above or use the account details to pay via GCash.
+                          </p>
+                        </div>
+                      )}
 
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">

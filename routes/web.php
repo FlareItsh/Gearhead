@@ -77,8 +77,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // THIS IS THE ONLY LINE YOU NEED TO CHANGE
     Route::get('/registry/{id}/payment', function ($id) {
-        return Inertia::render('Admin/RegistryPayment', [  // ← Added "Admin/"
+        $gcashSettings = \App\Models\GcashSetting::first();
+
+        return Inertia::render('Admin/RegistryPayment', [
             'bayId' => (int) $id,
+            'gcashSettings' => $gcashSettings,
         ]);
     })->name('admin.registry.payment')->middleware('role:admin');
 

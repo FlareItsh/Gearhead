@@ -25,4 +25,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
+
+    Route::get('settings/gcash', [\App\Http\Controllers\Settings\GcashController::class, 'edit'])
+        ->name('settings.gcash.edit');
+    Route::post('settings/gcash', [\App\Http\Controllers\Settings\GcashController::class, 'update'])
+        ->name('settings.gcash.update');
 });
