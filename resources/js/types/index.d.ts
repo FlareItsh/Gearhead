@@ -22,11 +22,24 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface Discount {
+    discount_id: number;
+    name: string;
+    type: 'fixed' | 'percentage';
+    value: number;
+    valid_from: string | null;
+    valid_to: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     loyaltyThreshold: number;
+    activeDiscount: Discount | null;
     sidebarOpen: boolean;
     [key: string]: unknown;
 }

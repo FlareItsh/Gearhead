@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout'
 import { Head, Link, router, usePage } from '@inertiajs/react'
 import { type BreadcrumbItem, type SharedData } from '@/types'
 import axios from 'axios'
-import { AlertCircle, Camera, CheckCircle2, Star, Upload, X, QrCode } from 'lucide-react'
+import { AlertCircle, Camera, CheckCircle2, Star, Upload, X, QrCode, Tag } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 axios.defaults.withCredentials = true
@@ -60,7 +60,7 @@ interface Props {
 }
 
 export default function RegistryPayment({ bayId, gcashSettings }: Props) {
-  const { loyaltyThreshold } = usePage<SharedData>().props as SharedData
+  const { loyaltyThreshold, activeDiscount } = usePage<SharedData>().props as SharedData
   const [method, setMethod] = useState<'cash' | 'gcash'>('cash')
   const [reference, setReference] = useState('')
   const [paidAmount, setPaidAmount] = useState<number>(0)
@@ -160,14 +160,29 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
       }
     }) || []
 
-  const details = {
-    customerName: order.user ? `${order.user.first_name} ${order.user.last_name}` : 'Walk-in',
-    assignedEmployee: order.employee
-      ? `${order.employee.first_name} ${order.employee.last_name}`
-      : null,
-    services: servicesList,
-    total: servicesList.reduce((sum, s) => sum + s.price, 0),
-  }
+  const details = (() => {
+    const subtotal = servicesList.reduce((sum, s) => sum + s.price, 0)
+
+    let reduction = 0
+    if (activeDiscount && !useLoyaltyPoints) {
+      if (activeDiscount.type === 'percentage') {
+        reduction = (subtotal * activeDiscount.value) / 100
+      } else {
+        reduction = activeDiscount.value
+      }
+    }
+
+    return {
+      customerName: order.user ? `${order.user.first_name} ${order.user.last_name}` : 'Walk-in',
+      assignedEmployee: order.employee
+        ? `${order.employee.first_name} ${order.employee.last_name}`
+        : null,
+      services: servicesList,
+      subtotal,
+      reduction,
+      total: Math.round(subtotal - reduction),
+    }
+  })()
 
   const change = method === 'cash' ? Math.max(0, paidAmount - details.total) : 0
 
@@ -648,9 +663,24 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                     </>
                   ) : (
                     <>
-                      <p className="mt-4 text-6xl font-black tracking-tight">
-                        ₱{details.total.toLocaleString()}
-                      </p>
+                      {details.reduction > 0 ? (
+                        <div className="mt-4 flex flex-col items-center">
+                          <p className="text-2xl opacity-60 line-through">
+                            ₱{details.subtotal.toLocaleString()}
+                          </p>
+                          <p className="text-6xl font-black tracking-tight">
+                            ₱{details.total.toLocaleString()}
+                          </p>
+                          <div className="mt-2 flex items-center gap-1 text-sm font-bold text-green-500">
+                            <Tag className="h-4 w-4" />
+                            {activeDiscount?.name}: -₱{Math.round(details.reduction).toLocaleString()}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-4 text-6xl font-black tracking-tight">
+                          ₱{details.total.toLocaleString()}
+                        </p>
+                      )}
                       <p className="mt-3 text-sm opacity-70">Total Amount Due</p>
                     </>
                   )}

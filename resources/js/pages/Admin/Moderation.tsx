@@ -9,8 +9,13 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle, Upload, QrCode, Gift, CreditCard } from 'lucide-react';
+import { LoaderCircle, Upload, QrCode, Gift, CreditCard, Plus, Trash2, Edit2, Calendar as CalendarIcon, Tag, Clock, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { Discount } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface GcashSettings {
     account_name: string;
@@ -22,6 +27,7 @@ interface GcashSettings {
 interface ModerationProps {
     loyaltyThreshold: number;
     gcashSettings: GcashSettings;
+    discounts: Discount[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,7 +37,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Moderation({ loyaltyThreshold, gcashSettings }: ModerationProps) {
+export default function Moderation({ loyaltyThreshold, gcashSettings, discounts }: ModerationProps) {
     // Loyalty Form
     const loyaltyForm = useForm({
         threshold: loyaltyThreshold,
@@ -70,6 +76,78 @@ export default function Moderation({ loyaltyThreshold, gcashSettings }: Moderati
             preserveScroll: true,
             forceFormData: true,
         });
+    };
+
+    // Discount Form
+    const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const discountForm = useForm({
+        name: '',
+        type: 'percentage' as 'fixed' | 'percentage',
+        value: 0,
+        valid_from: '',
+        valid_to: '',
+        is_active: true,
+    });
+
+    const openCreateDialog = () => {
+        setEditingDiscount(null);
+        discountForm.reset();
+        setIsDialogOpen(true);
+    };
+
+    const openEditDialog = (discount: Discount) => {
+        setEditingDiscount(discount);
+        discountForm.setData({
+            name: discount.name,
+            type: discount.type,
+            value: discount.value,
+            valid_from: discount.valid_from ? discount.valid_from.substring(0, 16) : '',
+            valid_to: discount.valid_to ? discount.valid_to.substring(0, 16) : '',
+            is_active: discount.is_active,
+        });
+        setIsDialogOpen(true);
+    };
+
+    const submitDiscount = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (editingDiscount) {
+            discountForm.put(route('admin.moderation.discounts.update', editingDiscount.discount_id), {
+                onSuccess: () => setIsDialogOpen(false),
+                preserveScroll: true,
+            });
+        } else {
+            discountForm.post(route('admin.moderation.discounts.store'), {
+                onSuccess: () => setIsDialogOpen(false),
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const deleteDiscount = (id: number) => {
+        if (confirm('Are you sure you want to delete this discount?')) {
+            useForm().delete(route('admin.moderation.discounts.destroy', id), {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const getStatusBadge = (discount: Discount) => {
+        const now = new Date();
+        const from = discount.valid_from ? new Date(discount.valid_from) : null;
+        const to = discount.valid_to ? new Date(discount.valid_to) : null;
+
+        if (!discount.is_active) {
+            return <Badge variant="destructive">Inactive</Badge>;
+        }
+        if (from && from > now) {
+            return <Badge variant="secondary">Upcoming</Badge>;
+        }
+        if (to && to < now) {
+            return <Badge variant="outline">Expired</Badge>;
+        }
+        return <Badge variant="highlight">Active</Badge>;
     };
 
     return (
@@ -233,6 +311,194 @@ export default function Moderation({ loyaltyThreshold, gcashSettings }: Moderati
                                     </Transition>
                                 </div>
                             </form>
+                        </CardContent>
+                    </Card>
+
+                    {/* Global Discounts */}
+                    <Card>
+                        <CardHeader className="py-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Tag className="h-5 w-5 text-highlight" />
+                                        Global Discounts
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Apply discounts to all services. Active discounts automatically apply at checkout.
+                                    </CardDescription>
+                                </div>
+                                <Button variant="highlight" onClick={openCreateDialog}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Discount
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="py-8">
+                            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                <DialogContent className="sm:max-w-lg">
+                                    <DialogHeader>
+                                        <DialogTitle>{editingDiscount ? 'Edit Discount' : 'Create New Discount'}</DialogTitle>
+                                        <DialogDescription>
+                                            Configure a promotional discount for all services.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <form onSubmit={submitDiscount} className="space-y-4 py-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="discount_name">Discount Name</Label>
+                                            <Input
+                                                id="discount_name"
+                                                value={discountForm.data.name}
+                                                onChange={(e) => discountForm.setData('name', e.target.value)}
+                                                placeholder="e.g. Summer Special"
+                                                required
+                                            />
+                                            <InputError message={discountForm.errors.name} />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="discount_type">Type</Label>
+                                                <Select
+                                                    value={discountForm.data.type}
+                                                    onValueChange={(val: any) => discountForm.setData('type', val)}
+                                                >
+                                                    <SelectTrigger id="discount_type">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="percentage">Percentage (%)</SelectItem>
+                                                        <SelectItem value="fixed">Fixed (₱)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <InputError message={discountForm.errors.type} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="discount_value">Value</Label>
+                                                <Input
+                                                    id="discount_value"
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={discountForm.data.value}
+                                                    onChange={(e) => discountForm.setData('value', parseFloat(e.target.value))}
+                                                    required
+                                                />
+                                                <InputError message={discountForm.errors.value} />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="valid_from">Valid From (Optional)</Label>
+                                                <Input
+                                                    id="valid_from"
+                                                    type="datetime-local"
+                                                    value={discountForm.data.valid_from}
+                                                    onChange={(e) => discountForm.setData('valid_from', e.target.value)}
+                                                />
+                                                <InputError message={discountForm.errors.valid_from} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="valid_to">Valid To (Optional)</Label>
+                                                <Input
+                                                    id="valid_to"
+                                                    type="datetime-local"
+                                                    value={discountForm.data.valid_to}
+                                                    onChange={(e) => discountForm.setData('valid_to', e.target.value)}
+                                                />
+                                                <InputError message={discountForm.errors.valid_to} />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="is_active"
+                                                checked={discountForm.data.is_active}
+                                                onChange={(e) => discountForm.setData('is_active', e.target.checked)}
+                                                className="h-4 w-4 rounded border-gray-300 text-highlight focus:ring-highlight"
+                                            />
+                                            <Label htmlFor="is_active">Enable this discount</Label>
+                                        </div>
+                                    </form>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                                        <Button variant="highlight" onClick={submitDiscount} disabled={discountForm.processing}>
+                                            {discountForm.processing && <LoaderCircle className="h-4 w-4 animate-spin mr-2" />}
+                                            {editingDiscount ? 'Update Discount' : 'Create Discount'}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Discount Name</TableHead>
+                                            <TableHead>Reduction</TableHead>
+                                            <TableHead>Duration</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {discounts.length > 0 ? (
+                                            discounts.map((discount) => (
+                                                <TableRow key={discount.discount_id}>
+                                                    <TableCell className="font-medium">{discount.name}</TableCell>
+                                                    <TableCell>
+                                                        {discount.type === 'percentage' 
+                                                            ? `${discount.value}%` 
+                                                            : `₱${parseFloat(discount.value.toString()).toLocaleString()}`}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center gap-1">
+                                                                <Clock className="h-3 w-3" />
+                                                                {discount.valid_from 
+                                                                    ? new Date(discount.valid_from).toLocaleDateString() 
+                                                                    : 'Always'}
+                                                                {' — '}
+                                                                {discount.valid_to 
+                                                                    ? new Date(discount.valid_to).toLocaleDateString() 
+                                                                    : 'No Expiry'}
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {getStatusBadge(discount)}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => openEditDialog(discount)}
+                                                            >
+                                                                <Edit2 className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="text-destructive hover:text-destructive"
+                                                                onClick={() => deleteDiscount(discount.discount_id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                    No discounts found. Create your first promotion above!
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

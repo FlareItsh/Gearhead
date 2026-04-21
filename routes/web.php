@@ -112,15 +112,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:admin');
 
     // Moderation
-    Route::get('/moderation', [\App\Http\Controllers\ModerationController::class, 'index'])
-        ->name('admin.moderation')
-        ->middleware('role:admin');
-    Route::post('/moderation/loyalty', [\App\Http\Controllers\ModerationController::class, 'updateLoyalty'])
-        ->name('admin.moderation.loyalty')
-        ->middleware('role:admin');
-    Route::post('/moderation/gcash', [\App\Http\Controllers\ModerationController::class, 'updateGcash'])
-        ->name('admin.moderation.gcash')
-        ->middleware('role:admin');
+    Route::group(['middleware' => 'role:admin'], function () {
+        Route::get('/moderation', [\App\Http\Controllers\ModerationController::class, 'index'])->name('admin.moderation');
+        Route::post('/moderation/loyalty', [\App\Http\Controllers\ModerationController::class, 'updateLoyalty'])->name('admin.moderation.loyalty');
+        Route::post('/moderation/gcash', [\App\Http\Controllers\ModerationController::class, 'updateGcash'])->name('admin.moderation.gcash');
+        Route::post('/moderation/discounts', [\App\Http\Controllers\ModerationController::class, 'storeDiscount'])->name('admin.moderation.discounts.store');
+        Route::put('/moderation/discounts/{id}', [\App\Http\Controllers\ModerationController::class, 'updateDiscount'])->name('admin.moderation.discounts.update');
+        Route::delete('/moderation/discounts/{id}', [\App\Http\Controllers\ModerationController::class, 'destroyDiscount'])->name('admin.moderation.discounts.destroy');
+    });
 });
 
 // * Auth routes

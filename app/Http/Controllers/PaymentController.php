@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
+use App\Models\Discount;
 use App\Models\QueueLine;
 use App\Repositories\Contracts\BayRepositoryInterface;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
@@ -235,7 +236,7 @@ class PaymentController extends Controller
 
         $userId = $validated['user_id'];
         $completedBookings = $this->serviceOrders->countCompletedBookingsForUser($userId);
-        
+
         $threshold = (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9);
 
         $isEligible = ($completedBookings + 1) % $threshold === 0;
@@ -301,11 +302,24 @@ class PaymentController extends Controller
                 $screenshotPath = 'receipts/'.$filename;
             }
 
+            // Calculate total and apply discount if not loyalty
+            $finalAmount = (float) ($validated['amount'] ?? 0);
+            if (! $isLoyaltyRedemption) {
+                // Fetch best discount and recalculate to ensure integrity
+                $bestDiscount = Discount::getBestActiveDiscount($finalAmount);
+                if ($bestDiscount) {
+                    $reduction = $bestDiscount->calculateReduction($finalAmount);
+                    $finalAmount = round($finalAmount - $reduction);
+                }
+            } else {
+                $finalAmount = 0.00;
+            }
+
             // Create payment record
             $payment = $this->repo->create([
                 'service_order_id' => $validated['service_order_id'],
                 'payment_method' => $isLoyaltyRedemption ? 'loyalty' : ($validated['payment_method'] ?? 'cash'),
-                'amount' => $isLoyaltyRedemption ? 0.00 : ($validated['amount'] ?? 0),
+                'amount' => $finalAmount,
                 'gcash_reference' => $validated['gcash_reference'] ?? null,
                 'gcash_screenshot' => $screenshotPath,
                 'is_point_redeemed' => $isLoyaltyRedemption,
