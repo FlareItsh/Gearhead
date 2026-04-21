@@ -28,6 +28,7 @@ import {
   UserCheck,
   UsersRound,
   Wrench,
+  Settings2,
 } from 'lucide-react'
 import AppLogo from './app-logo'
 
@@ -94,6 +95,11 @@ const mainNavItems: NavItem[] = [
     href: '/reports',
     icon: ChartColumnBig,
   },
+  {
+    title: 'Moderation',
+    href: '/moderation',
+    icon: Settings2,
+  },
 ]
 
 // Nav items for customer users. Exported so you can import and pass into
@@ -159,6 +165,7 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
       Employees: 'view_employees',
       Transactions: 'view_transactions',
       Reports: 'view_reports',
+      Moderation: 'manage_settings',
     }
 
     adminNavItems = mainNavItems.filter((item) => {

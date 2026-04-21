@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AppSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $request->user()->permissions,
                 ] : null,
             ],
+            'loyaltyThreshold' => (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

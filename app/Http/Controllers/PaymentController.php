@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\QueueLine;
 use App\Repositories\Contracts\BayRepositoryInterface;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
@@ -217,8 +218,10 @@ class PaymentController extends Controller
         // Count completed service orders with payments for this user
         $completedBookings = $this->serviceOrders->countCompletedBookingsForUser($userId);
 
-        // Check if next booking would be the 9th (0, 9, 18, 27, etc.)
-        return ($completedBookings + 1) % 9 === 0;
+        $threshold = (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9);
+
+        // Check if next booking would be the threshold (0, 9, 18, 27, etc.)
+        return ($completedBookings + 1) % $threshold === 0;
     }
 
     /**
@@ -232,15 +235,18 @@ class PaymentController extends Controller
 
         $userId = $validated['user_id'];
         $completedBookings = $this->serviceOrders->countCompletedBookingsForUser($userId);
+        
+        $threshold = (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9);
 
-        $isEligible = ($completedBookings + 1) % 9 === 0;
-        $pointsEarned = $completedBookings % 9;
+        $isEligible = ($completedBookings + 1) % $threshold === 0;
+        $pointsEarned = $completedBookings % $threshold;
 
         return response()->json([
             'is_eligible' => $isEligible,
             'completed_bookings' => $completedBookings,
             'points_earned' => $pointsEarned,
-            'points_needed' => 9 - $pointsEarned,
+            'points_needed' => $threshold - $pointsEarned,
+            'threshold' => $threshold,
         ]);
     }
 

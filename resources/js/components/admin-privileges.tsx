@@ -69,6 +69,7 @@ export const PRIVILEGES = [
     children: [{ id: 'export_transactions_pdf', label: 'Export PDF' }],
   },
   { id: 'view_reports', label: 'View Reports' },
+  { id: 'manage_settings', label: 'Manage System Settings' },
 ]
 
 interface AdminPrivilegesProps {

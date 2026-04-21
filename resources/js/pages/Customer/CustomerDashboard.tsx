@@ -31,9 +31,9 @@ const CustomerDashboard: React.FC = () => {
   const paymentsCount = pageProps.paymentsCount ?? 0
   const totalSpent = pageProps.totalSpent ?? 0
 
-  // Loyalty logic: 9 visits = reward
-  const loyaltyProgress = paymentsCount % 9
-  const loyaltyTarget = 9
+  const loyaltyThreshold = pageProps.loyaltyThreshold ?? 9
+  const loyaltyProgress = paymentsCount % loyaltyThreshold
+  const loyaltyTarget = loyaltyThreshold
   const progressPercentage = (loyaltyProgress / loyaltyTarget) * 100
 
   const [upcomingBookings, setUpcomingBookings] = useState<
@@ -180,7 +180,7 @@ const CustomerDashboard: React.FC = () => {
                   Loyalty Rewards
                 </h4>
                 <p className="text-sm font-medium text-muted-foreground/80">
-                  Every 9th wash is on us!
+                  Every {loyaltyThreshold}th wash is on us!
                 </p>
               </div>
               <div className="text-right">
@@ -199,8 +199,8 @@ const CustomerDashboard: React.FC = () => {
               />
             </div>
 
-            <div className="mt-8 grid grid-cols-9 gap-3">
-              {Array.from({ length: 9 }).map((_, i) => (
+            <div className={`mt-8 grid gap-3`} style={{ gridTemplateColumns: `repeat(${loyaltyThreshold}, minmax(0, 1fr))` }}>
+              {Array.from({ length: loyaltyThreshold }).map((_, i) => (
                 <div
                   key={i}
                   className={`flex h-10 items-center justify-center rounded-xl border-2 transition-all ${

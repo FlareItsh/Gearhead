@@ -37,13 +37,6 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
         },
     ];
 
-    if (isAdmin) {
-        sidebarNavItems.push({
-            title: 'Shop GCash',
-            href: '/settings/gcash',
-            icon: null,
-        });
-    }
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;

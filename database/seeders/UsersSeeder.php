@@ -43,6 +43,7 @@ class UsersSeeder extends Seeder
             'view_transactions',
             'export_transactions_pdf',
             'view_reports',
+            'manage_settings',
         ];
 
         $users = [

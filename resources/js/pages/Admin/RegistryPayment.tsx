@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import AppLayout from '@/layouts/app-layout'
-import { type BreadcrumbItem } from '@/types'
-import { Head, Link, router } from '@inertiajs/react'
+import { Head, Link, router, usePage } from '@inertiajs/react'
+import { type BreadcrumbItem, type SharedData } from '@/types'
 import axios from 'axios'
 import { AlertCircle, Camera, CheckCircle2, Star, Upload, X, QrCode } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -60,6 +60,7 @@ interface Props {
 }
 
 export default function RegistryPayment({ bayId, gcashSettings }: Props) {
+  const { loyaltyThreshold } = usePage<SharedData>().props as SharedData
   const [method, setMethod] = useState<'cash' | 'gcash'>('cash')
   const [reference, setReference] = useState('')
   const [paidAmount, setPaidAmount] = useState<number>(0)
@@ -415,7 +416,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           This customer has completed {loyaltyInfo?.completed_bookings} services.
-                          Their 9th service is <strong>automatically free</strong>.
+                          Their {loyaltyThreshold}th service is <strong>automatically free</strong>.
                         </p>
                       </div>
                     </div>
@@ -440,7 +441,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                       <div>
                         <p className="font-medium text-foreground">Loyalty Progress</p>
                         <p className="text-sm text-muted-foreground">
-                          {loyaltyInfo.points_earned} / 9 services completed
+                          {loyaltyInfo.points_earned} / {loyaltyThreshold} services completed
                         </p>
                       </div>
                     </div>
@@ -458,7 +459,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                     <div
                       className="h-full bg-yellow-400 transition-all duration-500"
                       style={{
-                        width: `${(loyaltyInfo.points_earned / 9) * 100}%`,
+                        width: `${(loyaltyInfo.points_earned / loyaltyThreshold) * 100}%`,
                       }}
                     />
                   </div>
@@ -642,7 +643,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                       <p className="mt-3 text-sm opacity-90">Loyalty Points Redeemed</p>
                       <div className="mt-4 flex items-center justify-center gap-2">
                         <Star className="h-5 w-5 fill-white" />
-                        <span className="text-lg font-bold">9th Service Free!</span>
+                        <span className="text-lg font-bold">{loyaltyThreshold}th Service Free!</span>
                       </div>
                     </>
                   ) : (
