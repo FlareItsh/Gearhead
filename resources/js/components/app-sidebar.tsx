@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { dashboard } from '@/routes'
-import { type NavItem } from '@/types'
+import { type NavGroup, type NavItem } from '@/types'
 import { router, usePage } from '@inertiajs/react'
 import {
   Banknote,
@@ -39,71 +39,99 @@ interface AppSidebarProps {
   roleNavItems?: Record<string, NavItem[]>
 }
 
-const mainNavItems: NavItem[] = [
+const adminNavGroups: { title: string; items: NavItem[] }[] = [
   {
-    title: 'Dashboard',
-    href: dashboard(),
-    icon: LayoutDashboard,
+    title: 'Core',
+    items: [
+      {
+        title: 'Dashboard',
+        href: dashboard(),
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Registry',
+        href: '/registry',
+        icon: Computer,
+      },
+    ],
   },
   {
-    title: 'Registry',
-    href: '/registry',
-    icon: Computer,
-  },
-  {
-    title: 'Bookings',
-    href: '/bookings',
-    icon: CalendarCog,
-  },
-  {
-    title: 'Bays',
-    href: '/bays',
-    icon: TableCellsMerge,
-  },
-  {
-    title: 'Services',
-    href: '/services',
-    icon: Wrench,
+    title: 'Operations',
+    items: [
+      {
+        title: 'Bookings',
+        href: '/bookings',
+        icon: CalendarCog,
+      },
+      {
+        title: 'Bays',
+        href: '/bays',
+        icon: TableCellsMerge,
+      },
+      {
+        title: 'Services',
+        href: '/services',
+        icon: Wrench,
+      },
+    ],
   },
   {
     title: 'Inventory',
-    href: '/inventory',
-    icon: Package,
+    items: [
+      {
+        title: 'Inventory',
+        href: '/inventory',
+        icon: Package,
+      },
+      {
+        title: 'Pullout Requests',
+        href: '/pullout-requests-page',
+        icon: PackageOpen,
+      },
+    ],
   },
   {
-    title: 'Pullout Requests',
-    href: '/pullout-requests-page',
-    icon: PackageOpen,
+    title: 'Community',
+    items: [
+      {
+        title: 'Users',
+        href: '/customers',
+        icon: UsersRound,
+      },
+      {
+        title: 'Employees',
+        href: '/staffs',
+        icon: UserCheck,
+      },
+    ],
   },
   {
-    title: 'Users',
-    href: '/customers',
-    icon: UsersRound,
+    title: 'Finance',
+    items: [
+      {
+        title: 'Transactions',
+        href: '/transactions',
+        icon: BanknoteArrowUp,
+      },
+      {
+        title: 'Reports',
+        href: '/reports',
+        icon: ChartColumnBig,
+      },
+    ],
   },
   {
-    title: 'Employees',
-    href: '/staffs',
-    icon: UserCheck,
-  },
-  {
-    title: 'Transactions',
-    href: '/transactions',
-    icon: BanknoteArrowUp,
-  },
-  {
-    title: 'Reports',
-    href: '/reports',
-    icon: ChartColumnBig,
-  },
-  {
-    title: 'Moderation',
-    href: '/moderation',
-    icon: Settings2,
+    title: 'System',
+    items: [
+      {
+        title: 'Moderation',
+        href: '/moderation',
+        icon: Settings2,
+      },
+    ],
   },
 ]
 
-// Nav items for customer users. Exported so you can import and pass into
-// AppSidebar via the `roleNavItems` prop, e.g. { customer: customerNavItems }
 export const customerNavItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -141,50 +169,54 @@ const footerNavItems: NavItem[] = [
 ]
 
 export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
-  // Resolve the current role. Priority:
-  // 1. `userRole` prop if provided by parent
-  // 2. `page.props.auth.user.role` from Inertia (if available)
-  // 3. default to 'admin'
   const page = usePage()
   const inertiaUser = (page.props as any)?.auth?.user
   const inertiaRole = inertiaUser?.role
   const userPermissions = inertiaUser?.permissions
   const currentRole = userRole ?? inertiaRole ?? 'admin'
 
-  // Filter mainNavItems based on permissions if the user is an admin
-  let adminNavItems = mainNavItems
-  if (currentRole === 'admin' && Array.isArray(userPermissions)) {
-    const permissionMap: Record<string, string> = {
-      Dashboard: 'view_dashboard',
-      Registry: 'view_registry',
-      Bookings: 'view_bookings',
-      Bays: 'view_bays',
-      Services: 'view_services',
-      Inventory: 'view_inventory',
-      'Pullout Requests': 'view_pullout_requests',
-      Employees: 'view_employees',
-      Transactions: 'view_transactions',
-      Reports: 'view_reports',
-      Moderation: 'manage_settings',
-    }
-
-    adminNavItems = mainNavItems.filter((item) => {
-      const requiredPerm = permissionMap[item.title]
-      if (!requiredPerm) return true // no permission map defined, allow
-      return userPermissions.includes(requiredPerm)
-    })
+  // Permission Map
+  const permissionMap: Record<string, string> = {
+    Dashboard: 'view_dashboard',
+    Registry: 'view_registry',
+    Bookings: 'view_bookings',
+    Bays: 'view_bays',
+    Services: 'view_services',
+    Inventory: 'view_inventory',
+    'Pullout Requests': 'view_pullout_requests',
+    Employees: 'view_employees',
+    Transactions: 'view_transactions',
+    Reports: 'view_reports',
+    Moderation: 'manage_settings',
   }
 
-  // Determine which nav items to render. Priority:
-  // 1. If roleNavItems is provided and contains the current role, use that.
-  // 2. If role is 'customer' use exported customerNavItems.
-  // 3. Otherwise use the filtered adminNavItems.
-  const itemsToRender: NavItem[] =
-    roleNavItems && roleNavItems[currentRole]
-      ? roleNavItems[currentRole]
-      : currentRole === 'customer'
-        ? customerNavItems
-        : adminNavItems
+  // Determine groups to render
+  let groupsToRender: NavGroup[] = []
+
+  if (currentRole === 'admin') {
+    groupsToRender = adminNavGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (!Array.isArray(userPermissions)) return true
+          const requiredPerm = permissionMap[item.title]
+          if (!requiredPerm) return true
+          return userPermissions.includes(requiredPerm)
+        }),
+      }))
+      .filter((group) => group.items.length > 0)
+  } else {
+    // For customers or roles with override
+    const items =
+      roleNavItems && roleNavItems[currentRole] ? roleNavItems[currentRole] : customerNavItems
+
+    groupsToRender = [
+      {
+        title: 'Platform',
+        items: items,
+      },
+    ]
+  }
 
   return (
     <Sidebar
@@ -210,8 +242,8 @@ export function AppSidebar({ userRole, roleNavItems }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
-        <NavMain items={itemsToRender} />
+      <SidebarContent className="custom-scrollbar">
+        <NavMain groups={groupsToRender} />
       </SidebarContent>
 
       <SidebarFooter>
