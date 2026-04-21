@@ -68,22 +68,47 @@ class UsersSeeder extends Seeder
                 'email' => 'customer@example.com',
                 'phone_number' => '9103139161',
                 'address' => 'Panabo City',
-                'password' => Hash::make('customer123'),
+                'password' => Hash::make('password'),
                 'role' => 'customer',
                 'permissions' => null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
         ];
+
+        // Generate 20 more customers
+        for ($i = 10; $i < 30; $i++) {
+            $users[] = [
+                'user_id' => $i,
+                'first_name' => 'Customer' . $i,
+                'middle_name' => null,
+                'last_name' => 'Test',
+                'email' => 'customer' . $i . '@example.com',
+                'phone_number' => '9' . rand(100000000, 999999999),
+                'address' => 'Test Address ' . $i,
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'permissions' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
         foreach ($users as $u) {
             if (! DB::table('users')->where('user_id', $u['user_id'])->exists()) {
                 DB::table('users')->insert($u);
             } else {
-                // Update existing user to ensure they have the latest permissions
-                DB::table('users')->where('user_id', $u['user_id'])->update([
-                    'permissions' => $u['permissions'],
+                $updateData = [
                     'updated_at' => $now,
-                ]);
+                ];
+                if (isset($u['permissions'])) {
+                    $updateData['permissions'] = $u['permissions'];
+                }
+                // Only reset customer passwords to "password"
+                if ($u['role'] === 'customer') {
+                    $updateData['password'] = Hash::make('password');
+                }
+                DB::table('users')->where('user_id', $u['user_id'])->update($updateData);
             }
         }
     }

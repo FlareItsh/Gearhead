@@ -36,10 +36,14 @@ class PaymentsSeeder extends Seeder
             $created = $monthTimeline[$index % count($monthTimeline)];
             $updated = date('Y-m-d H:i:s', strtotime($created . ' +2 hours'));
 
+            $order = DB::table('service_orders')->where('service_order_id', $orderId)->first();
+            $employeeId = $order->employee_id ?? rand(1, 10);
+
             DB::table('payments')->updateOrInsert(
                 ['payment_id' => $index + 1],
                 [
                     'service_order_id' => $orderId,
+                    'employee_id' => $employeeId,
                     'amount' => $amount,
                     'payment_method' => $payment_method,
                     'is_point_redeemed' => $is_point_redeemed,

@@ -18,7 +18,7 @@ class ServiceOrderDetailsSeeder extends Seeder
         }
 
         $details = [];
-        for ($orderId = 1; $orderId <= 200; $orderId++) {
+        for ($orderId = 1; $orderId <= 100; $orderId++) {
             $numDetails = rand(1, min(3, count($variantIds))); // Reduced for realistic data, capped by total variants
             $selectedVariants = [];
             // Pick unique random keys

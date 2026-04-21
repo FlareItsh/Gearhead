@@ -25,7 +25,7 @@ class SupplyPurchasesSeeder extends Seeder
         }
 
         $purchases = [];
-        for ($i = 1; $i <= 100; $i++) { // Tons, say 100
+        for ($i = 1; $i <= 50; $i++) { // Reduced to 50
             $purchaseDate = $monthTimeline[$i % count($monthTimeline)];
             $created = date('Y-m-d H:i:s', strtotime($purchaseDate . ' -' . rand(1, 24) . ' hours'));
             $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 12) . ' hours'));

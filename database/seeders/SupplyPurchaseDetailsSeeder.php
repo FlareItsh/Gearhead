@@ -16,8 +16,8 @@ class SupplyPurchaseDetailsSeeder extends Seeder
         $start = strtotime('2026-01-01 00:00:00');
         $end = strtotime('2026-12-31 23:59:59');
 
-        // Loop over 100 purchases
-        for ($purchaseId = 1; $purchaseId <= 100; $purchaseId++) {
+        // Loop over 50 purchases
+        for ($purchaseId = 1; $purchaseId <= 50; $purchaseId++) {
             $numDetails = rand(3, 15); // Multiple details per purchase
 
             for ($j = 0; $j < $numDetails; $j++) {

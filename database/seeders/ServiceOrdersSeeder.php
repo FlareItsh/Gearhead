@@ -26,7 +26,7 @@ class ServiceOrdersSeeder extends Seeder
         }
 
         $orders = [];
-        for ($i = 1; $i <= 200; $i++) {
+        for ($i = 1; $i <= 100; $i++) {
             $orderDate = $monthTimeline[$i % count($monthTimeline)];
             $created = date('Y-m-d H:i:s', strtotime($orderDate . ' -' . rand(1, 48) . ' hours'));
             $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 24) . ' hours'));
