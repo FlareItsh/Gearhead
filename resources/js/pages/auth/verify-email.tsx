@@ -1,5 +1,5 @@
 // Components
-import EmailVerificationNotificationController from '@/actions/App/Http/Controllers/Auth/EmailVerificationNotificationController';
+import Controllers from '@/actions/Laravel/Fortify/Http/Controllers';
 import { logout } from '@/routes';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             )}
 
             <Form
-                {...EmailVerificationNotificationController.store.form()}
+                {...Controllers.EmailVerificationNotificationController.store.form()}
                 className="space-y-6 text-center"
             >
                 {({ processing }) => (

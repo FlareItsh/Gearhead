@@ -49,19 +49,17 @@ class SocialController extends Controller
             $user = $this->users->findByEmail($googleUser->getEmail());
 
             if ($user) {
-                // Link Google to existing account and verify email
+                // Link Google to existing account
                 $user->update([
                     'google_id' => $googleUser->getId(),
                     'google_token' => $googleUser->token,
                     'google_refresh_token' => $googleUser->refreshToken,
-                    'email_verified_at' => $user->email_verified_at ?? now(),
                 ]);
             } else {
                 // Split name (Google usually provides name)
-                $fullName = $googleUser->getName();
-                $nameParts = explode(' ', $fullName);
-                $firstName = $nameParts[0] ?? 'Google';
-                $lastName = isset($nameParts[1]) ? implode(' ', array_slice($nameParts, 1)) : 'User';
+                $nameParts = explode(' ', $googleUser->getName(), 2);
+                $firstName = $nameParts[0] ?? '';
+                $lastName = $nameParts[1] ?? '';
 
                 // Create new user
                 $user = User::create([
@@ -73,7 +71,6 @@ class SocialController extends Controller
                     'google_refresh_token' => $googleUser->refreshToken,
                     'role' => 'customer',
                     'permissions' => ['view_dashboard', 'manage_own_bookings'], // Default customer permissions
-                    'email_verified_at' => now(), // Google emails are already verified
                     'password' => null, // Social only by default
                 ]);
 

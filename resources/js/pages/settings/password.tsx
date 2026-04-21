@@ -4,10 +4,11 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { useRef } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
+import { type SharedData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Password() {
+    const { auth } = usePage<SharedData>().props;
+    const hasPassword = auth.user.has_password;
+
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
@@ -32,8 +36,12 @@ export default function Password() {
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Update password"
-                        description="Ensure your account is using a long, random password to stay secure"
+                        title={hasPassword ? 'Update password' : 'Create password'}
+                        description={
+                            hasPassword
+                                ? 'Ensure your account is using a long, random password to stay secure'
+                                : 'Set a password to enable security features like 2FA and sensitive action confirmation'
+                        }
                     />
 
                     <Form
@@ -60,25 +68,27 @@ export default function Password() {
                     >
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="current_password">
-                                        Current password
-                                    </Label>
+                                {hasPassword && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="current_password">
+                                            Current password
+                                        </Label>
 
-                                    <Input
-                                        id="current_password"
-                                        ref={currentPasswordInput}
-                                        name="current_password"
-                                        type="password"
-                                        className="mt-1 block w-full"
-                                        autoComplete="current-password"
-                                        placeholder="Current password"
-                                    />
+                                        <Input
+                                            id="current_password"
+                                            ref={currentPasswordInput}
+                                            name="current_password"
+                                            type="password"
+                                            className="mt-1 block w-full"
+                                            autoComplete="current-password"
+                                            placeholder="Current password"
+                                        />
 
-                                    <InputError
-                                        message={errors.current_password}
-                                    />
-                                </div>
+                                        <InputError
+                                            message={errors.current_password}
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="password">

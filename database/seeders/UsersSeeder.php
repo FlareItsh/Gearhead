@@ -58,6 +58,7 @@ class UsersSeeder extends Seeder
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'permissions' => json_encode($adminPermissions),
+                'email_verified_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
@@ -72,6 +73,7 @@ class UsersSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role' => 'customer',
                 'permissions' => null,
+                'email_verified_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
@@ -90,6 +92,7 @@ class UsersSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role' => 'customer',
                 'permissions' => null,
+                'email_verified_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -109,6 +112,7 @@ class UsersSeeder extends Seeder
                 if ($u['role'] === 'customer') {
                     $updateData['password'] = Hash::make('password');
                 }
+                $updateData['email_verified_at'] = $now;
                 DB::table('users')->where('user_id', $u['user_id'])->update($updateData);
             }
         }

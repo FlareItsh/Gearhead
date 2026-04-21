@@ -55,6 +55,7 @@ export interface User {
     phone_number?: string;
     address?: string;
     role: string;
+    has_password: boolean;
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;

@@ -52,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'role' => $request->user()->role,
                     'permissions' => $request->user()->permissions,
+                    'has_password' => $request->user()->password !== null,
                 ] : null,
             ],
             'loyaltyThreshold' => (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9),
