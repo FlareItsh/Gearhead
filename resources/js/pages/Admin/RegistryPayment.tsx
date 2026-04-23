@@ -166,11 +166,15 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
     let reduction = 0
     if (activeDiscount && !useLoyaltyPoints) {
       if (activeDiscount.type === 'percentage') {
-        reduction = (subtotal * activeDiscount.value) / 100
+        const percentage = Math.min(100, Math.max(0, activeDiscount.value))
+        reduction = (subtotal * percentage) / 100
       } else {
-        reduction = activeDiscount.value
+        reduction = Math.max(0, activeDiscount.value)
       }
     }
+
+    // Cap reduction at subtotal to prevent negative totals
+    reduction = Math.min(reduction, subtotal)
 
     return {
       customerName: order.user ? `${order.user.first_name} ${order.user.last_name}` : 'Walk-in',
@@ -180,7 +184,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
       services: servicesList,
       subtotal,
       reduction,
-      total: Math.round(subtotal - reduction),
+      total: Math.round(Math.max(0, subtotal - reduction)),
     }
   })()
 

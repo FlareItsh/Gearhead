@@ -57,11 +57,11 @@ class Discount extends Model
 
         // Map discounts to their actual reduction value for the given total
         return $discounts->sortByDesc(function ($discount) use ($totalAmount) {
-            if ($discount->type === 'percentage') {
-                return ($totalAmount * $discount->value) / 100;
-            }
+            $reduction = $discount->type === 'percentage'
+                ? ($totalAmount * min(100, $discount->value)) / 100
+                : $discount->value;
 
-            return $discount->value;
+            return min($reduction, $totalAmount);
         })->first();
     }
 
@@ -70,10 +70,10 @@ class Discount extends Model
      */
     public function calculateReduction(float $totalAmount): float
     {
-        if ($this->type === 'percentage') {
-            return ($totalAmount * $this->value) / 100;
-        }
+        $reduction = $this->type === 'percentage'
+            ? ($totalAmount * min(100, $this->value)) / 100
+            : (float) $this->value;
 
-        return (float) $this->value;
+        return min($reduction, $totalAmount);
     }
 }

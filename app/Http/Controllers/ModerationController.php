@@ -78,7 +78,7 @@ class ModerationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:fixed,percentage',
-            'value' => 'required|numeric|min:0',
+            'value' => 'required|numeric|min:0'.($request->type === 'percentage' ? '|max:100' : ''),
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'required|boolean',
@@ -96,7 +96,7 @@ class ModerationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:fixed,percentage',
-            'value' => 'required|numeric|min:0',
+            'value' => 'required|numeric|min:0'.($request->type === 'percentage' ? '|max:100' : ''),
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'required|boolean',

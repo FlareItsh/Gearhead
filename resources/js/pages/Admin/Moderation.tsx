@@ -443,9 +443,18 @@ export default function Moderation({
                           type="number"
                           step="0.01"
                           value={discountForm.data.value}
-                          onChange={(e) =>
-                            discountForm.setData('value', parseFloat(e.target.value))
-                          }
+                          onChange={(e) => {
+                            let val = parseFloat(e.target.value) || 0
+                            if (discountForm.data.type === 'percentage' && val > 100) {
+                              val = 100
+                            }
+                            if (val < 0) {
+                              val = 0
+                            }
+                            discountForm.setData('value', val)
+                          }}
+                          max={discountForm.data.type === 'percentage' ? 100 : undefined}
+                          min={0}
                           required
                         />
                         <InputError message={discountForm.errors.value} />

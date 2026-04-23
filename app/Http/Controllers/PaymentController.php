@@ -309,7 +309,7 @@ class PaymentController extends Controller
                 $bestDiscount = Discount::getBestActiveDiscount($finalAmount);
                 if ($bestDiscount) {
                     $reduction = $bestDiscount->calculateReduction($finalAmount);
-                    $finalAmount = round($finalAmount - $reduction);
+                    $finalAmount = (float) round(max(0, $finalAmount - $reduction));
                 }
             } else {
                 $finalAmount = 0.00;
