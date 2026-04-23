@@ -108,4 +108,21 @@ class Employee extends Model
             'employment_ended_at' => null,
         ]);
     }
+
+    /**
+     * Relationship: Payouts for this employee.
+     */
+    public function payouts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(StaffPayout::class, 'employee_id', 'employee_id');
+    }
+
+    /**
+     * Relationship: Completed service orders where this employee was assigned.
+     */
+    public function completedServiceOrders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ServiceOrder::class, 'employee_id', 'employee_id')
+            ->where('status', 'completed');
+    }
 }

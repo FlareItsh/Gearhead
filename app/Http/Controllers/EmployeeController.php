@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
+use App\Models\ServiceOrder;
+use App\Models\StaffPayout;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -194,21 +197,22 @@ class EmployeeController extends Controller
         $employee = $this->employees->find($id);
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
-        
+
         $query = \App\Models\ServiceOrder::where('employee_id', $id)
             ->where('status', 'completed')
             ->with(['details.serviceVariant.service', 'user'])
             ->orderByDesc('order_date');
 
         if ($startDate && $endDate) {
-            $query->whereBetween('order_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            $query->whereBetween('order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         }
-            
+
         $completedOrders = $query->get()
             ->map(function ($order) use ($employee) {
                 // Adjusting calculation to match detail prices if available
                 $subtotal = $order->details->sum(function ($detail) {
                     $price = $detail->serviceVariant ? (float) $detail->serviceVariant->price : 0;
+
                     return (float) ($detail->quantity ?? 1) * $price;
                 });
 
@@ -217,8 +221,8 @@ class EmployeeController extends Controller
                     'date' => $order->order_date->format('Y-m-d H:i'),
                     'customer' => $order->user ? $order->user->full_name : 'Walk-in',
                     'services' => $order->details->map(function ($detail) {
-                        return $detail->serviceVariant && $detail->serviceVariant->service 
-                            ? $detail->serviceVariant->service->service_name 
+                        return $detail->serviceVariant && $detail->serviceVariant->service
+                            ? $detail->serviceVariant->service->service_name
                             : 'Unknown Service';
                     })->join(', '),
                     'total_amount' => $subtotal,
@@ -231,6 +235,76 @@ class EmployeeController extends Controller
             'commission_percentage' => (float) $employee->commission_percentage,
             'orders' => $completedOrders,
             'total_commission' => (float) $completedOrders->sum('commission_amount'),
+        ]);
+    }
+
+    /**
+     * Get wallet details for an employee
+     */
+    public function wallet(int $id)
+    {
+        $employee = Employee::findOrFail($id);
+
+        // Total Commission (Lifetime)
+        $totalCommission = ServiceOrder::where('employee_id', $id)
+            ->where('status', 'completed')
+            ->with('details.serviceVariant')
+            ->get()
+            ->sum(function ($order) use ($employee) {
+                $subtotal = $order->details->sum(function ($detail) {
+                    $price = $detail->serviceVariant ? (float) $detail->serviceVariant->price : 0;
+
+                    return (float) ($detail->quantity ?? 1) * $price;
+                });
+
+                return $subtotal * ((float) $employee->commission_percentage / 100);
+            });
+
+        // Total Payouts (Lifetime)
+        $totalPayouts = StaffPayout::where('employee_id', $id)
+            ->sum('amount');
+
+        $balance = $totalCommission - $totalPayouts;
+
+        $payouts = StaffPayout::where('employee_id', $id)
+            ->with('processor:user_id,first_name,last_name')
+            ->orderByDesc('payout_date')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'employee' => $employee->full_name,
+            'total_earned' => (float) $totalCommission,
+            'total_paid' => (float) $totalPayouts,
+            'balance' => (float) $balance,
+            'payouts' => $payouts,
+        ]);
+    }
+
+    /**
+     * Record a payout for an employee
+     */
+    public function payout(Request $request, int $id)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payout_date' => 'required|date',
+            'remarks' => 'nullable|string|max:255',
+        ]);
+
+        $employee = Employee::findOrFail($id);
+
+        $payout = StaffPayout::create([
+            'employee_id' => $id,
+            'amount' => $request->amount,
+            'payout_date' => $request->payout_date,
+            'remarks' => $request->remarks,
+            'processed_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'message' => 'Payout recorded successfully',
+            'payout' => $payout,
         ]);
     }
 }

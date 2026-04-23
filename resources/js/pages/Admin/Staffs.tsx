@@ -42,7 +42,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
-import { ChevronDownIcon, HandCoins, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronDownIcon, HandCoins, Pencil, Plus, Search, Trash2, Wallet } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -127,6 +127,24 @@ export default function Staffs() {
     total_commission: number
   } | null>(null)
   const [loadingCommissions, setLoadingCommissions] = useState(false)
+
+  // Wallet modal state
+  const [showWalletModal, setShowWalletModal] = useState(false)
+  const [selectedStaffIdForWallet, setSelectedStaffIdForWallet] = useState<number | null>(null)
+  const [walletData, setWalletData] = useState<{
+    employee: string
+    total_earned: number
+    total_paid: number
+    balance: number
+    payouts: any[]
+  } | null>(null)
+  const [loadingWallet, setLoadingWallet] = useState(false)
+  const [payoutForm, setPayoutForm] = useState({
+    amount: '',
+    payout_date: new Date().toISOString().split('T')[0],
+    remarks: '',
+  })
+  const [isSubmittingPayout, setIsSubmittingPayout] = useState(false)
 
   // Helper to get current month range
   const getCurrentMonthRange = () => {
@@ -322,6 +340,51 @@ export default function Staffs() {
       loadCommissions()
     }
   }, [showCommissionModal, selectedStaffIdForCommission, commissionStartDate, commissionEndDate])
+
+  const loadWallet = async () => {
+    if (!selectedStaffIdForWallet) return
+    try {
+      setLoadingWallet(true)
+      const res = await axios.get(`/api/staffs/${selectedStaffIdForWallet}/wallet`)
+      setWalletData(res.data)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load wallet data')
+    } finally {
+      setLoadingWallet(false)
+    }
+  }
+
+  const openWallet = (id: number) => {
+    setSelectedStaffIdForWallet(id)
+    setShowWalletModal(true)
+    setPayoutForm({
+      amount: '',
+      payout_date: new Date().toISOString().split('T')[0],
+      remarks: '',
+    })
+  }
+
+  const handleRecordPayout = async () => {
+    if (!selectedStaffIdForWallet || !payoutForm.amount) return
+    try {
+      setIsSubmittingPayout(true)
+      await axios.post(`/api/staffs/${selectedStaffIdForWallet}/payout`, payoutForm)
+      toast.success('Payout recorded successfully')
+      loadWallet() // Refresh data
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to record payout')
+    } finally {
+      setIsSubmittingPayout(false)
+    }
+  }
+
+  useEffect(() => {
+    if (showWalletModal && selectedStaffIdForWallet) {
+      loadWallet()
+    }
+  }, [showWalletModal, selectedStaffIdForWallet])
 
   /* Removed filteredStaff memo */
 
@@ -771,6 +834,23 @@ export default function Staffs() {
                                   </Tooltip>
                                 </TooltipProvider>
 
+                                {/* Wallet Action */}
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => openWallet(staff.id)}
+                                        className="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                      >
+                                        <Wallet className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>E-Wallet & Payouts</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+
                                 {/*delete*/}
                                 {hasPermission('delete_employee') && (
                                   <TooltipProvider>
@@ -1092,6 +1172,151 @@ export default function Staffs() {
                     >
                       Close
                     </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Wallet Modal */}
+            <Dialog
+              open={showWalletModal}
+              onOpenChange={setShowWalletModal}
+            >
+              <DialogContent className="w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all sm:max-w-none">
+                <div className="p-5">
+                  <DialogHeader className="mb-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <DialogTitle className="text-xl">
+                          Staff <span className="text-highlight">E-Wallet</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground/80">
+                          Wallet balance and payout history for{' '}
+                          <span className="font-semibold text-foreground">
+                            {walletData?.employee}
+                          </span>
+                        </DialogDescription>
+                      </div>
+                    </div>
+                  </DialogHeader>
+
+                  <div className="mb-6 grid grid-cols-3 gap-3">
+                    <Card className="border-border/50 bg-gradient-to-br from-highlight/5 to-transparent shadow-none border-highlight/20">
+                      <CardContent className="p-3">
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">Lifetime Earned</p>
+                        <p className="text-xl font-black text-highlight">₱{walletData?.total_earned.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 bg-gradient-to-br from-red-500/5 to-transparent shadow-none border-red-500/20">
+                      <CardContent className="p-3">
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">Total Paid Out</p>
+                        <p className="text-xl font-black text-red-500">₱{walletData?.total_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 bg-gradient-to-br from-green-500/5 to-transparent shadow-none border-green-500/30">
+                      <CardContent className="p-3">
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase text-green-600">Remaining Balance</p>
+                        <p className="text-2xl font-black text-green-600">₱{walletData?.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    {/* Record Payout Form */}
+                    <div className="flex flex-col gap-4">
+                      <div className="rounded-xl border border-border/50 bg-muted/5 p-4 shadow-sm">
+                        <HeadingSmall title="Record Payout" description="Distribute commission to staff" />
+                        <div className="mt-4 grid gap-4">
+                          <div className="grid gap-2">
+                            <Label className="text-xs font-semibold">Payout Amount (₱)</Label>
+                            <Input 
+                              type="number" 
+                              placeholder="0.00"
+                              value={payoutForm.amount}
+                              onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
+                              className="bg-background/50 focus:bg-background h-10 transition-all font-medium"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label className="text-xs font-semibold">Payout Date</Label>
+                            <Input 
+                              type="date"
+                              value={payoutForm.payout_date}
+                              onChange={(e) => setPayoutForm({...payoutForm, payout_date: e.target.value})}
+                              className="bg-background/50 focus:bg-background h-10 transition-all"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label className="text-xs font-semibold">Remarks/Notes</Label>
+                            <Input 
+                              placeholder="e.g. Weekly payout"
+                              value={payoutForm.remarks}
+                              onChange={(e) => setPayoutForm({...payoutForm, remarks: e.target.value})}
+                              className="bg-background/50 focus:bg-background h-10 transition-all"
+                            />
+                          </div>
+                          <Button 
+                            variant="highlight" 
+                            size="lg"
+                            className="mt-2 font-bold shadow-lg shadow-highlight/20"
+                            onClick={handleRecordPayout}
+                            disabled={isSubmittingPayout || !payoutForm.amount}
+                          >
+                            {isSubmittingPayout ? 'Processing...' : 'Confirm Payout'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payout History */}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex-1 rounded-xl border border-border/50 bg-muted/10 p-4 shadow-inner overflow-hidden">
+                        <HeadingSmall title="Payout History" description="Record of previous payouts" />
+                        <div className="mt-4 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+                          <Table>
+                            <TableHeader className="sticky top-0 z-10 bg-background/95 shadow-sm backdrop-blur-sm">
+                              <TableRow className="border-border/30 hover:bg-transparent">
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Date</TableHead>
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Amount</TableHead>
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Remarks</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {loadingWallet ? (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="py-12 text-center">
+                                    <div className="flex flex-col items-center gap-2">
+                                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-highlight border-t-transparent" />
+                                      <span className="loading-text text-xs">Fetching history...</span>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ) : !walletData?.payouts || walletData.payouts.length === 0 ? (
+                                <TableRow><TableCell colSpan={3} className="py-12 text-center text-xs italic text-muted-foreground/60 bg-muted/5 rounded-lg">No payouts recorded yet.</TableCell></TableRow>
+                              ) : (
+                                walletData.payouts.map((p) => (
+                                  <TableRow key={p.payout_id} className="text-[11px] group transition-all hover:bg-highlight/5 border-border/10">
+                                    <TableCell className="px-3 py-3 font-semibold tabular-nums text-muted-foreground">{new Date(p.payout_date).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })}</TableCell>
+                                    <TableCell className="px-3 py-3 font-black text-red-500 tabular-nums">₱{parseFloat(p.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                                    <TableCell className="px-3 py-3 text-muted-foreground/80 font-medium">
+                                      <div className="max-w-[140px] truncate" title={p.remarks}>{p.remarks || '-'}</div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="border-t border-border/30 bg-muted/5 p-4">
+                  <DialogClose asChild>
+                    <Button variant="outline" size="sm" className="min-w-[100px] text-xs font-bold uppercase tracking-wider transition-all hover:bg-muted">Close Wallet</Button>
                   </DialogClose>
                 </DialogFooter>
               </DialogContent>

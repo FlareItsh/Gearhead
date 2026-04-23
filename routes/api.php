@@ -104,6 +104,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/staffs/{id}/commissions', [EmployeeController::class, 'commissions'])
         ->name('admin.staffs.commissions');
 
+    Route::get('/staffs/{id}/wallet', [EmployeeController::class, 'wallet'])
+        ->name('admin.staffs.wallet');
+    Route::post('/staffs/{id}/payout', [EmployeeController::class, 'payout'])
+        ->name('admin.staffs.payout');
+
     Route::get('/service-orders/pending', [ServiceOrderController::class, 'pending'])
         ->name('api.service-orders.pending');
 
