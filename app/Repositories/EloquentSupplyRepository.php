@@ -63,6 +63,33 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
 
     public function getLedger(int $supplyId, ?string $start_date = null, ?string $end_date = null)
     {
+        $supply = DB::table('supplies')->where('supply_id', $supplyId)->first();
+        $current_stock = $supply ? $supply->quantity_stock : 0;
+
+        $forwarded_balance = 0;
+        if ($start_date) {
+            $total_purchases = DB::table('supply_purchase_details')
+                ->join('supply_purchases', 'supply_purchase_details.supply_purchase_id', '=', 'supply_purchases.supply_purchase_id')
+                ->where('supply_purchase_details.supply_id', $supplyId)
+                ->whereDate('supply_purchases.created_at', '<', $start_date)
+                ->sum('quantity');
+
+            $total_pullouts = DB::table('pullout_request_details')
+                ->join('pullout_requests', 'pullout_request_details.pullout_request_id', '=', 'pullout_requests.pullout_request_id')
+                ->where('pullout_request_details.supply_id', $supplyId)
+                ->where('pullout_requests.is_approve', true)
+                ->whereDate('pullout_requests.created_at', '<', $start_date)
+                ->sum('quantity');
+
+            $total_returns = DB::table('pullout_request_details')
+                ->where('supply_id', $supplyId)
+                ->where('is_returned', true)
+                ->whereDate('returned_at', '<', $start_date)
+                ->sum('quantity');
+
+            $forwarded_balance = ($total_purchases + $total_returns) - $total_pullouts;
+        }
+
         $purchases = DB::table('supply_purchase_details')
             ->join('supply_purchases', 'supply_purchase_details.supply_purchase_id', '=', 'supply_purchases.supply_purchase_id')
             ->join('suppliers', 'supply_purchases.supplier_id', '=', 'suppliers.supplier_id')
@@ -125,10 +152,16 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
                 'pullout_requests.pullout_request_id as reference_no',
             ]);
 
-        return $purchases
+        $entries = $purchases
             ->unionAll($pullouts)
             ->unionAll($returns)
-            ->orderBy('date', 'desc')
+            ->orderBy('date', 'asc')
             ->get();
+
+        return [
+            'current_stock' => $current_stock,
+            'forwarded_balance' => $forwarded_balance,
+            'entries' => $entries,
+        ];
     }
 }

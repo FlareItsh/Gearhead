@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table'
 import axios from 'axios'
 import { Calendar, History, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface LedgerEntry {
   date: string
@@ -44,9 +44,11 @@ export default function SupplyLedgerModal({
   supplyName,
 }: SupplyLedgerModalProps) {
   const [ledger, setLedger] = useState<LedgerEntry[]>([])
+  const [summary, setSummary] = useState({ current_stock: 0, forwarded_balance: 0 })
   const [loading, setLoading] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   // Set default date range (First of month to Today)
   useEffect(() => {
@@ -77,13 +79,28 @@ export default function SupplyLedgerModal({
           end_date: endDate || null,
         },
       })
-      setLedger(res.data)
+      setLedger(res.data.entries)
+      setSummary({
+        current_stock: res.data.current_stock,
+        forwarded_balance: res.data.forwarded_balance,
+      })
     } catch (err) {
       console.error('Failed to load ledger:', err)
     } finally {
       setLoading(false)
     }
   }
+
+  // Auto-scroll to bottom when data is loaded or modal opens
+  useEffect(() => {
+    if (open && !loading && ledger.length > 0) {
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+      }, 100)
+    }
+  }, [open, loading, ledger])
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '—'
@@ -157,8 +174,39 @@ export default function SupplyLedgerModal({
           </div>
         </div>
 
+        {/* Summary Bar */}
+        <div className="grid grid-cols-2 gap-4 border-b bg-background px-6 py-4">
+          <div className="flex flex-col rounded-lg border border-border/50 bg-muted/20 p-3 shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Forwarded Balance
+            </span>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-2xl font-black text-foreground">
+                {summary.forwarded_balance}
+              </span>
+              <span className="text-xs font-medium text-muted-foreground">Units</span>
+            </div>
+          </div>
+          <div className="flex flex-col rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3 shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-600 dark:text-yellow-400">
+              Total Stocks Now
+            </span>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-2xl font-black text-yellow-600 dark:text-yellow-400">
+                {summary.current_stock}
+              </span>
+              <span className="text-xs font-medium text-yellow-600/70 dark:text-yellow-400/70">
+                Units
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Table Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar"
+        >
           <div className="rounded-xl border border-border bg-card shadow-sm">
             {loading ? (
               <div className="flex h-[400px] flex-col items-center justify-center gap-3">
