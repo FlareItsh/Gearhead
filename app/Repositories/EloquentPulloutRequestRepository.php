@@ -2,10 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\PulloutRequestRepositoryInterface;
-
 use App\Models\PulloutRequest;
 use App\Models\PulloutRequestDetail;
+use App\Repositories\Contracts\PulloutRequestRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -55,6 +54,7 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                 'pr.approve_date',
                 'so.service_order_id',
                 's.service_name',
+                'sv.size',
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
                 DB::raw("GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ') as supplies")
             )
@@ -67,7 +67,8 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                 'so.service_order_id',
                 's.service_name',
                 'e.first_name',
-                'e.last_name'
+                'e.last_name',
+                'sv.size'
             )
             ->orderByDesc('pr.date_time')
             ->get()
@@ -80,6 +81,7 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                     ->select('sup.supply_name', 'prd.quantity', 'sup.unit', 'sup.supply_type')
                     ->get();
                 $item->details = $details;
+
                 return $item;
             });
     }
@@ -124,7 +126,7 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
     {
         return DB::transaction(function () use ($id, $approvedBy) {
             $request = PulloutRequest::with('details.supply')->findOrFail($id);
-            
+
             // Update pullout request status
             $request->update([
                 'is_approve' => true,
@@ -146,9 +148,9 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
     {
         return DB::transaction(function () use ($detailId, $returnedBy) {
             $detail = PulloutRequestDetail::with('supply')->findOrFail($detailId);
-            
+
             // Only process if supply is returnable (not consumable) and not already returned
-            if ($detail->supply->supply_type === 'supply' && !$detail->is_returned) {
+            if ($detail->supply->supply_type === 'supply' && ! $detail->is_returned) {
                 // Update the detail record
                 $detail->update([
                     'is_returned' => true,
@@ -182,9 +184,10 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             ->select(
                 'prd.pullout_request_details_id',
                 'pr.pullout_request_id',
-                'pr.date_time',
+                'pr.date_time as created_at',
                 'so.service_order_id',
                 's.service_name',
+                'sv.size',
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
                 'sup.supply_name',
                 'sup.unit',
@@ -210,12 +213,13 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             ->join('supplies as sup', 'prd.supply_id', '=', 'sup.supply_id')
             ->select(
                 'pr.pullout_request_id',
-                'pr.date_time',
+                'pr.date_time as created_at',
                 'pr.is_approve',
                 'pr.approve_by',
                 'pr.approve_date',
                 'so.service_order_id',
                 's.service_name',
+                'sv.size',
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
                 DB::raw("GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ') as supplies")
             )
@@ -228,14 +232,15 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                 'so.service_order_id',
                 's.service_name',
                 'e.first_name',
-                'e.last_name'
+                'e.last_name',
+                'sv.size'
             );
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where(DB::raw("CONCAT(e.first_name, ' ', e.last_name)"), 'like', "%{$search}%")
-                  ->orWhere('s.service_name', 'like', "%{$search}%")
-                  ->orWhere('pr.pullout_request_id', 'like', "%{$search}%");
+                    ->orWhere('s.service_name', 'like', "%{$search}%")
+                    ->orWhere('pr.pullout_request_id', 'like', "%{$search}%");
             });
         }
 
@@ -251,13 +256,14 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
 
         $paginator->getCollection()->transform(function ($item) {
             $item->status = $item->is_approve ? 'approved' : 'pending';
-             // Get individual supply details for this request
+            // Get individual supply details for this request
             $details = DB::table('pullout_request_details as prd')
                 ->join('supplies as sup', 'prd.supply_id', '=', 'sup.supply_id')
                 ->where('prd.pullout_request_id', $item->pullout_request_id)
                 ->select('sup.supply_name', 'prd.quantity', 'sup.unit', 'sup.supply_type')
                 ->get();
             $item->details = $details;
+
             return $item;
         });
 
@@ -280,9 +286,10 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             ->select(
                 'prd.pullout_request_details_id',
                 'pr.pullout_request_id',
-                'pr.date_time',
+                'pr.date_time as created_at',
                 'so.service_order_id',
                 's.service_name',
+                'sv.size',
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
                 'sup.supply_name',
                 'sup.unit',
@@ -293,10 +300,10 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
             );
 
         if ($search) {
-             $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where(DB::raw("CONCAT(e.first_name, ' ', e.last_name)"), 'like', "%{$search}%")
-                  ->orWhere('s.service_name', 'like', "%{$search}%")
-                  ->orWhere('sup.supply_name', 'like', "%{$search}%");
+                    ->orWhere('s.service_name', 'like', "%{$search}%")
+                    ->orWhere('sup.supply_name', 'like', "%{$search}%");
             });
         }
 

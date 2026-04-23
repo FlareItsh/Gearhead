@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
-
 use App\Models\PulloutService;
+use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -44,8 +43,8 @@ class EloquentPulloutServiceRepository implements PulloutServiceRepositoryInterf
             'pulloutRequestDetails.supply:supply_id,supply_name,unit',
             'pulloutRequestDetails.pulloutRequest',
         ])
-        ->orderByDesc('created_at')
-        ->get();
+            ->orderByDesc('created_at')
+            ->get();
     }
 
     public function getActiveServiceOrdersForPullout()
@@ -66,6 +65,7 @@ class EloquentPulloutServiceRepository implements PulloutServiceRepositoryInterf
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
                 DB::raw("CONCAT(u.first_name, ' ', u.last_name) as customer_name"),
                 's.service_name',
+                'sv.size',
                 'b.bay_number',
                 'so.order_date'
             )

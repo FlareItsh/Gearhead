@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
@@ -26,7 +27,6 @@ import axios from 'axios'
 import { CheckCircle, Clock, PackageCheck, Search, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Pullout Requests', href: '/pullout-requests' }]
 
@@ -42,6 +42,7 @@ interface PulloutRequest {
   employee_name: string
   service_name: string
   service_order_id: number
+  size: string
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
   approve_by?: string
@@ -52,7 +53,6 @@ interface PulloutRequest {
 interface ReturnableSupply {
   pullout_request_details_id: number
   pullout_request_id: number
-  date_time: string
   service_order_id: number
   service_name: string
   employee_name: string
@@ -62,6 +62,8 @@ interface ReturnableSupply {
   is_returned: boolean
   returned_at: string | null
   returned_by: string | null
+  size: string
+  created_at: string
 }
 
 interface PaginatedLink {
@@ -312,7 +314,7 @@ export default function PulloutRequestsPage() {
 
         {/* Requests Tab */}
         {activeTab === 'requests' && (
-          <Card className="border-border/50 bg-background text-foreground pt-5 pb-5">
+          <Card className="border-border/50 bg-background pt-5 pb-5 text-foreground">
             <CardContent>
               {!pulloutRequestsData || pulloutRequestsData.data.length === 0 ? (
                 <div className="flex h-32 items-center justify-center">
@@ -333,7 +335,8 @@ export default function PulloutRequestsPage() {
                               {getStatusBadge(request.status)}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Service Order # {request.service_order_id} - {request.service_name}
+                              Service Order # {request.service_order_id} - {request.service_name} (
+                              {request.size})
                             </p>
                             <p className="text-xs text-muted-foreground">
                               Requested: {formatDate(request.created_at)}
@@ -347,28 +350,29 @@ export default function PulloutRequestsPage() {
                               </p>
                             )}
                           </div>
-                          {request.status === 'pending' && hasPermission('approve_pullout_request') && (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
-                                onClick={() => handleApprove(request.pullout_request_id)}
-                              >
-                                <CheckCircle className="mr-1 h-4 w-4" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
-                                onClick={() => handleReject(request.pullout_request_id)}
-                              >
-                                <XCircle className="mr-1 h-4 w-4" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
+                          {request.status === 'pending' &&
+                            hasPermission('approve_pullout_request') && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
+                                  onClick={() => handleApprove(request.pullout_request_id)}
+                                >
+                                  <CheckCircle className="mr-1 h-4 w-4" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                                  onClick={() => handleReject(request.pullout_request_id)}
+                                >
+                                  <XCircle className="mr-1 h-4 w-4" />
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
                         </div>
                         <div className="p-4">
                           <h4 className="mb-2 text-sm font-medium">Requested Supplies:</h4>
@@ -423,7 +427,7 @@ export default function PulloutRequestsPage() {
 
         {/* Returns Tab */}
         {activeTab === 'returns' && (
-          <Card className="bg-background text-foreground pt-5 pb-5">
+          <Card className="bg-background pt-5 pb-5 text-foreground">
             <CardContent className="px-4">
               {!returnableSuppliesData || returnableSuppliesData.data.length === 0 ? (
                 <div className="flex h-32 items-center justify-center">
@@ -446,7 +450,7 @@ export default function PulloutRequestsPage() {
                     {returnableSuppliesData.data.map((supply) => (
                       <TableRow key={supply.pullout_request_details_id}>
                         <TableCell>
-                          #{supply.service_order_id} - {supply.service_name}
+                          #{supply.service_order_id} - {supply.service_name} ({supply.size})
                         </TableCell>
                         <TableCell>{supply.employee_name}</TableCell>
                         <TableCell>{supply.supply_name}</TableCell>
@@ -454,7 +458,7 @@ export default function PulloutRequestsPage() {
                           {supply.quantity} {supply.unit}
                         </TableCell>
                         <TableCell>
-                          {new Date(supply.date_time).toLocaleDateString('en-PH', {
+                          {new Date(supply.created_at).toLocaleDateString('en-PH', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
@@ -480,7 +484,9 @@ export default function PulloutRequestsPage() {
                                 size="sm"
                                 variant="outline"
                                 className="border-green-600 text-green-600 hover:bg-green-50"
-                                onClick={() => handleReturnSupply(supply.pullout_request_details_id)}
+                                onClick={() =>
+                                  handleReturnSupply(supply.pullout_request_details_id)
+                                }
                               >
                                 <PackageCheck className="mr-1 h-4 w-4" />
                                 Mark Returned

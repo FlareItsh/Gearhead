@@ -41,6 +41,7 @@ interface ServiceOrder {
   order_date: string
   bay_number?: string
   customer_name?: string
+  size: string
 }
 
 interface PulloutDetail {
@@ -208,7 +209,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            Create <span className="text-yellow-400 black:text-highlight">Pullout Request</span>
+            Create <span className="black:text-highlight text-yellow-400">Pullout Request</span>
           </DialogTitle>
           <DialogDescription>Request supplies/materials for an active service.</DialogDescription>
         </DialogHeader>
@@ -222,10 +223,10 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                 value={selectedServiceOrder}
                 onValueChange={setSelectedServiceOrder}
               >
-                <SelectTrigger className="h-14 w-full border border-border bg-background text-foreground text-base">
+                <SelectTrigger className="h-14 w-full border border-border bg-background text-base text-foreground">
                   <SelectValue placeholder="Choose a service order..." />
                 </SelectTrigger>
-                <SelectContent className="bg-background border border-border text-foreground">
+                <SelectContent className="border border-border bg-background text-foreground">
                   {serviceOrders.length === 0 ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
                       No active services found.
@@ -237,13 +238,15 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                         value={so.service_order_detail_id.toString()}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-yellow-400 black:text-highlight">
+                          <span className="black:text-highlight font-semibold text-yellow-400">
                             {so.bay_number ? `Bay ${so.bay_number}` : 'Bay ?'}
                           </span>
                           <span className="text-muted-foreground">|</span>
                           <span className="font-medium">{so.employee_name}</span>
                           <span className="text-muted-foreground">|</span>
-                          <span>{so.service_name}</span>
+                          <span>
+                            {so.service_name} ({so.size})
+                          </span>
                         </div>
                       </SelectItem>
                     ))
@@ -274,6 +277,15 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                       Customer
                     </p>
                     <p className="text-sm font-medium">{activeOrder.customer_name}</p>
+                  </div>
+                  <div className="mx-2 hidden h-8 w-px bg-border sm:block"></div>
+                  <div className="hidden sm:block">
+                    <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                      Service Size
+                    </p>
+                    <p className="black:text-highlight text-sm font-medium text-yellow-400">
+                      {activeOrder.size}
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -443,7 +455,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
                 </table>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-border bg-muted/30 dark:bg-muted/10 py-8 text-center text-sm text-muted-foreground">
+              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-border bg-muted/30 py-8 text-center text-sm text-muted-foreground dark:bg-muted/10">
                 <Package className="mb-2 h-8 w-8 opacity-20" />
                 <p>No items added yet.</p>
                 <p className="text-xs">Search and add supplies above.</p>
