@@ -34,12 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
@@ -50,9 +45,9 @@ import { ChevronDownIcon, Download, Edit2, History, Search, Trash2 } from 'lucid
 import { useEffect, useState } from 'react'
 
 import Pagination from '@/components/Pagination'
-import { toast } from 'sonner'
-import { usePermissions } from '@/hooks/use-permissions'
 import SupplyLedgerModal from '@/components/SupplyLedgerModal'
+import { usePermissions } from '@/hooks/use-permissions'
+import { toast } from 'sonner'
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Inventory', href: '/inventory' }]
 
@@ -122,12 +117,12 @@ export default function InventoryPage() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState('')
   const [purchaseReference, setPurchaseReference] = useState('')
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0])
   const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetail[]>([])
-  const [newDetail, setNewDetail] = useState<PurchaseDetail>({
+  const [newDetail, setNewDetail] = useState<Omit<PurchaseDetail, 'purchase_date'>>({
     supply_id: 0,
     quantity: 0,
     unit_price: 0,
-    purchase_date: new Date().toISOString().split('T')[0],
   })
 
   const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -149,7 +144,9 @@ export default function InventoryPage() {
 
   // Ledger state
   const [showLedgerModal, setShowLedgerModal] = useState(false)
-  const [selectedLedgerItem, setSelectedLedgerItem] = useState<{ id: number; name: string } | null>(null)
+  const [selectedLedgerItem, setSelectedLedgerItem] = useState<{ id: number; name: string } | null>(
+    null,
+  )
 
   useEffect(() => {
     loadSupplies()
@@ -222,13 +219,12 @@ export default function InventoryPage() {
       setDetailError('Please fill in all fields')
       return
     }
-    setPurchaseDetails((prev) => [...prev, { ...newDetail }])
+    setPurchaseDetails((prev) => [...prev, { ...newDetail, purchase_date: purchaseDate }])
     setDetailError('')
     setNewDetail({
       supply_id: 0,
       quantity: 0,
       unit_price: 0,
-      purchase_date: new Date().toISOString().split('T')[0],
     })
   }
 
@@ -252,7 +248,6 @@ export default function InventoryPage() {
     }
 
     try {
-      const purchaseDate = purchaseDetails[0].purchase_date
       const purchaseRes = await axios.post('/api/supply-purchases', {
         supplier_id: parseInt(selectedSupplier),
         purchase_date: purchaseDate,
@@ -286,7 +281,6 @@ export default function InventoryPage() {
         supply_id: 0,
         quantity: 0,
         unit_price: 0,
-        purchase_date: new Date().toISOString().split('T')[0],
       })
       setSuccessMessage('Purchase recorded successfully!')
       setShowSuccessModal(true)
@@ -585,44 +579,55 @@ export default function InventoryPage() {
                 </DialogHeader>
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Supplier</label>
-                    <Select
-                      value={selectedSupplier}
-                      onValueChange={setSelectedSupplier}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose supplier..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allSuppliers.map((s) => (
-                          <SelectItem
-                            key={s.supplier_id}
-                            value={s.supplier_id.toString()}
-                          >
-                            {s.first_name} {s.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {purchaseErrors.supplier && (
-                      <p className="mt-1 text-sm text-red-500">{purchaseErrors.supplier}</p>
-                    )}
-                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="text-sm font-medium">Supplier</label>
+                      <Select
+                        value={selectedSupplier}
+                        onValueChange={setSelectedSupplier}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose supplier..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allSuppliers.map((s) => (
+                            <SelectItem
+                              key={s.supplier_id}
+                              value={s.supplier_id.toString()}
+                            >
+                              {s.first_name} {s.last_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {purchaseErrors.supplier && (
+                        <p className="mt-1 text-sm text-red-500">{purchaseErrors.supplier}</p>
+                      )}
+                    </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Reference (Optional)</label>
-                    <Input
-                      placeholder="INV-001, PO-2025-001..."
-                      value={purchaseReference}
-                      onChange={(e) => setPurchaseReference(e.target.value)}
-                    />
+                    <div>
+                      <label className="text-sm font-medium">Reference (Optional)</label>
+                      <Input
+                        placeholder="INV-001, PO-2025-001..."
+                        value={purchaseReference}
+                        onChange={(e) => setPurchaseReference(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Purchase Date</label>
+                      <Input
+                        type="date"
+                        value={purchaseDate}
+                        onChange={(e) => setPurchaseDate(e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium">Add Items</label>
                     <div className="mt-3 rounded-lg border bg-muted/30 p-4">
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <div className="grid grid-cols-3 gap-3">
                         {/* SUPPLY - FULL WIDTH FIX */}
                         <div className="w-full">
                           <label className="text-xs font-medium">Supply</label>
@@ -696,22 +701,6 @@ export default function InventoryPage() {
                               }
                             }}
                             onKeyDown={(e) => ['-', 'e', 'E'].includes(e.key) && e.preventDefault()}
-                          />
-                        </div>
-
-                        {/* DATE */}
-                        <div className="w-full">
-                          <label className="text-xs font-medium">Date</label>
-                          <Input
-                            type="date"
-                            className="h-9"
-                            value={newDetail.purchase_date}
-                            onChange={(e) =>
-                              setNewDetail({
-                                ...newDetail,
-                                purchase_date: e.target.value,
-                              })
-                            }
                           />
                         </div>
                       </div>
@@ -949,16 +938,15 @@ export default function InventoryPage() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm hover:bg-muted-foreground/10 dark:bg-background-dark dark:text-foreground-dark dark:border-border-dark dark:hover:bg-muted-foreground/20"
+                    className="dark:bg-background-dark dark:text-foreground-dark dark:border-border-dark flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20"
                   >
-                    {filter === 'All'
-                      ? 'All'
-                      : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    {filter === 'All' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}
                     <ChevronDownIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" 
-                  className="bg-background dark:bg-background-dark border border-border dark:border-border-dark rounded-md shadow-md"
+                <DropdownMenuContent
+                  align="end"
+                  className="dark:bg-background-dark dark:border-border-dark rounded-md border border-border bg-background shadow-md"
                 >
                   {[
                     { label: 'All Items', value: 'All' },
@@ -967,10 +955,8 @@ export default function InventoryPage() {
                   ].map((option) => (
                     <DropdownMenuItem
                       key={option.value}
-                      onClick={() =>
-                        setFilter(option.value as 'All' | 'supply' | 'consumables')
-                      }
-                      className="text-foreground dark:text-foreground-dark hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20 rounded-md"
+                      onClick={() => setFilter(option.value as 'All' | 'supply' | 'consumables')}
+                      className="dark:text-foreground-dark rounded-md text-foreground hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20"
                     >
                       {option.label}
                     </DropdownMenuItem>
@@ -1116,84 +1102,82 @@ export default function InventoryPage() {
                             </div>
                           </div>
                           <div className="flex justify-end gap-2">
-                                    {hasPermission('view_inventory_ledger') && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 hover:bg-highlight hover:text-black"
-                                              onClick={() => openLedger(supply)}
-                                            >
-                                              <History className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent className="bg-primary text-primary-foreground">
-                                            View Item History
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
+                            {hasPermission('view_inventory_ledger') && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8 hover:bg-highlight hover:text-black"
+                                      onClick={() => openLedger(supply)}
+                                    >
+                                      <History className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-primary text-primary-foreground">
+                                    View Item History
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
 
-                                    {hasPermission('edit_inventory_item') && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 hover:bg-highlight hover:text-black"
-                                              onClick={() => openEditModal(supply)}
-                                            >
-                                              <Edit2 className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent className="bg-primary text-primary-foreground">
-                                            Edit Item
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
+                            {hasPermission('edit_inventory_item') && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8 hover:bg-highlight hover:text-black"
+                                      onClick={() => openEditModal(supply)}
+                                    >
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-primary text-primary-foreground">
+                                    Edit Item
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
 
-                                    {hasPermission('delete_inventory_item') && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 hover:border-red-500 hover:bg-red-500 hover:text-white"
-                                              onClick={() => {
-                                                setConfirmMessage(
-                                                  `Are you sure you want to delete "${supply.supply_name}"?`,
-                                                )
-                                                setOnConfirmAction(() => async () => {
-                                                  try {
-                                                    await axios.delete(
-                                                      `/api/supplies/${supply.supply_id}`,
-                                                    )
-                                                    loadSupplies()
-                                                    toast.success('Item deleted successfully!')
-                                                    loadAllSupplies()
-                                                  } catch (err) {
-                                                    console.error(err)
-                                                    toast.error('Failed to delete item')
-                                                  }
-                                                })
-                                                setConfirmOpen(true)
-                                              }}
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent className="bg-destructive text-destructive-foreground">
-                                            Delete Item
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                  </div>
+                            {hasPermission('delete_inventory_item') && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8 hover:border-red-500 hover:bg-red-500 hover:text-white"
+                                      onClick={() => {
+                                        setConfirmMessage(
+                                          `Are you sure you want to delete "${supply.supply_name}"?`,
+                                        )
+                                        setOnConfirmAction(() => async () => {
+                                          try {
+                                            await axios.delete(`/api/supplies/${supply.supply_id}`)
+                                            loadSupplies()
+                                            toast.success('Item deleted successfully!')
+                                            loadAllSupplies()
+                                          } catch (err) {
+                                            console.error(err)
+                                            toast.error('Failed to delete item')
+                                          }
+                                        })
+                                        setConfirmOpen(true)
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-destructive text-destructive-foreground">
+                                    Delete Item
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )
@@ -1213,11 +1197,11 @@ export default function InventoryPage() {
                 value={perPage.toString()}
                 onValueChange={(v) => setPerPage(Number(v))}
               >
-                <SelectTrigger className="h-8 w-[70px] bg-background text-foreground border border-border shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
+                <SelectTrigger className="h-8 w-[70px] border border-border bg-background text-foreground shadow-sm hover:bg-muted-foreground/10 dark:hover:bg-muted-foreground/20">
                   <SelectValue placeholder={perPage} />
                 </SelectTrigger>
 
-                <SelectContent className="bg-background text-foreground border border-border shadow-md">
+                <SelectContent className="border border-border bg-background text-foreground shadow-md">
                   {[5, 10, 25, 50, 100].map((pageSize) => (
                     <SelectItem
                       key={pageSize}
