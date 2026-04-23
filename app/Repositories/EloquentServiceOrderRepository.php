@@ -170,9 +170,10 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_price'),
                 'so.order_date',
-                'so.status'
+                'so.status',
+                'so.created_at'
             )
-            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'u.first_name', 'u.middle_name', 'u.last_name');
+            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'so.created_at', 'u.first_name', 'u.middle_name', 'u.last_name');
 
         if ($startDate) {
             $query->whereDate('so.order_date', '>=', $startDate);
@@ -199,9 +200,10 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_price'),
                 'so.order_date',
-                'so.status'
+                'so.status',
+                'so.created_at'
             )
-            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'u.first_name', 'u.middle_name', 'u.last_name');
+            ->groupBy('so.service_order_id', 'so.order_date', 'so.status', 'so.created_at', 'u.first_name', 'u.middle_name', 'u.last_name');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

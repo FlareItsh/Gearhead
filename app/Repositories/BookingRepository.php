@@ -22,6 +22,7 @@ class BookingRepository
                 'service_orders.status as order_status',
                 'service_orders.order_date',
                 'service_orders.order_type',
+                'service_orders.created_at',
                 DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'),
                 DB::raw('SUM(service_order_details.quantity * service_variants.price) as total_amount'),
                 DB::raw('MAX(payments.payment_method) as payment_method')
@@ -30,7 +31,8 @@ class BookingRepository
                 'service_orders.service_order_id',
                 'service_orders.status',
                 'service_orders.order_date',
-                'service_orders.order_type'
+                'service_orders.order_type',
+                'service_orders.created_at'
             );
 
         if ($status && $status !== 'all') {

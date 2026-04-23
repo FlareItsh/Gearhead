@@ -34,6 +34,7 @@ interface Booking {
   order_date: string
   total_price: number
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  created_at: string
 }
 
 interface PaginatedLink {
@@ -325,6 +326,7 @@ export default function AdminBookings() {
                           <TableHead className="font-semibold">Customer</TableHead>
                           <TableHead className="font-semibold">Services</TableHead>
                           <TableHead className="font-semibold">Date & Time</TableHead>
+                          <TableHead className="font-semibold">Requested At</TableHead>
                           <TableHead className="text-right font-semibold">Price</TableHead>
                           <TableHead className="text-center font-semibold">Status</TableHead>
                         </TableRow>
@@ -341,6 +343,9 @@ export default function AdminBookings() {
                             </TableCell>
                             <TableCell className="text-sm">
                               {formatDateTime(b.order_date)}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {formatDateTime(b.created_at)}
                             </TableCell>
                             <TableCell className="text-right font-medium">
                               ₱{Number(b.total_price).toLocaleString()}
@@ -367,6 +372,9 @@ export default function AdminBookings() {
                           <h3 className="font-semibold text-foreground">{b.customer_name}</h3>
                           <p className="mt-1 text-xs text-muted-foreground">
                             {formatDateTime(b.order_date)}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Requested: {formatDateTime(b.created_at)}
                           </p>
                         </div>
                         <div className="text-right">

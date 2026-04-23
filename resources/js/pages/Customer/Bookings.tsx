@@ -20,7 +20,6 @@ import {
   CheckCircle,
   Clock,
   Clock as ClockIcon,
-  CreditCard,
   History,
   Info,
   Tag,
@@ -39,6 +38,7 @@ interface Booking {
   services: string
   total_amount: number
   payment_method?: string
+  created_at: string
 }
 
 interface PaginatedLink {
@@ -471,18 +471,18 @@ export default function Bookings({
                   <div className="grid grid-cols-2 gap-6 border-b border-muted/20 pb-6">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 text-xs font-black tracking-widest text-muted-foreground/40 uppercase text-left">
-                        <Info className="h-3.5 w-3.5" /> Order Type
+                        <History className="h-3.5 w-3.5" /> Requested At
                       </div>
                       <p className="text-sm font-bold text-foreground text-left">
-                        {selectedBooking.order_type === 'W' ? 'Walk-in' : 'Reservation'}
+                        {new Date(selectedBooking.created_at).toLocaleString()}
                       </p>
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 text-xs font-black tracking-widest text-muted-foreground/40 uppercase text-left">
-                        <CreditCard className="h-3.5 w-3.5" /> Payment
+                        <Info className="h-3.5 w-3.5" /> Order Type
                       </div>
                       <p className="text-sm font-bold text-foreground text-left">
-                        {selectedBooking.payment_method || 'Unspecified'}
+                        {selectedBooking.order_type === 'W' ? 'Walk-in' : 'Reservation'}
                       </p>
                     </div>
                   </div>
