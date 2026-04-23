@@ -429,11 +429,46 @@ export default function InventoryPage() {
 
   const downloadPDF = () => {
     const doc = new jsPDF('p', 'mm', 'a4')
-    doc.setFontSize(20)
-    doc.text('Gearhead - Inventory Report', 14, 20)
+    const pageWidth = doc.internal.pageSize.getWidth()
+
+    // 1. Company Header
+    doc.setFontSize(22)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(30, 30, 30) // Dark Slate
+    doc.text('GEARHEAD CARWASH', pageWidth / 2, 20, { align: 'center' })
+
     doc.setFontSize(10)
-    doc.setTextColor(100)
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-PH')}`, 14, 28)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 100, 100)
+    doc.text('Official Inventory Stock Report', pageWidth / 2, 26, { align: 'center' })
+
+    // Horizontal Line
+    doc.setDrawColor(245, 158, 11) // Brand Yellow
+    doc.setLineWidth(1)
+    doc.line(14, 30, pageWidth - 14, 30)
+
+    // 2. Report Information
+    doc.setFontSize(10)
+    doc.setTextColor(50, 50, 50)
+    doc.setFont('helvetica', 'bold')
+    doc.text('REPORT DETAILS', 14, 40)
+
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Category Filter:`, 14, 46)
+    doc.setFont('helvetica', 'bold')
+    doc.text(filter === 'All' ? 'Full Inventory' : filter.toUpperCase(), 45, 46)
+
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Total Items:`, 14, 52)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`${suppliesData?.total || 0} Registered Items`, 45, 52)
+
+    // Right Side Info
+    const rightSideX = pageWidth - 60
+    doc.setTextColor(100, 100, 100)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Generated Date:`, rightSideX, 46)
+    doc.text(new Date().toLocaleDateString('en-PH', { dateStyle: 'long' }), rightSideX + 30, 46)
 
     const tableData = (suppliesData?.data || []).map((s) => [
       s.supply_name,
@@ -444,14 +479,66 @@ export default function InventoryPage() {
     ])
 
     autoTable(doc, {
-      head: [['Item', 'Unit', 'Stock', 'Reorder Level', 'Type']],
+      head: [['Item Name', 'Unit', 'Stock Level', 'Reorder Level', 'Item Type']],
       body: tableData,
-      startY: 35,
-      theme: 'striped',
-      headStyles: { fillColor: [255, 226, 38] },
+      startY: 60,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [30, 30, 30],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: {
+        2: { halign: 'center', fontStyle: 'bold' },
+        3: { halign: 'center' },
+        4: { halign: 'center' },
+      },
+      margin: { left: 14, right: 14 },
     })
 
-    doc.save(`inventory-${new Date().toISOString().split('T')[0]}.pdf`)
+    // 4. Report Summary Footer
+    const finalY = (doc as any).lastAutoTable.finalY + 10
+    doc.setFillColor(255, 248, 230) // Very Light Yellow
+    doc.rect(14, finalY, pageWidth - 28, 12, 'F')
+
+    doc.setFontSize(10)
+    doc.setTextColor(30, 30, 30)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`SUMMARY:`, 18, finalY + 8)
+    doc.setFont('helvetica', 'normal')
+    doc.text(
+      `Inventory scan complete. Total of ${suppliesData?.total || 0} items analyzed.`,
+      45,
+      finalY + 8,
+    )
+
+    // 5. Signature Section
+    const sigY = finalY + 35
+    doc.setFontSize(9)
+    doc.setTextColor(100)
+    doc.setFont('helvetica', 'normal')
+
+    // Prepared By
+    doc.line(14, sigY, 70, sigY)
+    doc.text('Inventory Manager / Date', 14, sigY + 5)
+
+    // Approved By
+    doc.line(pageWidth - 70, sigY, pageWidth - 14, sigY)
+    doc.text('Operations Head / Date', pageWidth - 70, sigY + 5)
+
+    // Page Numbers
+    const pageCount = (doc as any).internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, {
+        align: 'center',
+      })
+    }
+
+    doc.save(`GEARHEAD_INVENTORY_${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
   return (

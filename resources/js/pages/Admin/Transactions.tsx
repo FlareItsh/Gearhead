@@ -403,23 +403,53 @@ export default function Transactions({ transactions }: TransactionsProps) {
       }
 
       const doc = new jsPDF('p', 'mm', 'a4')
+      const pageWidth = doc.internal.pageSize.getWidth()
 
       const totalAmount = dataToExport.reduce(
         (sum, item) => sum + ('amount' in item ? item.amount : item.total_amount),
         0,
       )
 
-      const title = activeTab === 'payments' ? 'Payment History Report' : 'Supply Purchases Report'
+      const title = activeTab === 'payments' ? 'PAYMENT HISTORY REPORT' : 'SUPPLY PURCHASES REPORT'
 
-      doc.setFontSize(20)
+      // 1. Company Header
+      doc.setFontSize(22)
       doc.setFont('helvetica', 'bold')
-      doc.text(`Gearhead - ${title}`, 14, 20)
+      doc.setTextColor(30, 30, 30)
+      doc.text('GEARHEAD CARWASH', pageWidth / 2, 20, { align: 'center' })
 
       doc.setFontSize(10)
-      doc.setTextColor(100)
       doc.setFont('helvetica', 'normal')
-      doc.text(`Generated on: ${new Date().toLocaleDateString('en-PH')}`, 14, 28)
-      doc.text(`Period: ${startDate} to ${endDate}`, 14, 34)
+      doc.setTextColor(100, 100, 100)
+      doc.text(`Official ${title}`, pageWidth / 2, 26, { align: 'center' })
+
+      // Horizontal Line
+      doc.setDrawColor(245, 158, 11) // Brand Yellow
+      doc.setLineWidth(1)
+      doc.line(14, 30, pageWidth - 14, 30)
+
+      // 2. Report Information
+      doc.setFontSize(10)
+      doc.setTextColor(50, 50, 50)
+      doc.setFont('helvetica', 'bold')
+      doc.text('REPORT DETAILS', 14, 40)
+
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Report Type:`, 14, 46)
+      doc.setFont('helvetica', 'bold')
+      doc.text(activeTab === 'payments' ? 'Sales Revenue' : 'Procurement Expenses', 45, 46)
+
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Period Range:`, 14, 52)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`${startDate} to ${endDate}`, 45, 52)
+
+      // Right Side Info
+      const rightSideX = pageWidth - 60
+      doc.setTextColor(100, 100, 100)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Generated Date:`, rightSideX, 46)
+      doc.text(new Date().toLocaleDateString('en-PH', { dateStyle: 'long' }), rightSideX + 30, 46)
 
       const tableData = dataToExport.map((item) => {
         const isTx = 'payment_id' in item
@@ -441,18 +471,6 @@ export default function Transactions({ transactions }: TransactionsProps) {
         ]
       })
 
-      tableData.push([
-        '',
-        '',
-        'TOTAL',
-        totalAmount.toLocaleString('en-PH', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }),
-        '',
-        `${dataToExport.length} record${dataToExport.length !== 1 ? 's' : ''}`,
-      ])
-
       autoTable(doc, {
         head: [
           [
@@ -465,35 +483,66 @@ export default function Transactions({ transactions }: TransactionsProps) {
           ],
         ],
         body: tableData,
-        startY: 40,
-        theme: 'striped',
+        startY: 60,
+        theme: 'grid',
         headStyles: {
-          fillColor: [255, 226, 38],
-          textColor: [0, 0, 0],
+          fillColor: [30, 30, 30],
+          textColor: [255, 255, 255],
           fontStyle: 'bold',
+          halign: 'center',
         },
-        bodyStyles: { fontSize: 10 },
-        footStyles: { fontStyle: 'bold', fillColor: [240, 240, 240] },
-        styles: { fontSize: 9, cellPadding: 2 },
+        styles: { fontSize: 8, cellPadding: 2.5 },
         columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 45 },
-          3: { cellWidth: 25, halign: 'right' },
-          4: { cellWidth: 30, halign: 'center' },
-          5: { cellWidth: 30, halign: 'center' },
+          3: { halign: 'right', fontStyle: 'bold' },
+          4: { halign: 'center' },
+          5: { halign: 'center' },
         },
-        margin: { top: 40, left: 14, right: 14 },
-        didDrawPage: (data) => {
-          const pageWidth = doc.internal.pageSize.getWidth()
-          const pageHeight = doc.internal.pageSize.getHeight()
-          doc.setFontSize(9)
-          doc.setTextColor(150)
-          doc.text(`Page ${data.pageNumber}`, pageWidth / 2, pageHeight - 10, {
-            align: 'center',
-          })
-        },
+        margin: { left: 14, right: 14 },
       })
+
+      // 4. Report Summary Footer
+      const finalY = (doc as any).lastAutoTable.finalY + 10
+      doc.setFillColor(255, 248, 230) // Very Light Yellow
+      doc.rect(14, finalY, pageWidth - 28, 12, 'F')
+
+      doc.setFontSize(12)
+      doc.setTextColor(30, 30, 30)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`TOTAL SUMMARY (${activeTab.toUpperCase()}):`, 18, finalY + 8)
+      doc.setTextColor(245, 158, 11)
+      doc.text(
+        `PHP ${totalAmount.toLocaleString('en-PH', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        pageWidth - 45,
+        finalY + 8,
+        { align: 'right' },
+      )
+
+      // 5. Signature Section
+      const sigY = finalY + 35
+      doc.setFontSize(9)
+      doc.setTextColor(100)
+      doc.setFont('helvetica', 'normal')
+
+      // Prepared By
+      doc.line(14, sigY, 70, sigY)
+      doc.text('Prepared By / Date', 14, sigY + 5)
+
+      // Approved By
+      doc.line(pageWidth - 70, sigY, pageWidth - 14, sigY)
+      doc.text('Approved By / Date', pageWidth - 70, sigY + 5)
+
+      // Page Numbers
+      const pageCount = (doc as any).internal.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        doc.setFontSize(8)
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, {
+          align: 'center',
+        })
+      }
 
       doc.save(
         `${activeTab === 'payments' ? 'payments' : 'expenses'}-report-${

@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -73,6 +73,7 @@ interface PaymentResponse {
 }
 
 export default function Payments() {
+    const { props } = usePage();
     const [data, setData] = useState<PaymentResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [perPage, setPerPage] = useState(10);
@@ -121,27 +122,48 @@ export default function Payments() {
             const allPayments: Payment[] = res.data;
 
             const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
 
-            doc.setFillColor(255, 226, 38);
-            doc.rect(0, 0, 210, 40, 'F');
-
-            doc.setFontSize(24);
+            // 1. Company Header
+            doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('GEARHEAD', 15, 20);
+            doc.setTextColor(30, 30, 30);
+            doc.text('GEARHEAD CARWASH', pageWidth / 2, 20, { align: 'center' });
             
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text('PREMIUM AUTO DETAILING & SERVICES', 15, 28);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Customer Payment History Report', pageWidth / 2, 26, { align: 'center' });
 
-            doc.setFontSize(16);
+            // Horizontal Line
+            doc.setDrawColor(245, 158, 11);
+            doc.setLineWidth(1);
+            doc.line(15, 30, pageWidth - 15, 30);
+
+            // 2. Report Information
+            doc.setFontSize(10);
+            doc.setTextColor(50, 50, 50);
             doc.setFont('helvetica', 'bold');
-            doc.text('PAYMENT HISTORY REPORT', 120, 20, { align: 'left' });
+            doc.text('ACCOUNT SUMMARY', 15, 40);
 
-            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80, 80, 80);
-            doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 120, 28);
+            doc.text(`Customer Name:`, 15, 46);
+            doc.setFont('helvetica', 'bold');
+            const user = (props.auth as any)?.user;
+            const fullName = user ? `${user.first_name} ${user.last_name}` : 'Valued Customer';
+            doc.text(fullName, 45, 46);
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Report Date:`, 15, 52);
+            doc.setFont('helvetica', 'bold');
+            doc.text(new Date().toLocaleDateString('en-PH', { dateStyle: 'long' }), 45, 52);
+
+            // Right Side
+            const rightSideX = pageWidth - 65;
+            doc.setTextColor(100, 100, 100);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Total Records:`, rightSideX, 46);
+            doc.text(`${allPayments.length} Transactions`, rightSideX + 30, 46);
 
             const formatAmount = (amount: string | number) => {
                 const num = parseFloat(amount.toString());
@@ -159,7 +181,7 @@ export default function Payments() {
             autoTable(doc, {
                 head: [['DATE', 'SERVICES RENDERED', 'AMOUNT', 'METHOD', 'REFERENCE']],
                 body: tableData,
-                startY: 50,
+                startY: 62,
                 theme: 'grid',
                 headStyles: {
                     fillColor: [30, 30, 30],
@@ -168,10 +190,10 @@ export default function Payments() {
                     fontStyle: 'bold',
                     halign: 'center'
                 },
-                styles: { fontSize: 8, cellPadding: 4 },
+                styles: { fontSize: 8, cellPadding: 3 },
                 columnStyles: {
                     0: { cellWidth: 30, halign: 'center' },
-                    1: { cellWidth: 75 },
+                    1: { cellWidth: 70 },
                     2: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
                     3: { cellWidth: 25, halign: 'center' },
                     4: { cellWidth: 25, halign: 'center' },
@@ -183,15 +205,21 @@ export default function Payments() {
             const finalY = (doc as any).lastAutoTable.finalY + 10;
             const total = allPayments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
 
-            doc.setFillColor(245, 245, 245);
-            doc.rect(130, finalY, 65, 20, 'F');
+            doc.setFillColor(255, 248, 230); // Very Light Yellow
+            doc.rect(130, finalY, 65, 12, 'F');
             doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text('TOTAL SPENT', 135, finalY + 8);
-            doc.setFontSize(12);
-            doc.setTextColor(0);
+            doc.setTextColor(30, 30, 30);
             doc.setFont('helvetica', 'bold');
-            doc.text(formatAmount(total), 135, finalY + 16);
+            doc.text('TOTAL SPENT:', 135, finalY + 8);
+            doc.setTextColor(245, 158, 11);
+            doc.text(formatAmount(total), pageWidth - 18, finalY + 8, { align: 'right' });
+
+            // Signature
+            const sigY = finalY + 35;
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text('Prepared by Gearhead System', 15, sigY);
+            doc.text(`Printed: ${new Date().toLocaleString()}`, pageWidth - 15, sigY, { align: 'right' });
 
             doc.save(`gearhead-payment-history-${new Date().toISOString().split('T')[0]}.pdf`);
             toast.success('Report downloaded successfully!');

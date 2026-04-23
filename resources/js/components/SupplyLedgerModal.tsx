@@ -16,9 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import axios from 'axios'
-import { Calendar, History, Loader2 } from 'lucide-react'
+import { Calendar, FileDown, History, Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface LedgerEntry {
   date: string
@@ -118,6 +121,124 @@ export default function SupplyLedgerModal({
     }).format(new Date(utcDateString))
   }
 
+  const exportToPDF = () => {
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+
+    // 1. Company Header
+    doc.setFontSize(22)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(30, 30, 30) // Dark Slate
+    doc.text('GEARHEAD CARWASH', pageWidth / 2, 20, { align: 'center' })
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 100, 100)
+    doc.text('Official Inventory Transaction Report', pageWidth / 2, 26, { align: 'center' })
+
+    // Horizontal Line
+    doc.setDrawColor(245, 158, 11) // Brand Yellow
+    doc.setLineWidth(1)
+    doc.line(14, 30, pageWidth - 14, 30)
+
+    // 2. Report Information
+    doc.setFontSize(10)
+    doc.setTextColor(50, 50, 50)
+    doc.setFont('helvetica', 'bold')
+    doc.text('REPORT DETAILS', 14, 40)
+
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Product Name:`, 14, 46)
+    doc.setFont('helvetica', 'bold')
+    doc.text(supplyName || 'N/A', 45, 46)
+
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Period Range:`, 14, 52)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`${startDate} to ${endDate}`, 45, 52)
+
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Forwarded Balance:`, 14, 58)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(245, 158, 11)
+    doc.text(`${summary.forwarded_balance} Units`, 45, 58)
+
+    // Right Side Info
+    const rightSideX = pageWidth - 60
+    doc.setTextColor(100, 100, 100)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Generated Date:`, rightSideX, 46)
+    doc.text(new Date().toLocaleDateString('en-PH', { dateStyle: 'long' }), rightSideX + 30, 46)
+    doc.text(`Generated Time:`, rightSideX, 52)
+    doc.text(new Date().toLocaleTimeString('en-PH'), rightSideX + 30, 52)
+
+    // 3. Transactions Table
+    const tableData = ledger.map(entry => [
+      formatDate(entry.date),
+      entry.type,
+      entry.supplier_name || '-',
+      entry.employee_name || '-',
+      entry.qty_in > 0 ? `+${entry.qty_in}` : '-',
+      entry.qty_out > 0 ? `-${entry.qty_out}` : '-',
+      entry.reference_no || '-'
+    ])
+
+    autoTable(doc, {
+      startY: 68,
+      head: [['Date & Time', 'Type', 'Supplier', 'Employee', 'Qty In', 'Qty Out', 'Reference']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [30, 30, 30],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: {
+        4: { halign: 'center', fontStyle: 'bold' },
+        5: { halign: 'center', fontStyle: 'bold' },
+        6: { halign: 'right' },
+      }
+    })
+
+    // 4. Report Summary Footer
+    const finalY = (doc as any).lastAutoTable.finalY + 10
+    doc.setFillColor(255, 248, 230) // Very Light Yellow
+    doc.rect(14, finalY, pageWidth - 28, 12, 'F')
+
+    doc.setFontSize(12)
+    doc.setTextColor(30, 30, 30)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`ENDING INVENTORY / TOTAL STOCKS:`, 18, finalY + 8)
+    doc.setTextColor(245, 158, 11)
+    doc.text(`${summary.current_stock} UNITS`, pageWidth - 45, finalY + 8, { align: 'right' })
+
+    // 5. Signature Section
+    const sigY = finalY + 35
+    doc.setFontSize(9)
+    doc.setTextColor(100)
+    doc.setFont('helvetica', 'normal')
+
+    // Prepared By
+    doc.line(14, sigY, 70, sigY)
+    doc.text('Prepared By / Date', 14, sigY + 5)
+
+    // Approved By
+    doc.line(pageWidth - 70, sigY, pageWidth - 14, sigY)
+    doc.text('Approved By / Date', pageWidth - 70, sigY + 5)
+
+    // Page Numbers
+    const pageCount = (doc as any).internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+    }
+
+    doc.save(`GEARHEAD_LEDGER_${supplyName?.replace(/\s+/g, '_')}_${startDate}.pdf`)
+  }
+
   return (
     <Dialog
       open={open}
@@ -170,6 +291,17 @@ export default function SupplyLedgerModal({
                   className="h-9 w-[160px] border-border/60 bg-muted/20 text-xs focus:ring-yellow-500"
                 />
               </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToPDF}
+                disabled={loading || ledger.length === 0}
+                className="h-9 border-yellow-500/50 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500 hover:text-white dark:text-yellow-400 dark:hover:bg-yellow-500 dark:hover:text-background"
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Export Now
+              </Button>
             </div>
           </div>
         </div>
@@ -203,11 +335,11 @@ export default function SupplyLedgerModal({
         </div>
 
         {/* Table Content */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar"
-        >
-          <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex-1 flex flex-col px-6 pb-6 pt-0 min-h-0 overflow-hidden">
+          <div
+            ref={scrollRef}
+            className="mt-4 flex-1 overflow-y-auto rounded-xl border border-border bg-card shadow-sm custom-scrollbar"
+          >
             {loading ? (
               <div className="flex h-[400px] flex-col items-center justify-center gap-3">
                 <div className="relative h-12 w-12 text-yellow-500">
@@ -217,16 +349,16 @@ export default function SupplyLedgerModal({
                 <p className="text-sm font-medium text-muted-foreground">Refreshing records...</p>
               </div>
             ) : ledger.length > 0 ? (
-              <Table>
-                <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
-                  <TableRow className="border-b border-border/50">
-                    <TableHead className="w-[200px] font-bold text-foreground">Date & Time</TableHead>
-                    <TableHead className="w-[120px] font-bold text-foreground text-center">Type</TableHead>
-                    <TableHead className="font-bold text-foreground">Supplier</TableHead>
-                    <TableHead className="font-bold text-foreground">Employee</TableHead>
-                    <TableHead className="text-center font-bold text-foreground">Qty In</TableHead>
-                    <TableHead className="text-center font-bold text-foreground">Qty Out</TableHead>
-                    <TableHead className="text-right font-bold text-foreground">Reference</TableHead>
+              <Table className="relative min-w-full border-separate border-spacing-0">
+                <TableHeader className="sticky top-0 z-20">
+                  <TableRow className="border-b border-border/50 hover:bg-transparent">
+                    <TableHead className="sticky top-0 z-30 w-[200px] bg-muted/95 backdrop-blur-md font-bold text-foreground border-b">Date & Time</TableHead>
+                    <TableHead className="sticky top-0 z-30 w-[120px] bg-muted/95 backdrop-blur-md font-bold text-foreground text-center border-b">Type</TableHead>
+                    <TableHead className="sticky top-0 z-30 bg-muted/95 backdrop-blur-md font-bold text-foreground border-b">Supplier</TableHead>
+                    <TableHead className="sticky top-0 z-30 bg-muted/95 backdrop-blur-md font-bold text-foreground border-b">Employee</TableHead>
+                    <TableHead className="sticky top-0 z-30 bg-muted/95 backdrop-blur-md text-center font-bold text-foreground border-b">Qty In</TableHead>
+                    <TableHead className="sticky top-0 z-30 bg-muted/95 backdrop-blur-md text-center font-bold text-foreground border-b">Qty Out</TableHead>
+                    <TableHead className="sticky top-0 z-30 bg-muted/95 backdrop-blur-md text-right font-bold text-foreground border-b">Reference</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
