@@ -1,3 +1,4 @@
+import FloatingPromotions from '@/components/FloatingPromotions'
 import Header from '@/components/Header'
 import { Head } from '@inertiajs/react'
 import About from './Sections/About'
@@ -7,7 +8,7 @@ import Hero from './Sections/Hero'
 import LP_Services from './Sections/LP_Services'
 import Review from './Sections/Review'
 
-export default function Welcome() {
+export default function Welcome({ discounts }: { discounts?: any[] }) {
   return (
     <>
       <Head title="Welcome">
@@ -29,6 +30,8 @@ export default function Welcome() {
       >
         <Hero />
       </section>
+
+      <FloatingPromotions discounts={discounts} />
 
       <section
         id="about"

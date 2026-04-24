@@ -1,4 +1,5 @@
 import DashboardBookingConfirmation from '@/components/DashboardBookingConfirmation'
+import FloatingPromotions from '@/components/FloatingPromotions'
 import HeadingSmall from '@/components/heading-small'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ const CustomerDashboard: React.FC = () => {
   const pageProps = usePage().props as unknown as SharedData & {
     paymentsCount?: number
     totalSpent?: number
+    discounts?: any[]
   }
   const { auth } = pageProps
   const firstName = auth?.user?.first_name ?? auth?.user?.name ?? 'there'
@@ -138,6 +140,7 @@ const CustomerDashboard: React.FC = () => {
       />
 
       <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 duration-700 animate-in fade-in slide-in-from-bottom-4 md:p-6 lg:p-8">
+        <FloatingPromotions discounts={pageProps.discounts} />
         {/* --- Hero Section --- */}
         <section className="relative overflow-hidden rounded-[2.5rem] border border-border/40 bg-muted/20 shadow-xl transition-all duration-700">
           <div className="absolute inset-0 z-0">
@@ -168,8 +171,6 @@ const CustomerDashboard: React.FC = () => {
             </div>
           </div>
         </section>
-
-        {/* --- Stats and Loyalty Grid --- */}
         <div className="grid gap-6 md:grid-cols-12">
           {/* Loyalty Progress Card - Takes more space */}
           <div className="relative col-span-12 overflow-hidden rounded-[2.5rem] border border-border/50 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl md:col-span-8 dark:bg-card">

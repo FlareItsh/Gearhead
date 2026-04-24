@@ -186,7 +186,7 @@ export default function LP_Services() {
                                     {/* Button */}
                                     <div className="px-6 pt-4 pb-8">
                                         <Link
-                                            href={`/services?service=${encodeURIComponent(card.title)}`}
+                                            href={`/services?service=${encodeURIComponent(card.title === 'Engine Wash' ? 'Enginewash' : card.title)}`}
                                             className="block"
                                         >
                                             <Button

@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // * Public Routes
-Route::get('/', fn () => Inertia::render('welcome'))->name('home');
+Route::get('/', function () {
+    return Inertia::render('welcome', [
+        'discounts' => \App\Models\Discount::advertisable()->get(),
+    ]);
+})->name('home');
 
 // * Guest-accessible booking route
 Route::get('/services', function (Request $request, AdminController $admin, CustomerController $customer) {

@@ -80,6 +80,7 @@ class CustomerController extends Controller
         return Inertia::render('dashboard', [
             'paymentsCount' => $count,
             'totalSpent' => $total,
+            'discounts' => \App\Models\Discount::advertisable()->get(),
         ]);
     }
 

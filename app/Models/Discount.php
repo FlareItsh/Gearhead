@@ -45,6 +45,21 @@ class Discount extends Model
     }
 
     /**
+     * Scope for current and upcoming discounts for promotional display.
+     */
+    public function scopeAdvertisable(Builder $query): Builder
+    {
+        $now = Carbon::now();
+
+        return $query->where('is_active', true)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('valid_to')
+                    ->orWhere('valid_to', '>=', $now);
+            })
+            ->orderBy('valid_from', 'asc');
+    }
+
+    /**
      * Get the best active discount (highest reduction).
      */
     public static function getBestActiveDiscount(float $totalAmount = 0): ?self
