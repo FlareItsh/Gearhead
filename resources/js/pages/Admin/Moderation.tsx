@@ -50,6 +50,8 @@ import {
   Tag,
   Trash2,
   Upload,
+  Filter,
+  ArrowUpDown,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
@@ -151,6 +153,8 @@ export default function Moderation({
   const [isReviewsLoading, setIsReviewsLoading] = useState(false)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [reviewRatingFilter, setReviewRatingFilter] = useState('all')
+  const [reviewSortBy, setReviewSortBy] = useState('newest')
 
   const openViewDialog = (review: Review) => {
     setSelectedReview(review)
@@ -164,6 +168,8 @@ export default function Moderation({
         status: activeReviewTab,
         per_page: reviewPerPage,
         search: reviewSearch,
+        rating: reviewRatingFilter,
+        sort_by: reviewSortBy,
       }
 
       if (url) {
@@ -183,7 +189,7 @@ export default function Moderation({
 
   useEffect(() => {
     loadReviews()
-  }, [activeReviewTab, reviewPerPage])
+  }, [activeReviewTab, reviewPerPage, reviewRatingFilter, reviewSortBy])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -736,7 +742,7 @@ export default function Moderation({
                   </Tabs>
                 </div>
                 
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -745,6 +751,40 @@ export default function Moderation({
                       onChange={(e) => setReviewSearch(e.target.value)}
                       className="pl-10 h-9 border-border bg-background focus:ring-highlight"
                     />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-muted-foreground" />
+                      <Select value={reviewRatingFilter} onValueChange={setReviewRatingFilter}>
+                        <SelectTrigger className="h-9 w-[130px] border-border bg-background">
+                          <SelectValue placeholder="Rating" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Ratings</SelectItem>
+                          {[5, 4, 3, 2, 1].map((stars) => (
+                            <SelectItem key={stars} value={stars.toString()}>
+                              {stars} Stars
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      <Select value={reviewSortBy} onValueChange={setReviewSortBy}>
+                        <SelectTrigger className="h-9 w-[160px] border-border bg-background">
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="newest">Newest First</SelectItem>
+                          <SelectItem value="oldest">Oldest First</SelectItem>
+                          <SelectItem value="highest_rating">Highest Rating</SelectItem>
+                          <SelectItem value="lowest_rating">Lowest Rating</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               </CardHeader>

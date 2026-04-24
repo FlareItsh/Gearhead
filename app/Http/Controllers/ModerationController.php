@@ -139,6 +139,8 @@ class ModerationController extends Controller
         $status = $request->query('status', 'displayed'); // 'displayed' or 'hidden'
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search', '');
+        $rating = $request->query('rating', 'all');
+        $sortBy = $request->query('sort_by', 'newest');
 
         $query = Review::with('user')
             ->when($status === 'displayed', function ($q) {
@@ -146,6 +148,9 @@ class ModerationController extends Controller
             })
             ->when($status === 'hidden', function ($q) {
                 return $q->where('is_displayed', false);
+            })
+            ->when($rating !== 'all', function ($q) use ($rating) {
+                return $q->where('rating', (int) $rating);
             })
             ->when($search, function ($q) use ($search) {
                 return $q->where(function ($sub) use ($search) {
@@ -156,8 +161,18 @@ class ModerationController extends Controller
                                 ->orWhere('last_name', 'like', "%{$search}%");
                         });
                 });
-            })
-            ->orderBy('created_at', 'desc');
+            });
+
+        // Sorting
+        if ($sortBy === 'newest') {
+            $query->orderBy('created_at', 'desc');
+        } elseif ($sortBy === 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($sortBy === 'highest_rating') {
+            $query->orderBy('rating', 'desc');
+        } elseif ($sortBy === 'lowest_rating') {
+            $query->orderBy('rating', 'asc');
+        }
 
         return response()->json($query->paginate($perPage));
     }
