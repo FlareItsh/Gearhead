@@ -49,7 +49,7 @@ const FloatingPromotions: React.FC<FloatingPromotionsProps> = ({ discounts = [] 
   }
 
   return (
-    <div className="fixed right-6 bottom-6 z-50 w-[calc(100%-3rem)] max-w-[320px] duration-700 animate-in fade-in slide-in-from-bottom-10">
+    <div className="fixed right-6 top-24 z-50 w-[calc(100%-3rem)] max-w-[320px] duration-700 animate-in fade-in slide-in-from-top-10">
       <div
         className={`group relative overflow-hidden rounded-[2rem] border p-1 shadow-2xl transition-all duration-500 hover:scale-[1.02] ${
           isActive
