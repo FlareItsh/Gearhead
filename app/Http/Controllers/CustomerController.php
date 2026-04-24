@@ -246,4 +246,26 @@ class CustomerController extends Controller
 
         return response()->json(['message' => 'Customer updated successfully.']);
     }
+
+    public function storeReview(Request $request)
+    {
+        $validated = $request->validate([
+            'comment' => 'required|string|max:1000',
+            'rating' => 'required|integer|min:1|max:5',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        \App\Models\Review::create([
+            'user_id' => $user->user_id,
+            'name' => $user->first_name.' '.$user->last_name,
+            'comment' => $validated['comment'],
+            'rating' => $validated['rating'],
+            'is_displayed' => false, // Needs moderation
+            'is_verified' => true,
+        ]);
+
+        return back()->with('status', 'review-submitted');
+    }
 }

@@ -1,4 +1,5 @@
 import InputError from '@/components/input-error'
+import Pagination from '@/components/Pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,24 +28,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import AppLayout from '@/layouts/app-layout'
 import { usePermissions } from '@/hooks/use-permissions'
-import { Discount, type BreadcrumbItem } from '@/types'
+import { Discount, Review, type BreadcrumbItem } from '@/types'
 import { Transition } from '@headlessui/react'
-import { Head, useForm } from '@inertiajs/react'
+import { Head, router, useForm } from '@inertiajs/react'
 import {
+  CheckCircle2,
   Clock,
   CreditCard,
   Edit2,
+  Eye,
+  EyeOff,
   Gift,
   LoaderCircle,
   Plus,
   QrCode,
+  Search,
+  Star,
   Tag,
   Trash2,
   Upload,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import { toast } from 'sonner'
 
 interface GcashSettings {
   account_name: string
@@ -53,10 +62,26 @@ interface GcashSettings {
   qr_code_url: string | null
 }
 
+interface PaginatedLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  links: PaginatedLink[]
+}
+
 interface ModerationProps {
   loyaltyThreshold: number
   gcashSettings: GcashSettings
   discounts: Discount[]
+  reviews: PaginatedResponse<Review>
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -70,6 +95,7 @@ export default function Moderation({
   loyaltyThreshold,
   gcashSettings,
   discounts,
+  reviews: initialReviews,
 }: ModerationProps) {
   const { hasPermission } = usePermissions()
   // Loyalty Form
@@ -112,9 +138,59 @@ export default function Moderation({
     })
   }
 
-  // Discount Form
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<{ id: number; type: 'review' | 'discount' } | null>(null)
+
+  // Reviews State
+  const [reviewsData, setReviewsData] = useState<PaginatedResponse<Review>>(initialReviews)
+  const [activeReviewTab, setActiveReviewTab] = useState<'displayed' | 'hidden'>('displayed')
+  const [reviewSearch, setReviewSearch] = useState('')
+  const [reviewPerPage, setReviewPerPage] = useState(10)
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false)
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  const openViewDialog = (review: Review) => {
+    setSelectedReview(review)
+    setIsViewDialogOpen(true)
+  }
+
+  const loadReviews = async (url?: string) => {
+    setIsReviewsLoading(true)
+    try {
+      const params: any = {
+        status: activeReviewTab,
+        per_page: reviewPerPage,
+        search: reviewSearch,
+      }
+
+      if (url) {
+        const urlObj = new URL(url)
+        const page = urlObj.searchParams.get('page')
+        if (page) params.page = page
+      }
+
+      const res = await axios.get(route('reviews.list'), { params })
+      setReviewsData(res.data)
+    } catch (err) {
+      console.error('Failed to load reviews', err)
+    } finally {
+      setIsReviewsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadReviews()
+  }, [activeReviewTab, reviewPerPage])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadReviews()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [reviewSearch])
 
   const discountForm = useForm({
     name: '',
@@ -159,12 +235,46 @@ export default function Moderation({
     }
   }
 
-  const deleteDiscount = (id: number) => {
-    if (confirm('Are you sure you want to delete this discount?')) {
-      useForm().delete(route('admin.moderation.discounts.destroy', id), {
+  const confirmDelete = (id: number, type: 'review' | 'discount') => {
+    setItemToDelete({ id, type })
+    setIsDeleteDialogOpen(true)
+  }
+
+  const toggleReviewVisibility = (id: number) => {
+    router.post(
+      route('admin.moderation.reviews.toggle', id),
+      {},
+      {
         preserveScroll: true,
-      })
-    }
+        onSuccess: () => {
+          toast.success('Review visibility updated')
+          loadReviews()
+        },
+      },
+    )
+  }
+
+  const handleDelete = () => {
+    if (!itemToDelete) return
+
+    const deleteRoute =
+      itemToDelete.type === 'review'
+        ? route('admin.moderation.reviews.destroy', itemToDelete.id)
+        : route('admin.moderation.discounts.destroy', itemToDelete.id)
+
+    router.delete(deleteRoute, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setIsDeleteDialogOpen(false)
+        setItemToDelete(null)
+        toast.success(
+          `${itemToDelete.type === 'review' ? 'Review' : 'Discount'} deleted successfully`,
+        )
+        if (itemToDelete.type === 'review') {
+          loadReviews()
+        }
+      },
+    })
   }
 
   const getStatusBadge = (discount: Discount) => {
@@ -183,6 +293,7 @@ export default function Moderation({
     }
     return <Badge variant="highlight">Active</Badge>
   }
+
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -574,7 +685,7 @@ export default function Moderation({
                                   variant="ghost"
                                   size="icon"
                                   className="text-destructive hover:text-destructive"
-                                  onClick={() => deleteDiscount(discount.discount_id)}
+                                  onClick={() => confirmDelete(discount.discount_id, 'discount')}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -598,7 +709,323 @@ export default function Moderation({
               </CardContent>
             </Card>
           )}
+
+          {/* Customer Reviews */}
+          {hasPermission('manage_reviews') && (
+            <Card className="border border-border/50 bg-background text-foreground">
+              <CardHeader className="py-6 border-b border-border/50">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-highlight" />
+                      Customer Testimonials
+                    </CardTitle>
+                    <CardDescription>
+                      Manage reviews shown on the landing page. Total: <span className="font-bold text-foreground">{reviewsData.total}</span>
+                    </CardDescription>
+                  </div>
+                  <Tabs
+                    value={activeReviewTab}
+                    onValueChange={(v) => setActiveReviewTab(v as any)}
+                    className="w-full sm:w-[300px]"
+                  >
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="displayed">Displayed</TabsTrigger>
+                      <TabsTrigger value="hidden">Hidden</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+                
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Search reviews..."
+                      value={reviewSearch}
+                      onChange={(e) => setReviewSearch(e.target.value)}
+                      className="pl-10 h-9 border-border bg-background focus:ring-highlight"
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow className="border-b border-border/50">
+                        <TableHead className="font-semibold">Customer</TableHead>
+                        <TableHead className="font-semibold">Review</TableHead>
+                        <TableHead className="font-semibold">Rating</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="text-right font-semibold">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isReviewsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-32 text-center">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <LoaderCircle className="h-8 w-8 animate-spin text-highlight" />
+                              <span className="text-sm text-muted-foreground">Updating list...</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : reviewsData.data.length > 0 ? (
+                        reviewsData.data.map((review) => (
+                          <TableRow key={review.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors">
+                            <TableCell>
+                              <div className="flex flex-col gap-1.5">
+                                <span className="font-bold text-foreground">{review.name}</span>
+                                {review.is_verified && (
+                                  <Badge variant="success" className="text-[10px] py-0 h-4 w-fit px-1.5 font-bold uppercase tracking-wider">
+                                    <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
+                                    Verified
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-md">
+                              <p className="line-clamp-2 text-sm text-muted-foreground leading-relaxed break-all">
+                                {review.comment}
+                              </p>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5 font-black text-foreground">
+                                {review.rating}
+                                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {review.is_displayed ? (
+                                <Badge variant="success" className="font-bold shadow-green-100/50">Displayed</Badge>
+                              ) : (
+                                <Badge variant="secondary" className="font-bold">Hidden</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-highlight hover:bg-highlight/10 hover:text-highlight"
+                                  onClick={() => openViewDialog(review)}
+                                  title="View Full Review"
+                                >
+                                  <Search className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 gap-1.5 font-bold text-xs border-border/60 hover:border-highlight/50 hover:bg-highlight/5"
+                                  onClick={() => toggleReviewVisibility(review.id)}
+                                >
+                                  {review.is_displayed ? (
+                                    <>
+                                      <EyeOff className="h-3.5 w-3.5" />
+                                      Hide
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="h-3.5 w-3.5" />
+                                      Show
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                  onClick={() => confirmDelete(review.id, 'review')}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            className="h-32 text-center text-muted-foreground"
+                          >
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <Search className="h-8 w-8 opacity-20 mb-2" />
+                              <p>No reviews found in this category.</p>
+                              {reviewSearch && <p className="text-xs">Try clearing your search query.</p>}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Review Pagination */}
+                <div className="flex flex-col items-center justify-between gap-4 border-t border-border/50 p-4 sm:flex-row bg-muted/10">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Rows per page</span>
+                    <Select
+                      value={reviewPerPage.toString()}
+                      onValueChange={(v) => setReviewPerPage(Number(v))}
+                    >
+                      <SelectTrigger className="h-8 w-[70px] border-border bg-background">
+                        <SelectValue placeholder={reviewPerPage} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[5, 10, 25, 50].map((pageSize) => (
+                          <SelectItem key={pageSize} value={pageSize.toString()}>
+                            {pageSize}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Pagination
+                    links={reviewsData.links}
+                    onPageChange={loadReviews}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <Dialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="h-5 w-5" />
+                Confirm Deletion
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this {itemToDelete?.type}? This action cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4 gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+              >
+                Delete {itemToDelete?.type === 'review' ? 'Review' : 'Discount'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Review Details Modal */}
+        <Dialog
+          open={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-highlight" />
+                Review Details
+              </DialogTitle>
+              <DialogDescription>
+                Detailed information about this customer review.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedReview && (
+              <div className="mt-4 space-y-6">
+                <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</p>
+                    <p className="text-lg font-bold">{selectedReview.name}</p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Rating</p>
+                    <div className="flex items-center justify-end gap-1.5 font-black text-xl">
+                      {selectedReview.rating}
+                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Review Comment</p>
+                  <div className="rounded-xl bg-muted/30 p-4 border border-border/50 overflow-hidden">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap italic break-all">
+                      "{selectedReview.comment}"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</p>
+                    {selectedReview.is_displayed ? (
+                      <Badge variant="success" className="font-bold">Displayed on Landing</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="font-bold">Hidden</Badge>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Verified Purchase</p>
+                    {selectedReview.is_verified ? (
+                      <Badge variant="success" className="font-bold">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="font-bold">Unverified</Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date Posted</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(selectedReview.created_at).toLocaleDateString(undefined, {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter className="mt-6 border-t border-border/50 pt-4">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => setIsViewDialogOpen(false)}
+              >
+                Close
+              </Button>
+              {selectedReview && (
+                <Button
+                  variant="highlight"
+                  className="w-full sm:w-auto font-bold"
+                  onClick={() => {
+                    toggleReviewVisibility(selectedReview.id)
+                    setIsViewDialogOpen(false)
+                  }}
+                >
+                  {selectedReview.is_displayed ? 'Hide Review' : 'Show Review'}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   )

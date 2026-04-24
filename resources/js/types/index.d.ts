@@ -34,6 +34,18 @@ export interface Discount {
     updated_at: string;
 }
 
+export interface Review {
+    id: number;
+    user_id: number | null;
+    name: string;
+    comment: string;
+    rating: number;
+    is_displayed: boolean;
+    is_verified: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };

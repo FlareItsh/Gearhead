@@ -12,6 +12,7 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'discounts' => \App\Models\Discount::advertisable()->get(),
+        'reviews' => \App\Models\Review::where('is_displayed', true)->orderBy('created_at', 'desc')->get(),
     ]);
 })->name('home');
 
@@ -123,7 +124,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/moderation/discounts', [\App\Http\Controllers\ModerationController::class, 'storeDiscount'])->name('admin.moderation.discounts.store');
         Route::put('/moderation/discounts/{id}', [\App\Http\Controllers\ModerationController::class, 'updateDiscount'])->name('admin.moderation.discounts.update');
         Route::delete('/moderation/discounts/{id}', [\App\Http\Controllers\ModerationController::class, 'destroyDiscount'])->name('admin.moderation.discounts.destroy');
+        Route::post('/moderation/reviews/{id}/toggle', [\App\Http\Controllers\ModerationController::class, 'toggleReview'])->name('admin.moderation.reviews.toggle');
+        Route::delete('/moderation/reviews/{id}', [\App\Http\Controllers\ModerationController::class, 'destroyReview'])->name('admin.moderation.reviews.destroy');
     });
+
+    Route::post('/reviews', [CustomerController::class, 'storeReview'])->name('reviews.store');
 });
 
 // * Auth routes

@@ -51,6 +51,7 @@ class UsersSeeder extends Seeder
             'manage_loyalty',
             'manage_gcash',
             'manage_discounts',
+            'manage_reviews',
         ];
 
         $users = [
@@ -90,12 +91,12 @@ class UsersSeeder extends Seeder
         for ($i = 10; $i < 30; $i++) {
             $users[] = [
                 'user_id' => $i,
-                'first_name' => 'Customer' . $i,
+                'first_name' => 'Customer'.$i,
                 'middle_name' => null,
                 'last_name' => 'Test',
-                'email' => 'customer' . $i . '@example.com',
-                'phone_number' => '9' . rand(100000000, 999999999),
-                'address' => 'Test Address ' . $i,
+                'email' => 'customer'.$i.'@example.com',
+                'phone_number' => '9'.rand(100000000, 999999999),
+                'address' => 'Test Address '.$i,
                 'password' => Hash::make('password'),
                 'role' => 'customer',
                 'permissions' => null,

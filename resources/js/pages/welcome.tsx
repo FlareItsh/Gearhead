@@ -8,7 +8,7 @@ import Hero from './Sections/Hero'
 import LP_Services from './Sections/LP_Services'
 import Review from './Sections/Review'
 
-export default function Welcome({ discounts }: { discounts?: any[] }) {
+export default function Welcome({ discounts, reviews }: { discounts?: any[]; reviews?: any[] }) {
   return (
     <>
       <Head title="Welcome">
@@ -51,7 +51,7 @@ export default function Welcome({ discounts }: { discounts?: any[] }) {
         id="review"
         className="scroll-mt-18"
       >
-        <Review />
+        <Review reviews={reviews} />
       </section>
 
       <section

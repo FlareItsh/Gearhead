@@ -1,5 +1,6 @@
 import DashboardBookingConfirmation from '@/components/DashboardBookingConfirmation'
 import FloatingPromotions from '@/components/FloatingPromotions'
+import FloatingReview from '@/components/FloatingReview'
 import HeadingSmall from '@/components/heading-small'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -141,6 +142,7 @@ const CustomerDashboard: React.FC = () => {
 
       <div className="flex h-full flex-1 flex-col gap-8 rounded-xl p-4 duration-700 animate-in fade-in slide-in-from-bottom-4 md:p-6 lg:p-8">
         <FloatingPromotions discounts={pageProps.discounts} />
+        {pageProps.auth.user.role === 'customer' && <FloatingReview />}
         {/* --- Hero Section --- */}
         <section className="relative overflow-hidden rounded-[2.5rem] border border-border/40 bg-muted/20 shadow-xl transition-all duration-700">
           <div className="absolute inset-0 z-0">

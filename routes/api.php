@@ -227,6 +227,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('customers.list');
     Route::post('/customers/create', [CustomerController::class, 'store'])
         ->name('customers.create');
+
+    // Reviews API
+    Route::get('/reviews/list', [\App\Http\Controllers\ModerationController::class, 'getReviews'])
+        ->name('reviews.list');
 });
 
 // * Guest-accessible booking endpoint (before auth middleware)
