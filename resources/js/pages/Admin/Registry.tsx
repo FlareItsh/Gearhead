@@ -816,9 +816,9 @@ export default function Registry({
                     📅
                   </div>
                   <div className="text-center">
-                    <h3 className="text-lg font-bold">Reservations & Queue</h3>
+                    <h3 className="text-lg font-bold">Reservations</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      For clients with prior booking or in queue
+                      For clients with prior booking
                     </p>
                   </div>
                 </button>
@@ -841,42 +841,37 @@ export default function Registry({
             {startServiceStep === 'booking' && (
               <div className="space-y-4">
                 <div className="custom-scrollbar max-h-96 space-y-3 overflow-y-auto">
-                  {todayBookings.length === 0 ? (
+                  {todayBookings.filter(b => !b.is_queued).length === 0 ? (
                     <div className="py-12 text-center">
                       <p className="text-muted-foreground">No reservations found.</p>
                     </div>
                   ) : (
-                    todayBookings.map((booking) => (
-                      <button
-                        key={booking.service_order_id}
-                        onClick={() => handleSelectBooking(booking)}
-                        className="w-full rounded-lg border border-border p-4 text-left transition-all hover:border-highlight hover:bg-accent/5"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                    todayBookings
+                      .filter((b) => !b.is_queued)
+                      .map((booking) => (
+                        <button
+                          key={booking.service_order_id}
+                          onClick={() => handleSelectBooking(booking)}
+                          className="w-full rounded-lg border border-border p-4 text-left transition-all hover:border-highlight hover:bg-accent/5"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
                               <p className="font-semibold text-foreground">
                                 {booking.customer_name}
                               </p>
-                              {booking.is_queued && (
-                                <span className="inline-flex items-center rounded-full bg-highlight/10 px-2 py-0.5 text-xs font-medium text-highlight ring-1 ring-highlight/20 ring-inset">
-                                  Queue #{booking.queue_number}
-                                </span>
-                              )}
+                              <p className="mt-1 text-sm text-muted-foreground">{booking.services}</p>
                             </div>
-                            <p className="mt-1 text-sm text-muted-foreground">{booking.services}</p>
+                            <div className="text-right">
+                              <p className="font-bold text-highlight">
+                                ₱{parseFloat(booking.total).toLocaleString()}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {new Date(booking.order_date).toLocaleString()}
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-highlight">
-                              ₱{parseFloat(booking.total).toLocaleString()}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {new Date(booking.order_date).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    ))
+                        </button>
+                      ))
                   )}
                 </div>
               </div>

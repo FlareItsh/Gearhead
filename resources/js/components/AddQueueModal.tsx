@@ -112,12 +112,14 @@ export default function AddQueueModal({ isOpen, onClose, onSuccess }: AddQueueMo
                   <Loader2 className="mb-2 h-8 w-8 animate-spin" />
                   <p>Loading reservations...</p>
                 </div>
-              ) : todayBookings.length === 0 ? (
+              ) : todayBookings.filter(b => !b.is_queued).length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">
                   <p className="text-lg font-medium">No reservations found today</p>
                 </div>
               ) : (
-                todayBookings.map((booking) => (
+                todayBookings
+                  .filter((b) => !b.is_queued)
+                  .map((booking) => (
                   <button
                     key={booking.service_order_id}
                     onClick={() => handleSelectBooking(booking)}
@@ -130,11 +132,6 @@ export default function AddQueueModal({ isOpen, onClose, onSuccess }: AddQueueMo
                           <p className="font-semibold text-foreground group-hover:text-highlight transition-colors">
                             {booking.customer_name}
                           </p>
-                          {booking.is_queued && (
-                            <span className="inline-flex items-center rounded-full bg-highlight/10 px-2 py-0.5 text-xs font-medium text-highlight ring-1 ring-highlight/20 ring-inset">
-                              Queue #{booking.queue_number}
-                            </span>
-                          )}
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
                           {booking.services}
