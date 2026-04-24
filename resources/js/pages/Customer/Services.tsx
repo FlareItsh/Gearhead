@@ -5,7 +5,7 @@ import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
 import { register } from '@/routes'
 import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
-import { AlertCircle, CheckCircle2, ChevronDown, Clock, Star, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronDown, Circle, Clock, Star, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -693,20 +693,29 @@ export default function Services() {
                         : 'border-border/40 bg-white hover:border-highlight/20 dark:bg-muted/5'
                     }`}
                   >
-                    <div>
-                      <p className="text-base leading-tight font-black text-foreground uppercase">
-                        {variant.size}
-                      </p>
-                      <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                        {variant.estimated_duration} mins
-                      </p>
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${
+                        active 
+                          ? 'border-highlight bg-highlight shadow-[0_0_10px_rgba(234,179,8,0.3)]' 
+                          : 'border-border/60 bg-transparent'
+                      }`}>
+                        {active && <div className="h-2 w-2 rounded-full bg-black" />}
+                      </div>
+                      <div>
+                        <p className={`text-base leading-tight font-black uppercase transition-colors ${active ? 'text-highlight' : 'text-foreground'}`}>
+                          {variant.size}
+                        </p>
+                        <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                          {variant.estimated_duration} mins
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-black text-foreground">
+                      <p className={`text-lg font-black transition-colors ${active ? 'text-highlight' : 'text-foreground'}`}>
                         ₱{Number(variant.price).toLocaleString()}
                       </p>
                       {active && (
-                        <div className="mt-1 flex items-center justify-end gap-1">
+                        <div className="mt-1 flex items-center justify-end gap-1 animate-in fade-in zoom-in duration-300">
                           <CheckCircle2 className="h-3 w-3 text-highlight" />
                           <span className="text-[10px] font-black tracking-widest text-highlight uppercase">
                             Selected
@@ -717,6 +726,16 @@ export default function Services() {
                   </button>
                 )
               })}
+            </div>
+
+            <div className="p-8 pt-0">
+              <Button
+                variant="highlight"
+                className="h-14 w-full rounded-2xl text-xs font-black tracking-widest uppercase shadow-xl shadow-highlight/20 transition-all hover:scale-[1.02] active:scale-95"
+                onClick={() => setIsVariantModalOpen(false)}
+              >
+                Confirm Selection
+              </Button>
             </div>
           </div>
         </div>
