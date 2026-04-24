@@ -5,7 +5,7 @@ import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
 import { register } from '@/routes'
 import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
-import { AlertCircle, CheckCircle2, ChevronDown, Circle, Clock, Star, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronDown, Circle, Clock, Star, X, Calendar as CalendarIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -586,39 +586,53 @@ export default function Services() {
               </div>
 
               <div className="space-y-5 border-t border-border/20 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                      <CalendarIcon className="h-3 w-3 text-highlight" />
                       Desired Date
                     </label>
-                    <div className="relative">
+                    <div className="group relative">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-highlight transition-colors">
+                        <CalendarIcon className="h-4 w-4" />
+                      </div>
                       <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="w-full rounded-xl border-border/40 bg-white p-3 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
+                        className="w-full rounded-2xl border border-border/40 bg-white py-4 pl-12 pr-4 text-sm font-black text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
                       />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
-                      Estimated Time
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                      <Clock className="h-3 w-3 text-highlight" />
+                      Preferred Start Time
                     </label>
-                    <select
-                      value={selectedTime}
-                      onChange={(e) => setSelectedTime(e.target.value)}
-                      className="w-full rounded-xl border-border/40 bg-white p-3 text-sm font-black text-foreground shadow-sm transition-all focus:ring-2 focus:ring-highlight/20 dark:bg-card/50"
-                    >
-                      <option value="">Select Time</option>
-                      {availableTimeSlots.map((t) => (
-                        <option
-                          key={t}
-                          value={t}
-                        >
-                          {t}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="group relative">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-highlight transition-colors">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <select
+                        value={selectedTime}
+                        onChange={(e) => setSelectedTime(e.target.value)}
+                        className="w-full appearance-none rounded-2xl border border-border/40 bg-white py-4 pl-12 pr-10 text-sm font-black text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
+                      >
+                        <option value="">Select a time slot</option>
+                        {availableTimeSlots.map((t) => (
+                          <option
+                            key={t}
+                            value={t}
+                          >
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-highlight">
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
