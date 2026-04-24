@@ -13,9 +13,10 @@ class UsersSeeder extends Seeder
         $now = now();
         $adminPermissions = [
             'view_dashboard',
+            'add_queue',
             'view_registry',
             'start_service',
-            'add_queue',
+            'view_queue',
             'view_bookings',
             'view_bays',
             'edit_bay',
@@ -40,10 +41,16 @@ class UsersSeeder extends Seeder
             'add_employee',
             'edit_employee',
             'delete_employee',
+            'view_commissions',
+            'view_wallet',
+            'manage_payouts',
             'view_transactions',
             'export_transactions_pdf',
             'view_reports',
             'manage_settings',
+            'manage_loyalty',
+            'manage_gcash',
+            'manage_discounts',
         ];
 
         $users = [
