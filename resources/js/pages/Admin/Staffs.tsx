@@ -1287,12 +1287,13 @@ export default function Staffs() {
                                 <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Date</TableHead>
                                 <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Amount</TableHead>
                                 <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Remarks</TableHead>
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase text-right">Processed By</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {loadingWallet ? (
                                 <TableRow>
-                                  <TableCell colSpan={3} className="py-12 text-center">
+                                  <TableCell colSpan={4} className="py-12 text-center">
                                     <div className="flex flex-col items-center gap-2">
                                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-highlight border-t-transparent" />
                                       <span className="loading-text text-xs">Fetching history...</span>
@@ -1300,7 +1301,7 @@ export default function Staffs() {
                                   </TableCell>
                                 </TableRow>
                               ) : !walletData?.payouts || walletData.payouts.length === 0 ? (
-                                <TableRow><TableCell colSpan={3} className="py-12 text-center text-xs italic text-muted-foreground/60 bg-muted/5 rounded-lg">No payouts recorded yet.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={4} className="py-12 text-center text-xs italic text-muted-foreground/60 bg-muted/5 rounded-lg">No payouts recorded yet.</TableCell></TableRow>
                               ) : (
                                 walletData.payouts.map((p) => (
                                   <TableRow key={p.payout_id} className="text-[11px] group transition-all hover:bg-highlight/5 border-border/10">
@@ -1308,6 +1309,11 @@ export default function Staffs() {
                                     <TableCell className="px-3 py-3 font-black text-red-500 tabular-nums">₱{parseFloat(p.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
                                     <TableCell className="px-3 py-3 text-muted-foreground/80 font-medium">
                                       <div className="max-w-[140px] truncate" title={p.remarks}>{p.remarks || '-'}</div>
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-right">
+                                      <span className="rounded-md bg-highlight/10 px-2 py-1 text-[10px] font-bold text-highlight uppercase">
+                                        {p.processor ? `${p.processor.first_name} ${p.processor.last_name}` : 'System'}
+                                      </span>
                                     </TableCell>
                                   </TableRow>
                                 ))

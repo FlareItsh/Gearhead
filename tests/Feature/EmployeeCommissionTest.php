@@ -27,7 +27,7 @@ it('can store an employee with commission percentage', function () {
         ->postJson('/api/staffs', $data);
 
     $response->assertSuccessful();
-    
+
     $this->assertDatabaseHas('employees', [
         'first_name' => 'John',
         'commission_percentage' => 15.5,
@@ -89,11 +89,62 @@ it('calculates commissions correctly for completed orders', function () {
         ->getJson("/api/staffs/{$employee->employee_id}/commissions");
 
     $response->assertSuccessful();
-    
+
     // Total = 2000, 10% = 200
     $response->assertJsonPath('total_commission', 200);
     $response->assertJsonFragment([
         'total_amount' => 2000,
         'commission_amount' => 200,
+    ]);
+});
+
+it('can record a payout and identifies the processor', function () {
+    $employee = Employee::factory()->create();
+
+    $data = [
+        'amount' => 500.00,
+        'payout_date' => now()->format('Y-m-d'),
+        'remarks' => 'Test payout',
+    ];
+
+    $response = $this->actingAs($this->admin)
+        ->postJson("/api/staffs/{$employee->employee_id}/payout", $data);
+
+    $response->assertSuccessful();
+
+    $this->assertDatabaseHas('staff_payouts', [
+        'employee_id' => $employee->employee_id,
+        'amount' => 500.00,
+        'processed_by' => $this->admin->user_id,
+    ]);
+});
+
+it('includes processor details in the wallet response', function () {
+    $employee = Employee::factory()->create();
+
+    // Create a payout processed by admin
+    \App\Models\StaffPayout::create([
+        'employee_id' => $employee->employee_id,
+        'amount' => 300,
+        'payout_date' => now(),
+        'processed_by' => $this->admin->user_id,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->getJson("/api/staffs/{$employee->employee_id}/wallet");
+
+    $response->assertSuccessful();
+
+    $response->assertJsonStructure([
+        'payouts' => [
+            '*' => [
+                'processor' => ['user_id', 'first_name', 'last_name'],
+            ],
+        ],
+    ]);
+
+    $response->assertJsonFragment([
+        'first_name' => $this->admin->first_name,
+        'last_name' => $this->admin->last_name,
     ]);
 });
