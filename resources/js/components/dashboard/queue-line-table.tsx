@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -9,7 +10,7 @@ import {
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 
-interface QueueData {
+export interface QueueData {
   queue_line_id: number
   service_order_id: number
   status: string
@@ -28,7 +29,12 @@ interface QueueData {
   }
 }
 
-export default function QueueLineTable() {
+interface QueueLineTableProps {
+  onAction?: (queue: QueueData) => void
+  actionLabel?: string
+}
+
+export default function QueueLineTable({ onAction, actionLabel }: QueueLineTableProps) {
   const [queues, setQueues] = useState<QueueData[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -57,13 +63,14 @@ export default function QueueLineTable() {
             <TableHead>Customer</TableHead>
             <TableHead>Services</TableHead>
             <TableHead>Queue</TableHead>
+            {onAction && <TableHead className="text-right">Action</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
               <TableCell
-                colSpan={3}
+                colSpan={onAction ? 4 : 3}
                 className="h-24 text-center"
               >
                 Loading...
@@ -72,7 +79,7 @@ export default function QueueLineTable() {
           ) : queues.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={3}
+                colSpan={onAction ? 4 : 3}
                 className="h-24 text-center text-muted-foreground"
               >
                 No active queues found.
@@ -99,6 +106,17 @@ export default function QueueLineTable() {
                   </div>
                 </TableCell>
                 <TableCell className="text-lg font-bold text-highlight">#{index + 1}</TableCell>
+                {onAction && (
+                  <TableCell className="text-right">
+                    <Button
+                      variant="highlight"
+                      size="sm"
+                      onClick={() => onAction(queue)}
+                    >
+                      {actionLabel || 'Select'}
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

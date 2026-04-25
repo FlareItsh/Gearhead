@@ -2,6 +2,7 @@ import { LowStockTable } from '@/components/dashboard/low-stock-table'
 import QueueLineTable from '@/components/dashboard/queue-line-table'
 import Heading from '@/components/heading'
 import HeadingSmall from '@/components/heading-small'
+import AddQueueModal from '@/components/AddQueueModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Input } from '@/components/ui/input'
@@ -13,13 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import AppLayout from '@/layouts/app-layout'
+import { usePermissions } from '@/hooks/use-permissions'
 import CustomerDashboard from '@/pages/Customer/CustomerDashboard'
 import { dashboard } from '@/routes'
 import { type BreadcrumbItem } from '@/types'
-import { Head, usePage } from '@inertiajs/react'
+import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
-import { CalendarDays, PhilippinePeso, Users, Zap } from 'lucide-react'
+import { CalendarDays, PhilippinePeso, Plus, Users, Zap } from 'lucide-react'
 import { memo, useEffect, useMemo, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, Cell, Legend, Tooltip, XAxis, YAxis } from 'recharts'
 import { route } from 'ziggy-js'
@@ -57,6 +60,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
+  const { hasPermission } = usePermissions()
   const page = usePage()
   const role = (page.props as { auth?: { user?: { role?: string } } })?.auth?.user?.role
 
@@ -77,6 +81,10 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
 
   // Loading state for cards only
   const [isLoading, setIsLoading] = useState(true)
+
+  // UI states
+  const [showAddQueueModal, setShowAddQueueModal] = useState(false)
+  const [queueTableKey, setQueueTableKey] = useState(0)
 
   // Helper function to format date range
   const formatDateRange = (start: string, end: string): string => {
@@ -394,14 +402,27 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
             </Card>
 
             {/* Queue Line */}
-            <Card className="border border-sidebar-border/70 bg-background">
+            <Card className="border border-sidebar-border/70 bg-background hover:shadow-lg transition-all duration-300">
               <CardContent className="p-4 text-foreground">
-                <HeadingSmall
-                  title="Queue Line"
-                  description="Customers waiting for service"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <HeadingSmall
+                    title="Queue Line"
+                    description="Customers waiting for service"
+                  />
+                  {hasPermission('add_queue') && (
+                    <Button
+                      onClick={() => setShowAddQueueModal(true)}
+                      variant="highlight"
+                      size="sm"
+                      className="h-8 shadow-sm hover:shadow-md transition-all active:scale-95"
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      <span>Add to Queue</span>
+                    </Button>
+                  )}
+                </div>
                 <div className="custom-scrollbar h-[250px] overflow-y-auto">
-                  <QueueLineTable />
+                  <QueueLineTable key={queueTableKey} />
                 </div>
               </CardContent>
             </Card>
@@ -573,6 +594,12 @@ export default function Dashboard({ lowStockSupplies = [] }: DashboardProps) {
           </div>
         </div>
       )}
+
+      <AddQueueModal
+        isOpen={showAddQueueModal}
+        onClose={() => setShowAddQueueModal(false)}
+        onSuccess={() => setQueueTableKey((prev) => prev + 1)}
+      />
     </AppLayout>
   )
 }

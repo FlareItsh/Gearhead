@@ -263,10 +263,30 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
         DB::transaction(function () use ($serviceOrderId, $variantIds) {
             $this->deleteServiceOrderDetails($serviceOrderId);
 
-            foreach ($variantIds as $variantId) {
+            // Filter out unique variants to avoid constraint violations
+            $uniqueVariants = array_unique($variantIds, SORT_REGULAR);
+
+            foreach ($uniqueVariants as $variantId) {
+                // Handle case where $variantId is an object (common with Inertia/Eloquent responses)
+                if (is_object($variantId) && isset($variantId->service_variant)) {
+                    $variantId = $variantId->service_variant;
+                } elseif (is_array($variantId) && isset($variantId['service_variant'])) {
+                    $variantId = $variantId['service_variant'];
+                }
+
+                // Skip if still not a valid ID
+                if (! is_numeric($variantId)) {
+                    \Log::warning('Invalid variant_id skipped in replaceServiceOrderDetailsWithVariants', [
+                        'service_order_id' => $serviceOrderId,
+                        'variant_id' => $variantId,
+                    ]);
+
+                    continue;
+                }
+
                 DB::table('service_order_details')->insert([
                     'service_order_id' => $serviceOrderId,
-                    'service_variant' => $variantId,
+                    'service_variant' => (int) $variantId,
                     'quantity' => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -307,6 +327,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
                 DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services'),
                 DB::raw('GROUP_CONCAT(s.service_id) as service_ids'),
+                DB::raw('GROUP_CONCAT(sv.service_variant) as variant_ids'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total')
             )
             ->groupBy('so.service_order_id', 'so.user_id', 'so.order_date', 'u.first_name', 'u.last_name', 'u.phone_number', 'ql.created_at', 'ql.queue_line_id')
@@ -324,6 +345,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                     'phone' => $booking->phone,
                     'services' => $booking->services,
                     'service_ids' => $booking->service_ids ? explode(',', $booking->service_ids) : [],
+                    'variant_ids' => $booking->variant_ids ? explode(',', $booking->variant_ids) : [],
                     'total' => $booking->total,
                     'order_date' => $booking->order_date,
                     'is_queued' => ! is_null($booking->queue_line_id),

@@ -818,38 +818,42 @@ export default function Staffs() {
                                 )}
 
                                 {/* Commissions Action */}
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() => openCommissions(staff.id)}
-                                        className="text-highlight hover:text-highlight/80"
-                                      >
-                                        <HandCoins className="h-4 w-4" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>View Commissions</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                {hasPermission('view_commissions') && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() => openCommissions(staff.id)}
+                                          className="text-highlight hover:text-highlight/80"
+                                        >
+                                          <HandCoins className="h-4 w-4" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>View Commissions</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
 
                                 {/* Wallet Action */}
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() => openWallet(staff.id)}
-                                        className="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                      >
-                                        <Wallet className="h-4 w-4" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>E-Wallet & Payouts</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                {hasPermission('view_wallet') && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() => openWallet(staff.id)}
+                                          className="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                        >
+                                          <Wallet className="h-4 w-4" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>E-Wallet & Payouts</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
 
                                 {/*delete*/}
                                 {hasPermission('delete_employee') && (
@@ -1257,15 +1261,17 @@ export default function Staffs() {
                               className="bg-background/50 focus:bg-background h-10 transition-all"
                             />
                           </div>
-                          <Button 
-                            variant="highlight" 
-                            size="lg"
-                            className="mt-2 font-bold shadow-lg shadow-highlight/20"
-                            onClick={handleRecordPayout}
-                            disabled={isSubmittingPayout || !payoutForm.amount}
-                          >
-                            {isSubmittingPayout ? 'Processing...' : 'Confirm Payout'}
-                          </Button>
+                          {hasPermission('manage_payouts') && (
+                            <Button 
+                              variant="highlight" 
+                              size="lg"
+                              className="mt-2 font-bold shadow-lg shadow-highlight/20"
+                              onClick={handleRecordPayout}
+                              disabled={isSubmittingPayout || !payoutForm.amount}
+                            >
+                              {isSubmittingPayout ? 'Processing...' : 'Confirm Payout'}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -1,3 +1,4 @@
+import QueueLineTable from '@/components/dashboard/queue-line-table'
 import Heading from '@/components/heading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,7 +17,7 @@ import { cn } from '@/lib/utils'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/react'
 import axios from 'axios'
-import { Loader2, UserPlus, X } from 'lucide-react'
+import { Eye, Loader2, UserPlus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -107,7 +108,7 @@ export default function Registry({
   const [showStartServiceDialog, setShowStartServiceDialog] = useState(false)
   const [isQueueDialog, setIsQueueDialog] = useState(false)
   const [startServiceStep, setStartServiceStep] = useState<
-    'initial' | 'booking' | 'walk-in' | 'assign'
+    'initial' | 'booking' | 'walk-in' | 'assign' | 'queue-overview' | 'select-bay'
   >('initial')
   const [todayBookings, setTodayBookings] = useState<any[]>([])
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null)
@@ -131,6 +132,12 @@ export default function Registry({
 
     // Check URL parameters for success messages
     const params = new URLSearchParams(window.location.search)
+
+    if (params.get('action') === 'add-queue') {
+      handleAddQueue()
+      window.history.replaceState({}, '', '/registry')
+    }
+
     if (params.get('serviceStarted') === 'true') {
       toast.success('Service started successfully!')
       window.history.replaceState({}, '', '/registry')
@@ -239,6 +246,14 @@ export default function Registry({
       .catch((err) => console.error('Failed to fetch bookings:', err))
   }
 
+  const handleViewQueue = () => {
+    setSelectedBayForService(null)
+    setIsQueueDialog(true)
+    setSelectedEmployeeId('')
+    setStartServiceStep('queue-overview')
+    setShowStartServiceDialog(true)
+  }
+
   const handleSelectBooking = async (booking: any) => {
     if (isQueueDialog) {
       setIsAssigning(true)
@@ -301,19 +316,35 @@ export default function Registry({
     if (selectedBooking) {
       setIsAssigning(true)
       try {
-        let serviceIds: number[] = []
-        if (typeof selectedBooking.service_ids === 'string') {
-          serviceIds = selectedBooking.service_ids.split(',').map(Number)
-        } else if (Array.isArray(selectedBooking.service_ids)) {
-          serviceIds = selectedBooking.service_ids.map(Number)
+        let variantIds: number[] = []
+        if (selectedBooking.variant_ids) {
+          if (typeof selectedBooking.variant_ids === 'string') {
+            variantIds = selectedBooking.variant_ids.split(',').map(Number)
+          } else if (Array.isArray(selectedBooking.variant_ids)) {
+            variantIds = selectedBooking.variant_ids.map(Number)
+          }
         }
 
-        await axios.put(`/service-orders/${selectedBooking.service_order_id}`, {
+        // If no variant_ids, fallback to service_ids (for legacy or fallback)
+        const payload: any = {
           bay_id: selectedBayForService!.bay_id,
           employee_id: employee.employee_id,
           status: 'in_progress',
-          service_ids: serviceIds,
-        })
+        }
+
+        if (variantIds.length > 0) {
+          payload.variant_ids = variantIds
+        } else {
+          let serviceIds: number[] = []
+          if (typeof selectedBooking.service_ids === 'string') {
+            serviceIds = selectedBooking.service_ids.split(',').map(Number)
+          } else if (Array.isArray(selectedBooking.service_ids)) {
+            serviceIds = selectedBooking.service_ids.map(Number)
+          }
+          payload.service_ids = serviceIds
+        }
+
+        await axios.put(`/service-orders/${selectedBooking.service_order_id}`, payload)
         toast.success('Service started successfully!')
 
         // Reset and Refresh
@@ -441,14 +472,15 @@ export default function Registry({
             description="Manage and monitor bays for carwash services"
           />
 
-          {hasPermission('add_queue') && isAllBaysFull && (
+          {hasPermission('view_queue') && (
             <Button
               variant="highlight"
               size="lg"
-              className="ml-auto"
-              onClick={handleAddQueue}
+              className="ml-auto flex items-center gap-2"
+              onClick={handleViewQueue}
             >
-              Add Queue
+              <Eye className="h-5 w-5" />
+              View Queue
             </Button>
           )}
         </div>
@@ -764,6 +796,8 @@ export default function Registry({
               {startServiceStep === 'walk-in' && 'Walk-in Service'}
               {startServiceStep === 'booking' && 'Select from Queue'}
               {startServiceStep === 'assign' && 'Assign Staff'}
+              {startServiceStep === 'queue-overview' && 'Active Queue'}
+              {startServiceStep === 'select-bay' && 'Select Available Bay'}
             </h2>
 
             {startServiceStep === 'initial' && (
@@ -897,8 +931,15 @@ export default function Registry({
                     variant="outline"
                     className="flex-1"
                     onClick={() => {
-                      if (startServiceStep === 'assign') setStartServiceStep('booking')
-                      else setStartServiceStep('initial')
+                      if (startServiceStep === 'assign') {
+                        if (selectedBooking && selectedBayForService) {
+                          setStartServiceStep('select-bay')
+                        } else {
+                          setStartServiceStep('booking')
+                        }
+                      } else {
+                        setStartServiceStep('initial')
+                      }
                     }}
                   >
                     Back
@@ -914,6 +955,78 @@ export default function Registry({
                       : startServiceStep === 'walk-in'
                         ? 'Continue'
                         : 'Start Service'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {startServiceStep === 'queue-overview' && (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <QueueLineTable
+                    actionLabel="Assign to Bay"
+                    onAction={(queue) => {
+                      setSelectedBooking({
+                        ...queue.service_order,
+                        customer_name: `${queue.service_order.user.first_name} ${queue.service_order.user.last_name}`,
+                        total: queue.service_order.details.reduce((sum: number, d: any) => sum + (parseFloat(d.serviceVariant?.price || d.service?.price || '0')), 0),
+                        service_ids: queue.service_order.details.map((d: any) => d.service_id || d.serviceVariant?.service_id),
+                        variant_ids: queue.service_order.details.map((d: any) => d.service_variant?.service_variant || d.service_variant || d.serviceVariant?.service_variant),
+                      })
+                      setStartServiceStep('select-bay')
+                    }}
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowStartServiceDialog(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="highlight"
+                    onClick={() => setStartServiceStep('initial')}
+                  >
+                    Add to Queue
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {startServiceStep === 'select-bay' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {bays
+                    .filter((b) => b.status === 'available')
+                    .map((bay) => (
+                      <button
+                        key={bay.bay_id}
+                        onClick={() => {
+                          setSelectedBayForService(bay)
+                          setStartServiceStep('assign')
+                        }}
+                        className="flex flex-col items-center justify-center rounded-xl border-2 border-border p-6 transition-all hover:border-highlight hover:bg-muted/30"
+                      >
+                        <div className="mb-2 text-2xl font-bold text-highlight">
+                          #{bay.bay_number}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{bay.bay_type}</div>
+                      </button>
+                    ))}
+                  {bays.filter((b) => b.status === 'available').length === 0 && (
+                    <div className="col-span-full py-8 text-center text-muted-foreground">
+                      No available bays.
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setStartServiceStep('queue-overview')}
+                  >
+                    Back
                   </Button>
                 </div>
               </div>

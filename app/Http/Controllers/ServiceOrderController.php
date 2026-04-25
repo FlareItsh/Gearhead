@@ -139,6 +139,11 @@ class ServiceOrderController extends Controller
 
         $this->repo->update($item, $data);
 
+        // Remove from queue if assigned to a bay
+        if (array_key_exists('bay_id', $data) && $data['bay_id']) {
+            \App\Models\QueueLine::where('service_order_id', $id)->delete();
+        }
+
         return response()->json($item);
     }
 

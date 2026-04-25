@@ -2,13 +2,17 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 
 export const PRIVILEGES = [
-  { id: 'view_dashboard', label: 'View Dashboard' },
+  {
+    id: 'view_dashboard',
+    label: 'View Dashboard',
+    children: [{ id: 'add_queue', label: 'Add Queue' }],
+  },
   {
     id: 'view_registry',
     label: 'View Registry',
     children: [
       { id: 'start_service', label: 'Start Service' },
-      { id: 'add_queue', label: 'Add Queue' },
+      { id: 'view_queue', label: 'View Queue' },
     ],
   },
   { id: 'view_bookings', label: 'View Bookings' },
@@ -61,6 +65,9 @@ export const PRIVILEGES = [
       { id: 'add_employee', label: 'Add Employee' },
       { id: 'edit_employee', label: 'Edit Employee' },
       { id: 'delete_employee', label: 'Delete Employee' },
+      { id: 'view_commissions', label: 'View Commissions' },
+      { id: 'view_wallet', label: 'View E-Wallet' },
+      { id: 'manage_payouts', label: 'Manage Payouts' },
     ],
   },
   {
@@ -69,7 +76,15 @@ export const PRIVILEGES = [
     children: [{ id: 'export_transactions_pdf', label: 'Export PDF' }],
   },
   { id: 'view_reports', label: 'View Reports' },
-  { id: 'manage_settings', label: 'Manage System Settings' },
+  {
+    id: 'manage_settings',
+    label: 'Manage System Settings',
+    children: [
+      { id: 'manage_loyalty', label: 'Loyalty Points' },
+      { id: 'manage_gcash', label: 'GCash Info' },
+      { id: 'manage_discounts', label: 'Global Discounts' },
+    ],
+  },
 ]
 
 interface AdminPrivilegesProps {
