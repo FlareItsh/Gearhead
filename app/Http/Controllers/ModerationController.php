@@ -26,7 +26,8 @@ class ModerationController extends Controller
         return Inertia::render('Admin/Moderation', [
             'loyaltyThreshold' => $loyaltyThreshold ? (int) $loyaltyThreshold->value : 9,
             'gcashSettings' => $gcashSettings,
-            'discounts' => Discount::orderBy('created_at', 'desc')->get(),
+            'discounts' => Discount::with('services')->orderBy('created_at', 'desc')->get(),
+            'services' => \App\Models\Service::all(),
             'reviews' => Review::with('user')->where('is_displayed', true)->orderBy('created_at', 'desc')->paginate(10),
         ]);
     }
@@ -84,9 +85,17 @@ class ModerationController extends Controller
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'required|boolean',
+            'applies_to' => 'required|in:all,specific_services',
+            'min_spend' => 'required|numeric|min:0',
+            'service_ids' => 'required_if:applies_to,specific_services|array',
+            'service_ids.*' => 'exists:services,service_id',
         ]);
 
-        Discount::create($validated);
+        $discount = Discount::create($validated);
+
+        if ($request->applies_to === 'specific_services') {
+            $discount->services()->sync($request->service_ids);
+        }
 
         return back()->with('status', 'discount-created');
     }
@@ -102,9 +111,19 @@ class ModerationController extends Controller
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'required|boolean',
+            'applies_to' => 'required|in:all,specific_services',
+            'min_spend' => 'required|numeric|min:0',
+            'service_ids' => 'required_if:applies_to,specific_services|array',
+            'service_ids.*' => 'exists:services,service_id',
         ]);
 
         $discount->update($validated);
+
+        if ($request->applies_to === 'specific_services') {
+            $discount->services()->sync($request->service_ids);
+        } else {
+            $discount->services()->detach();
+        }
 
         return back()->with('status', 'discount-updated');
     }

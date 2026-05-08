@@ -56,7 +56,7 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'loyaltyThreshold' => (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9),
-            'activeDiscount' => Discount::getBestActiveDiscount(),
+            'activeDiscounts' => Discount::active()->with('services')->get(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

@@ -303,13 +303,24 @@ class PaymentController extends Controller
             }
 
             // Calculate total and apply discount if not loyalty
-            $finalAmount = (float) ($validated['amount'] ?? 0);
+            // Use subtotal to avoid double-applying discounts if the amount was already reduced
+            $subtotal = (float) ($request->input('subtotal') ?? $validated['amount'] ?? 0);
+
             if (! $isLoyaltyRedemption) {
-                // Fetch best discount and recalculate to ensure integrity
-                $bestDiscount = Discount::getBestActiveDiscount($finalAmount);
+                // Get items for the discount calculation to ensure specific service logic is applied
+                $items = $serviceOrder->details->map(function ($detail) {
+                    return [
+                        'service_id' => $detail->serviceVariant->service_id,
+                        'price' => (float) $detail->serviceVariant->price,
+                    ];
+                })->toArray();
+
+                $bestDiscount = Discount::getBestActiveDiscount($subtotal, $items);
                 if ($bestDiscount) {
-                    $reduction = $bestDiscount->calculateReduction($finalAmount);
-                    $finalAmount = (float) round(max(0, $finalAmount - $reduction));
+                    $reduction = $bestDiscount->calculateReduction($subtotal, $items);
+                    $finalAmount = (float) round(max(0, $subtotal - $reduction));
+                } else {
+                    $finalAmount = $subtotal;
                 }
             } else {
                 $finalAmount = 0.00;

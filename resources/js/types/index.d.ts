@@ -30,6 +30,19 @@ export interface Discount {
     valid_from: string | null;
     valid_to: string | null;
     is_active: boolean;
+    applies_to: 'all' | 'specific_services';
+    min_spend: number;
+    services?: Service[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Service {
+    service_id: number;
+    service_name: string;
+    description: string;
+    category: string;
+    status: string;
     created_at: string;
     updated_at: string;
 }
@@ -51,7 +64,7 @@ export interface SharedData {
     quote: { message: string; author: string };
     auth: Auth;
     loyaltyThreshold: number;
-    activeDiscount: Discount | null;
+    activeDiscounts: Discount[];
     sidebarOpen: boolean;
     [key: string]: unknown;
 }

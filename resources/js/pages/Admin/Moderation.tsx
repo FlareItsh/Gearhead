@@ -29,9 +29,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Checkbox } from '@/components/ui/checkbox'
 import AppLayout from '@/layouts/app-layout'
 import { usePermissions } from '@/hooks/use-permissions'
-import { Discount, Review, type BreadcrumbItem } from '@/types'
+import { Discount, Review, Service, type BreadcrumbItem } from '@/types'
 import { Transition } from '@headlessui/react'
 import { Head, router, useForm } from '@inertiajs/react'
 import {
@@ -83,6 +84,7 @@ interface ModerationProps {
   loyaltyThreshold: number
   gcashSettings: GcashSettings
   discounts: Discount[]
+  services: Service[]
   reviews: PaginatedResponse<Review>
 }
 
@@ -97,6 +99,7 @@ export default function Moderation({
   loyaltyThreshold,
   gcashSettings,
   discounts,
+  services,
   reviews: initialReviews,
 }: ModerationProps) {
   const { hasPermission } = usePermissions()
@@ -205,6 +208,9 @@ export default function Moderation({
     valid_from: '',
     valid_to: '',
     is_active: true,
+    applies_to: 'all' as 'all' | 'specific_services',
+    min_spend: 0,
+    service_ids: [] as number[],
   })
 
   const openCreateDialog = () => {
@@ -222,6 +228,9 @@ export default function Moderation({
       valid_from: discount.valid_from ? discount.valid_from.substring(0, 16) : '',
       valid_to: discount.valid_to ? discount.valid_to.substring(0, 16) : '',
       is_active: discount.is_active,
+      applies_to: discount.applies_to,
+      min_spend: discount.min_spend,
+      service_ids: discount.services?.map(s => s.service_id) || [],
     })
     setIsDialogOpen(true)
   }
@@ -298,6 +307,15 @@ export default function Moderation({
       return <Badge variant="outline">Expired</Badge>
     }
     return <Badge variant="highlight">Active</Badge>
+  }
+
+  const toggleService = (serviceId: number) => {
+    const current = [...discountForm.data.service_ids]
+    if (current.includes(serviceId)) {
+      discountForm.setData('service_ids', current.filter(id => id !== serviceId))
+    } else {
+      discountForm.setData('service_ids', [...current, serviceId])
+    }
   }
 
 
@@ -589,6 +607,62 @@ export default function Moderation({
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
+                          <Label htmlFor="applies_to">Applies To</Label>
+                          <Select
+                            value={discountForm.data.applies_to}
+                            onValueChange={(val: any) => discountForm.setData('applies_to', val)}
+                          >
+                            <SelectTrigger id="applies_to">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Services</SelectItem>
+                              <SelectItem value="specific_services">Specific Services</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <InputError message={discountForm.errors.applies_to} />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="min_spend">Min. Spend (₱)</Label>
+                          <Input
+                            id="min_spend"
+                            type="number"
+                            step="0.01"
+                            value={discountForm.data.min_spend}
+                            onChange={(e) => discountForm.setData('min_spend', parseFloat(e.target.value) || 0)}
+                            min={0}
+                            required
+                          />
+                          <InputError message={discountForm.errors.min_spend} />
+                        </div>
+                      </div>
+
+                      {discountForm.data.applies_to === 'specific_services' && (
+                        <div className="grid gap-2">
+                          <Label>Select Services</Label>
+                          <div className="grid max-h-40 grid-cols-1 gap-2 overflow-y-auto rounded-md border p-3 sm:grid-cols-2">
+                            {services.map((service) => (
+                              <div key={service.service_id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`service-${service.service_id}`}
+                                  checked={discountForm.data.service_ids.includes(service.service_id)}
+                                  onCheckedChange={() => toggleService(service.service_id)}
+                                />
+                                <Label
+                                  htmlFor={`service-${service.service_id}`}
+                                  className="text-sm font-normal cursor-pointer"
+                                >
+                                  {service.service_name}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                          <InputError message={discountForm.errors.service_ids} />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
                           <Label htmlFor="valid_from">Valid From (Optional)</Label>
                           <Input
                             id="valid_from"
@@ -648,6 +722,8 @@ export default function Moderation({
                       <TableRow>
                         <TableHead>Discount Name</TableHead>
                         <TableHead>Reduction</TableHead>
+                        <TableHead>Target</TableHead>
+                        <TableHead>Min. Spend</TableHead>
                         <TableHead>Duration</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -662,6 +738,18 @@ export default function Moderation({
                               {discount.type === 'percentage'
                                 ? `${discount.value}%`
                                 : `₱${parseFloat(discount.value.toString()).toLocaleString()}`}
+                            </TableCell>
+                            <TableCell>
+                              {discount.applies_to === 'all' ? (
+                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Global</span>
+                              ) : (
+                                <Badge variant="outline" className="font-normal">
+                                  {discount.services?.length || 0} Services
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {discount.min_spend > 0 ? `₱${parseFloat(discount.min_spend.toString()).toLocaleString()}` : '-'}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               <div className="flex flex-col gap-1">

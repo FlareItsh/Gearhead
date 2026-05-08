@@ -25,4 +25,9 @@ class Service extends Model
     {
         return $this->hasMany(ServiceVariant::class, 'service_id', 'service_id');
     }
+
+    public function discounts()
+    {
+        return $this->belongsToMany(Discount::class, 'discount_service', 'service_id', 'discount_id');
+    }
 }

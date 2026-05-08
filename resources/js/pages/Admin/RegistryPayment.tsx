@@ -48,10 +48,18 @@ interface ServiceOrder {
   employee_id?: number
 }
 
-interface GcashSetting {
-  account_name: string
-  account_number: string
-  qr_code_url: string | null
+interface Discount {
+  discount_id: number
+  name: string
+  type: 'percentage' | 'fixed'
+  value: number
+  min_spend: number
+  applies_to: 'all' | 'specific_services'
+  services?: { service_id: number }[]
+}
+
+interface SharedDataWithDiscount extends SharedData {
+  activeDiscount: Discount | null
 }
 
 interface Props {
@@ -60,7 +68,7 @@ interface Props {
 }
 
 export default function RegistryPayment({ bayId, gcashSettings }: Props) {
-  const { loyaltyThreshold, activeDiscount } = usePage<SharedData>().props as SharedData
+  const { loyaltyThreshold, activeDiscounts } = usePage<SharedData>().props as unknown as { loyaltyThreshold: number; activeDiscounts: Discount[] }
   const [method, setMethod] = useState<'cash' | 'gcash'>('cash')
   const [reference, setReference] = useState('')
   const [paidAmount, setPaidAmount] = useState<number>(0)
@@ -155,6 +163,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
       const price = typeof rawPrice === 'string' ? parseFloat(rawPrice) : (rawPrice as number)
 
       return {
+        service_id: serviceData.service_id || serviceData.service?.service_id || 0,
         name: serviceName,
         price: price,
       }
@@ -164,12 +173,50 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
     const subtotal = servicesList.reduce((sum, s) => sum + s.price, 0)
 
     let reduction = 0
-    if (activeDiscount && !useLoyaltyPoints) {
-      if (activeDiscount.type === 'percentage') {
-        const percentage = Math.min(100, Math.max(0, activeDiscount.value))
-        reduction = (subtotal * percentage) / 100
-      } else {
-        reduction = Math.max(0, activeDiscount.value)
+    let discountName = ''
+
+    if (activeDiscounts && activeDiscounts.length > 0 && !useLoyaltyPoints) {
+      // Find the best discount for this specific order
+      const results = activeDiscounts.map((discount) => {
+        let currentReduction = 0
+        const isMinSpendMet = subtotal >= (discount.min_spend || 0)
+
+        let isServiceEligible = true
+        if (discount.applies_to === 'specific_services' && discount.services) {
+          const eligibleServiceIds = discount.services.map((s) => s.service_id)
+          isServiceEligible = servicesList.some((s) => eligibleServiceIds.includes(s.service_id))
+        }
+
+        if (isMinSpendMet && isServiceEligible) {
+          if (discount.applies_to === 'specific_services' && discount.services) {
+            // If specific services, only apply to those services
+            const eligibleServiceIds = discount.services.map((s) => s.service_id)
+            const eligibleTotal = servicesList
+              .filter((s) => eligibleServiceIds.includes(s.service_id))
+              .reduce((sum, s) => sum + s.price, 0)
+
+            if (discount.type === 'percentage') {
+              currentReduction = (eligibleTotal * Math.min(100, discount.value)) / 100
+            } else {
+              currentReduction = Math.min(discount.value, eligibleTotal)
+            }
+          } else {
+            // Global discount
+            if (discount.type === 'percentage') {
+              currentReduction = (subtotal * Math.min(100, discount.value)) / 100
+            } else {
+              currentReduction = Math.min(discount.value, subtotal)
+            }
+          }
+        }
+        return { discount, reduction: currentReduction }
+      })
+
+      // Sort by reduction descending and pick the best
+      const best = results.sort((a, b) => b.reduction - a.reduction)[0]
+      if (best && best.reduction > 0) {
+        reduction = best.reduction
+        discountName = best.discount.name
       }
     }
 
@@ -184,6 +231,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
       services: servicesList,
       subtotal,
       reduction,
+      discountName,
       total: Math.round(Math.max(0, subtotal - reduction)),
     }
   })()
@@ -262,6 +310,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
         formData.append('bay_id', bayId.toString())
         formData.append('payment_method', 'loyalty')
         formData.append('amount', '0')
+        formData.append('subtotal', details.subtotal.toString())
         formData.append('use_loyalty_points', 'true')
 
         const res = await axios.post('/api/payment/process', formData, {
@@ -316,7 +365,8 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
       formData.append('service_order_id', order.service_order_id.toString())
       formData.append('bay_id', bayId.toString())
       formData.append('payment_method', method)
-      // Always save the actual total amount, not the amount received
+      // Send both subtotal and total to prevent double-discounting
+      formData.append('subtotal', details.subtotal.toString())
       formData.append('amount', details.total.toString())
 
       if (method === 'gcash') {
@@ -677,7 +727,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                           </p>
                           <div className="mt-2 flex items-center gap-1 text-sm font-bold text-green-500">
                             <Tag className="h-4 w-4" />
-                            {activeDiscount?.name}: -₱{Math.round(details.reduction).toLocaleString()}
+                            {details.discountName}: -₱{Math.round(details.reduction).toLocaleString()}
                           </div>
                         </div>
                       ) : (
