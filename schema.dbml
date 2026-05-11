@@ -39,9 +39,20 @@ Table discounts {
   valid_from datetime
   valid_to datetime
   is_active tinyint
+  applies_to enum
+  min_spend decimal
   created_at timestamp
   updated_at timestamp
 }
+
+Table discount_service {
+  id bigint [primary key]
+  discount_id bigint
+  service_id bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
 
 Table employees {
   employee_id bigint [primary key]
@@ -197,6 +208,19 @@ Table queue_lines {
   created_at timestamp
   updated_at timestamp
 }
+
+Table reviews {
+  id bigint [primary key]
+  user_id bigint
+  name varchar
+  comment text
+  rating int
+  is_displayed tinyint
+  is_verified tinyint
+  created_at timestamp
+  updated_at timestamp
+}
+
 
 Table service_order_details {
   service_order_detail_id bigint [primary key]
@@ -359,3 +383,7 @@ Ref: staff_payouts.processed_by > users.user_id [delete: set null]
 Ref: supply_purchase_details.supply_id > supplies.supply_id [delete: cascade]
 Ref: supply_purchase_details.supply_purchase_id > supply_purchases.supply_purchase_id [delete: cascade]
 Ref: supply_purchases.supplier_id > suppliers.supplier_id [delete: cascade]
+Ref: discount_service.discount_id > discounts.discount_id [delete: cascade]
+Ref: discount_service.service_id > services.service_id [delete: cascade]
+Ref: reviews.user_id > users.user_id [delete: set null]
+

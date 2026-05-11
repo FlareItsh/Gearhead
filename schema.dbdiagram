@@ -1,507 +1,568 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "darkMode": true,
   "gridEnabling": true,
-  "detailLevel": "All",
-  "tablePositions": [
-    {
-      "name": "app_settings",
-      "schemaName": "public",
-      "x": 1344,
-      "y": 16
-    },
-    {
-      "name": "bays",
-      "schemaName": "public",
-      "x": 16,
-      "y": 448
-    },
-    {
-      "name": "cache",
-      "schemaName": "public",
-      "x": 256,
-      "y": 16
-    },
-    {
-      "name": "cache_locks",
-      "schemaName": "public",
-      "x": 16,
-      "y": 16
-    },
-    {
-      "name": "discounts",
-      "schemaName": "public",
-      "x": 2216,
-      "y": 16
-    },
-    {
-      "name": "employees",
-      "schemaName": "public",
-      "x": 16,
-      "y": 720
-    },
-    {
-      "name": "failed_jobs",
-      "schemaName": "public",
-      "x": 1632,
-      "y": 16
-    },
-    {
-      "name": "gcash_settings",
-      "schemaName": "public",
-      "x": 1904,
-      "y": 16
-    },
-    {
-      "name": "job_batches",
-      "schemaName": "public",
-      "x": 2504,
-      "y": 16
-    },
-    {
-      "name": "jobs",
-      "schemaName": "public",
-      "x": 1080,
-      "y": 16
-    },
-    {
-      "name": "landing_page_contents",
-      "schemaName": "public",
-      "x": 608,
-      "y": 2088
-    },
-    {
-      "name": "migrations",
-      "schemaName": "public",
-      "x": 512,
-      "y": 16
-    },
-    {
-      "name": "password_reset_tokens",
-      "schemaName": "public",
-      "x": 776,
-      "y": 16
-    },
-    {
-      "name": "payments",
-      "schemaName": "public",
-      "x": 1144,
-      "y": 488
-    },
-    {
-      "name": "personal_access_tokens",
-      "schemaName": "public",
-      "x": 2800,
-      "y": 16
-    },
-    {
-      "name": "pullout_request_details",
-      "schemaName": "public",
-      "x": 2232,
-      "y": 448
-    },
-    {
-      "name": "pullout_requests",
-      "schemaName": "public",
-      "x": 608,
-      "y": 448
-    },
-    {
-      "name": "pullout_services",
-      "schemaName": "public",
-      "x": 1704,
-      "y": 488
-    },
-    {
-      "name": "queue_lines",
-      "schemaName": "public",
-      "x": 1144,
-      "y": 888
-    },
-    {
-      "name": "service_order_details",
-      "schemaName": "public",
-      "x": 1144,
-      "y": 1128
-    },
-    {
-      "name": "service_orders",
-      "schemaName": "public",
-      "x": 608,
-      "y": 784
-    },
-    {
-      "name": "service_variants",
-      "schemaName": "public",
-      "x": 608,
-      "y": 1184
-    },
-    {
-      "name": "services",
-      "schemaName": "public",
-      "x": 16,
-      "y": 1216
-    },
-    {
-      "name": "sessions",
-      "schemaName": "public",
-      "x": 608,
-      "y": 2392
-    },
-    {
-      "name": "staff_payouts",
-      "schemaName": "public",
-      "x": 608,
-      "y": 1488
-    },
-    {
-      "name": "suppliers",
-      "schemaName": "public",
-      "x": 16,
-      "y": 1520
-    },
-    {
-      "name": "supplies",
-      "schemaName": "public",
-      "x": 16,
-      "y": 1848
-    },
-    {
-      "name": "supply_purchase_details",
-      "schemaName": "public",
-      "x": 1144,
-      "y": 1400
-    },
-    {
-      "name": "supply_purchases",
-      "schemaName": "public",
-      "x": 608,
-      "y": 1816
-    },
-    {
-      "name": "users",
-      "schemaName": "public",
-      "x": 16,
-      "y": 2184
-    }
-  ],
-  "tableGroupCollapseStates": [],
-  "stickyNoteLayouts": [],
-  "referencePaths": [
-    {
-      "firstFieldNames": [
-        "last_edited_by"
-      ],
-      "firstTableName": "landing_page_contents",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "user_id"
-      ],
-      "secondTableName": "users",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "employee_id"
-      ],
-      "firstTableName": "payments",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "employee_id"
-      ],
-      "secondTableName": "employees",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "service_order_id"
-      ],
-      "firstTableName": "payments",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "service_order_id"
-      ],
-      "secondTableName": "service_orders",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "pullout_request_id"
-      ],
-      "firstTableName": "pullout_request_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "pullout_request_id"
-      ],
-      "secondTableName": "pullout_requests",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "pullout_service_id"
-      ],
-      "firstTableName": "pullout_request_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "pullout_service_id"
-      ],
-      "secondTableName": "pullout_services",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "supply_id"
-      ],
-      "firstTableName": "pullout_request_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "supply_id"
-      ],
-      "secondTableName": "supplies",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "employee_id"
-      ],
-      "firstTableName": "pullout_requests",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "employee_id"
-      ],
-      "secondTableName": "employees",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "service_order_detail_id"
-      ],
-      "firstTableName": "pullout_services",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "service_order_detail_id"
-      ],
-      "secondTableName": "service_order_details",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "service_order_id"
-      ],
-      "firstTableName": "queue_lines",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "service_order_id"
-      ],
-      "secondTableName": "service_orders",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "service_order_id"
-      ],
-      "firstTableName": "service_order_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "service_order_id"
-      ],
-      "secondTableName": "service_orders",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "service_variant"
-      ],
-      "firstTableName": "service_order_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "service_variant"
-      ],
-      "secondTableName": "service_variants",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "bay_id"
-      ],
-      "firstTableName": "service_orders",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "bay_id"
-      ],
-      "secondTableName": "bays",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "employee_id"
-      ],
-      "firstTableName": "service_orders",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "employee_id"
-      ],
-      "secondTableName": "employees",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "user_id"
-      ],
-      "firstTableName": "service_orders",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "user_id"
-      ],
-      "secondTableName": "users",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "service_id"
-      ],
-      "firstTableName": "service_variants",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "service_id"
-      ],
-      "secondTableName": "services",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "user_id"
-      ],
-      "firstTableName": "sessions",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "user_id"
-      ],
-      "secondTableName": "users",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "employee_id"
-      ],
-      "firstTableName": "staff_payouts",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "employee_id"
-      ],
-      "secondTableName": "employees",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "processed_by"
-      ],
-      "firstTableName": "staff_payouts",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "user_id"
-      ],
-      "secondTableName": "users",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "supply_id"
-      ],
-      "firstTableName": "supply_purchase_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "supply_id"
-      ],
-      "secondTableName": "supplies",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "supply_purchase_id"
-      ],
-      "firstTableName": "supply_purchase_details",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "supply_purchase_id"
-      ],
-      "secondTableName": "supply_purchases",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "supplier_id"
-      ],
-      "firstTableName": "supply_purchases",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "supplier_id"
-      ],
-      "secondTableName": "suppliers",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    }
-  ]
+  "currentViewName": null,
+  "defaultView": {
+    "detailLevel": "All",
+    "tablePositions": [
+      {
+        "name": "app_settings",
+        "schemaName": "public",
+        "x": 1752,
+        "y": 2488
+      },
+      {
+        "name": "bays",
+        "schemaName": "public",
+        "x": 480,
+        "y": 1256
+      },
+      {
+        "name": "cache",
+        "schemaName": "public",
+        "x": 960,
+        "y": 2488
+      },
+      {
+        "name": "cache_locks",
+        "schemaName": "public",
+        "x": 792,
+        "y": 2488
+      },
+      {
+        "name": "discounts",
+        "schemaName": "public",
+        "x": 592,
+        "y": 1536
+      },
+      {
+        "name": "employees",
+        "schemaName": "public",
+        "x": 1856,
+        "y": 1320
+      },
+      {
+        "name": "failed_jobs",
+        "schemaName": "public",
+        "x": 1960,
+        "y": 2488
+      },
+      {
+        "name": "gcash_settings",
+        "schemaName": "public",
+        "x": 88,
+        "y": 2488.5457797820563
+      },
+      {
+        "name": "job_batches",
+        "schemaName": "public",
+        "x": 328,
+        "y": 2488.5457797820563
+      },
+      {
+        "name": "jobs",
+        "schemaName": "public",
+        "x": 1560,
+        "y": 2488
+      },
+      {
+        "name": "landing_page_contents",
+        "schemaName": "public",
+        "x": 1176,
+        "y": 192
+      },
+      {
+        "name": "migrations",
+        "schemaName": "public",
+        "x": 1144,
+        "y": 2488
+      },
+      {
+        "name": "password_reset_tokens",
+        "schemaName": "public",
+        "x": 1328,
+        "y": 2488
+      },
+      {
+        "name": "payments",
+        "schemaName": "public",
+        "x": 2032,
+        "y": 1864
+      },
+      {
+        "name": "personal_access_tokens",
+        "schemaName": "public",
+        "x": 544,
+        "y": 2488.5457797820563
+      },
+      {
+        "name": "pullout_request_details",
+        "schemaName": "public",
+        "x": 104,
+        "y": 1464
+      },
+      {
+        "name": "pullout_requests",
+        "schemaName": "public",
+        "x": 760,
+        "y": 1048
+      },
+      {
+        "name": "pullout_services",
+        "schemaName": "public",
+        "x": 808,
+        "y": 1944
+      },
+      {
+        "name": "queue_lines",
+        "schemaName": "public",
+        "x": 1304,
+        "y": 2152
+      },
+      {
+        "name": "service_order_details",
+        "schemaName": "public",
+        "x": 1128,
+        "y": 1088
+      },
+      {
+        "name": "service_orders",
+        "schemaName": "public",
+        "x": 1400,
+        "y": 1344
+      },
+      {
+        "name": "service_variants",
+        "schemaName": "public",
+        "x": 352,
+        "y": 912
+      },
+      {
+        "name": "services",
+        "schemaName": "public",
+        "x": 320,
+        "y": 1880
+      },
+      {
+        "name": "sessions",
+        "schemaName": "public",
+        "x": 832,
+        "y": 672
+      },
+      {
+        "name": "staff_payouts",
+        "schemaName": "public",
+        "x": 1184,
+        "y": 1720
+      },
+      {
+        "name": "suppliers",
+        "schemaName": "public",
+        "x": 608,
+        "y": 232
+      },
+      {
+        "name": "supplies",
+        "schemaName": "public",
+        "x": 952,
+        "y": 1384
+      },
+      {
+        "name": "supply_purchase_details",
+        "schemaName": "public",
+        "x": 1528,
+        "y": 1776
+      },
+      {
+        "name": "supply_purchases",
+        "schemaName": "public",
+        "x": 1160,
+        "y": 728
+      },
+      {
+        "name": "users",
+        "schemaName": "public",
+        "x": 1672,
+        "y": 592
+      },
+      {
+        "name": "discount_service",
+        "schemaName": "public",
+        "x": 48,
+        "y": 1168
+      },
+      {
+        "name": "reviews",
+        "schemaName": "public",
+        "x": 1800,
+        "y": 48
+      }
+    ],
+    "tableGroupCollapseStates": [],
+    "stickyNoteLayouts": [],
+    "referencePaths": [
+      {
+        "firstFieldNames": [
+          "last_edited_by"
+        ],
+        "firstTableName": "landing_page_contents",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "user_id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "employee_id"
+        ],
+        "firstTableName": "payments",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "employee_id"
+        ],
+        "secondTableName": "employees",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_order_id"
+        ],
+        "firstTableName": "payments",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_order_id"
+        ],
+        "secondTableName": "service_orders",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "pullout_request_id"
+        ],
+        "firstTableName": "pullout_request_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "pullout_request_id"
+        ],
+        "secondTableName": "pullout_requests",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "pullout_service_id"
+        ],
+        "firstTableName": "pullout_request_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "pullout_service_id"
+        ],
+        "secondTableName": "pullout_services",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "supply_id"
+        ],
+        "firstTableName": "pullout_request_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "supply_id"
+        ],
+        "secondTableName": "supplies",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "employee_id"
+        ],
+        "firstTableName": "pullout_requests",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "employee_id"
+        ],
+        "secondTableName": "employees",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_order_detail_id"
+        ],
+        "firstTableName": "pullout_services",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_order_detail_id"
+        ],
+        "secondTableName": "service_order_details",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_order_id"
+        ],
+        "firstTableName": "queue_lines",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_order_id"
+        ],
+        "secondTableName": "service_orders",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_order_id"
+        ],
+        "firstTableName": "service_order_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_order_id"
+        ],
+        "secondTableName": "service_orders",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_variant"
+        ],
+        "firstTableName": "service_order_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_variant"
+        ],
+        "secondTableName": "service_variants",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "bay_id"
+        ],
+        "firstTableName": "service_orders",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "bay_id"
+        ],
+        "secondTableName": "bays",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "employee_id"
+        ],
+        "firstTableName": "service_orders",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "employee_id"
+        ],
+        "secondTableName": "employees",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "user_id"
+        ],
+        "firstTableName": "service_orders",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "user_id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_id"
+        ],
+        "firstTableName": "service_variants",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_id"
+        ],
+        "secondTableName": "services",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "user_id"
+        ],
+        "firstTableName": "sessions",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "user_id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "employee_id"
+        ],
+        "firstTableName": "staff_payouts",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "employee_id"
+        ],
+        "secondTableName": "employees",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "processed_by"
+        ],
+        "firstTableName": "staff_payouts",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "user_id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "supply_id"
+        ],
+        "firstTableName": "supply_purchase_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "supply_id"
+        ],
+        "secondTableName": "supplies",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "supply_purchase_id"
+        ],
+        "firstTableName": "supply_purchase_details",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "supply_purchase_id"
+        ],
+        "secondTableName": "supply_purchases",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "supplier_id"
+        ],
+        "firstTableName": "supply_purchases",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "supplier_id"
+        ],
+        "secondTableName": "suppliers",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "discount_id"
+        ],
+        "firstTableName": "discount_service",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "discount_id"
+        ],
+        "secondTableName": "discounts",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "service_id"
+        ],
+        "firstTableName": "discount_service",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "service_id"
+        ],
+        "secondTableName": "services",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "user_id"
+        ],
+        "firstTableName": "reviews",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "user_id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      }
+    ]
+  },
+  "views": {}
 }
