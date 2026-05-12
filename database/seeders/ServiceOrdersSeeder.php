@@ -30,12 +30,12 @@ class ServiceOrdersSeeder extends Seeder
         $totalOrders = count($monthTimeline);
         for ($i = 1; $i <= $totalOrders; $i++) {
             $orderDate = $monthTimeline[$i - 1];
-            $created = date('Y-m-d H:i:s', strtotime($orderDate . ' -' . rand(1, 48) . ' hours'));
-            $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 24) . ' hours'));
+            $created = date('Y-m-d H:i:s', strtotime($orderDate.' -'.rand(1, 48).' hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created.' +'.rand(1, 24).' hours'));
             $userId = $userIds[array_rand($userIds)];
             $employeeId = rand(1, 10);
             $bayId = rand(1, 6);
-            $status = 'Completed';
+            $status = 'completed';
             $orderType = rand(0, 1) ? 'W' : 'R';
             // Check if any detail has underwash (service_id 6-9), adjust bay to 6
             // But since details seeded after, assume some logic: if rand, set bay 6 for some
