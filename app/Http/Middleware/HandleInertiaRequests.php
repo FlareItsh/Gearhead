@@ -62,7 +62,13 @@ class HandleInertiaRequests extends Middleware
                     return 9;
                 }
             })(),
-            'activeDiscounts' => Discount::active()->with('services')->get(),
+            'activeDiscounts' => (function () {
+                try {
+                    return Discount::active()->with('services')->get();
+                } catch (\Exception) {
+                    return collect();
+                }
+            })(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
