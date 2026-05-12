@@ -12,12 +12,12 @@ class SupplyPurchaseDetailsSeeder extends Seeder
         $now = now();
         $details = [];
 
-        // Define date range for purchase_date (entire 2025)
-        $start = strtotime('2026-01-01 00:00:00');
-        $end = strtotime('2026-12-31 23:59:59');
+        // Define date range for purchase_date (April to June 2026)
+        $start = strtotime('2026-04-01 00:00:00');
+        $end = strtotime('2026-06-30 23:59:59');
 
-        // Loop over 50 purchases
-        for ($purchaseId = 1; $purchaseId <= 50; $purchaseId++) {
+        // Loop over 15 purchases
+        for ($purchaseId = 1; $purchaseId <= 15; $purchaseId++) {
             $numDetails = rand(3, 15); // Multiple details per purchase
 
             for ($j = 0; $j < $numDetails; $j++) {
@@ -28,7 +28,7 @@ class SupplyPurchaseDetailsSeeder extends Seeder
                 $quantity = rand(5, 40);       // Previously 5-300
                 $unitPrice = rand(5, 40);      // Previously 10-800
 
-                // Random purchase_date in 2025
+                // Random purchase_date in April-June 2026
                 $purchase_date = date('Y-m-d H:i:s', rand($start, $end));
 
                 $details[] = [

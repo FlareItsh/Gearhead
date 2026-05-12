@@ -10,8 +10,9 @@ class SupplyPurchasesSeeder extends Seeder
     public function run(): void
     {
         $monthTimeline = [];
-        for ($month = 1; $month <= 12; $month++) {
-            for ($day = 1; $day <= 28; $day++) {
+        foreach ([4, 5, 6] as $month) {
+            for ($i = 1; $i <= 5; $i++) {
+                $day = rand(1, 28);
                 $hour = rand(8, 18);
                 $min = rand(0, 59);
                 $dateStr = sprintf('2026-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
@@ -25,8 +26,9 @@ class SupplyPurchasesSeeder extends Seeder
         }
 
         $purchases = [];
-        for ($i = 1; $i <= 50; $i++) { // Reduced to 50
-            $purchaseDate = $monthTimeline[$i % count($monthTimeline)];
+        $totalPurchases = count($monthTimeline);
+        for ($i = 1; $i <= $totalPurchases; $i++) {
+            $purchaseDate = $monthTimeline[$i - 1];
             $created = date('Y-m-d H:i:s', strtotime($purchaseDate . ' -' . rand(1, 24) . ' hours'));
             $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 12) . ' hours'));
             $supplierId = $supplierIds[array_rand($supplierIds)];

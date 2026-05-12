@@ -10,8 +10,9 @@ class ServiceOrdersSeeder extends Seeder
     public function run(): void
     {
         $monthTimeline = [];
-        for ($month = 1; $month <= 12; $month++) {
-            for ($day = 1; $day <= 28; $day++) { // Safe for Feb
+        foreach ([4, 5, 6] as $month) {
+            for ($i = 1; $i <= 5; $i++) {
+                $day = rand(1, 28);
                 $hour = rand(8, 18);
                 $min = rand(0, 59);
                 $dateStr = sprintf('2026-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
@@ -26,8 +27,9 @@ class ServiceOrdersSeeder extends Seeder
         }
 
         $orders = [];
-        for ($i = 1; $i <= 100; $i++) {
-            $orderDate = $monthTimeline[$i % count($monthTimeline)];
+        $totalOrders = count($monthTimeline);
+        for ($i = 1; $i <= $totalOrders; $i++) {
+            $orderDate = $monthTimeline[$i - 1];
             $created = date('Y-m-d H:i:s', strtotime($orderDate . ' -' . rand(1, 48) . ' hours'));
             $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 24) . ' hours'));
             $userId = $userIds[array_rand($userIds)];

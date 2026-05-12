@@ -11,17 +11,12 @@ class PaymentsSeeder extends Seeder
     {
         $orderIds = DB::table('service_orders')->pluck('service_order_id')->toArray();
         $payments = [];
-        $monthTimeline = [];
-        for ($month = 1; $month <= 12; $month++) {
-            for ($day = 1; $day <= 28; $day++) {
-                $hour = rand(8, 18);
-                $min = rand(0, 59);
-                $monthTimeline[] = sprintf('2026-%02d-%02d %02d:%02d:00', $month, $day, $hour, $min);
-            }
-        }
-        shuffle($monthTimeline);
-
         foreach ($orderIds as $index => $orderId) {
+            $order = DB::table('service_orders')->where('service_order_id', $orderId)->first();
+            if (!$order) {
+                continue;
+            }
+
             $details = DB::table('service_order_details as sod')
                 ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
                 ->where('sod.service_order_id', $orderId)
@@ -33,10 +28,9 @@ class PaymentsSeeder extends Seeder
             $is_point_redeemed = (bool) rand(0, 1);
             $gcash_reference = $payment_method === 'gcash' ? (string) rand(1000000000000, 9999999999999) : null;
 
-            $created = $monthTimeline[$index % count($monthTimeline)];
+            $created = $order->order_date;
             $updated = date('Y-m-d H:i:s', strtotime($created . ' +2 hours'));
 
-            $order = DB::table('service_orders')->where('service_order_id', $orderId)->first();
             $employeeId = $order->employee_id ?? rand(1, 10);
 
             DB::table('payments')->updateOrInsert(

@@ -87,8 +87,8 @@ class UsersSeeder extends Seeder
             ],
         ];
 
-        // Generate 20 more customers
-        for ($i = 10; $i < 30; $i++) {
+        // Generate 5 more customers (Total 6 including hardcoded)
+        for ($i = 10; $i < 15; $i++) {
             $users[] = [
                 'user_id' => $i,
                 'first_name' => 'Customer'.$i,
