@@ -9,194 +9,194 @@
       {
         "name": "app_settings",
         "schemaName": "public",
-        "x": 1752,
-        "y": 2488
+        "x": 884,
+        "y": 2616
       },
       {
         "name": "bays",
         "schemaName": "public",
-        "x": 480,
-        "y": 1256
+        "x": 1328,
+        "y": 1600
       },
       {
         "name": "cache",
         "schemaName": "public",
-        "x": 960,
-        "y": 2488
+        "x": 1128,
+        "y": 2614.4857506275616
       },
       {
         "name": "cache_locks",
         "schemaName": "public",
-        "x": 792,
-        "y": 2488
+        "x": 1344,
+        "y": 2614.4857506275616
       },
       {
         "name": "discounts",
         "schemaName": "public",
-        "x": 592,
-        "y": 1536
+        "x": 620.0584779656468,
+        "y": 326.7434672954539
       },
       {
         "name": "employees",
         "schemaName": "public",
-        "x": 1856,
-        "y": 1320
+        "x": 1672,
+        "y": 144
       },
       {
         "name": "failed_jobs",
         "schemaName": "public",
-        "x": 1960,
-        "y": 2488
+        "x": 1544,
+        "y": 2616
       },
       {
         "name": "gcash_settings",
         "schemaName": "public",
-        "x": 88,
-        "y": 2488.5457797820563
+        "x": 1776,
+        "y": 2616
       },
       {
         "name": "job_batches",
         "schemaName": "public",
-        "x": 328,
-        "y": 2488.5457797820563
+        "x": 1872,
+        "y": 2930.6999805996493
       },
       {
         "name": "jobs",
         "schemaName": "public",
-        "x": 1560,
-        "y": 2488
+        "x": 884.8543454361886,
+        "y": 2928
       },
       {
         "name": "landing_page_contents",
         "schemaName": "public",
-        "x": 1176,
-        "y": 192
+        "x": 968,
+        "y": 1824
       },
       {
         "name": "migrations",
         "schemaName": "public",
-        "x": 1144,
-        "y": 2488
+        "x": 1120,
+        "y": 2928.941318827798
       },
       {
         "name": "password_reset_tokens",
         "schemaName": "public",
-        "x": 1328,
-        "y": 2488
+        "x": 1336,
+        "y": 2928.2695657797203
       },
       {
         "name": "payments",
         "schemaName": "public",
-        "x": 2032,
-        "y": 1864
+        "x": 1730.9710119488846,
+        "y": 1504
       },
       {
         "name": "personal_access_tokens",
         "schemaName": "public",
-        "x": 544,
-        "y": 2488.5457797820563
+        "x": 1584,
+        "y": 2930.471740114511
       },
       {
         "name": "pullout_request_details",
         "schemaName": "public",
-        "x": 104,
-        "y": 1464
+        "x": 869.7506275619141,
+        "y": 536
       },
       {
         "name": "pullout_requests",
         "schemaName": "public",
-        "x": 760,
-        "y": 1048
+        "x": 871.0510560857488,
+        "y": 192
       },
       {
         "name": "pullout_services",
         "schemaName": "public",
-        "x": 808,
-        "y": 1944
+        "x": 1287.857768627705,
+        "y": 360
       },
       {
         "name": "queue_lines",
         "schemaName": "public",
-        "x": 1304,
-        "y": 2152
+        "x": 950.5823502046392,
+        "y": 1231.3695722465038
       },
       {
         "name": "service_order_details",
         "schemaName": "public",
-        "x": 1128,
-        "y": 1088
+        "x": 1280,
+        "y": 928
       },
       {
         "name": "service_orders",
         "schemaName": "public",
-        "x": 1400,
-        "y": 1344
+        "x": 1320,
+        "y": 1231.3695722465038
       },
       {
         "name": "service_variants",
         "schemaName": "public",
-        "x": 352,
-        "y": 912
+        "x": 944,
+        "y": 927.3695722465038
       },
       {
         "name": "services",
         "schemaName": "public",
-        "x": 320,
-        "y": 1880
+        "x": 628.0584779656468,
+        "y": 960
       },
       {
         "name": "sessions",
         "schemaName": "public",
-        "x": 832,
-        "y": 672
+        "x": 1000,
+        "y": 1560
       },
       {
         "name": "staff_payouts",
         "schemaName": "public",
-        "x": 1184,
-        "y": 1720
+        "x": 1764.8840570337993,
+        "y": 1896
       },
       {
         "name": "suppliers",
         "schemaName": "public",
-        "x": 608,
-        "y": 232
+        "x": 1753.9131189910117,
+        "y": 1184
       },
       {
         "name": "supplies",
         "schemaName": "public",
-        "x": 952,
-        "y": 1384
+        "x": 1288,
+        "y": 600
       },
       {
         "name": "supply_purchase_details",
         "schemaName": "public",
-        "x": 1528,
-        "y": 1776
+        "x": 1670.837280384456,
+        "y": 624
       },
       {
         "name": "supply_purchases",
         "schemaName": "public",
-        "x": 1160,
-        "y": 728
+        "x": 1718.5877651173287,
+        "y": 936
       },
       {
         "name": "users",
         "schemaName": "public",
-        "x": 1672,
-        "y": 592
+        "x": 1326.321628811058,
+        "y": 1856
       },
       {
         "name": "discount_service",
         "schemaName": "public",
-        "x": 48,
-        "y": 1168
+        "x": 630.4385847423515,
+        "y": 734.7434672954539
       },
       {
         "name": "reviews",
         "schemaName": "public",
-        "x": 1800,
-        "y": 48
+        "x": 984.8175476215575,
+        "y": 2120
       }
     ],
     "tableGroupCollapseStates": [],
@@ -215,7 +215,12 @@
         "secondTableName": "users",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 1175.333004985037,
+            "y": 1904
+          }
+        ]
       },
       {
         "firstFieldNames": [
@@ -230,7 +235,16 @@
         "secondTableName": "employees",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 2052.1015002286686,
+            "y": 1616
+          },
+          {
+            "x": 2052.1015002286686,
+            "y": 192
+          }
+        ]
       },
       {
         "firstFieldNames": [
@@ -245,7 +259,16 @@
         "secondTableName": "service_orders",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 1662.7682892217822,
+            "y": 1584
+          },
+          {
+            "x": 1662.7682892217822,
+            "y": 1279.3695722465038
+          }
+        ]
       },
       {
         "firstFieldNames": [
@@ -260,7 +283,16 @@
         "secondTableName": "pullout_requests",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 1198.4930659917197,
+            "y": 680
+          },
+          {
+            "x": 1198.4930659917197,
+            "y": 240
+          }
+        ]
       },
       {
         "firstFieldNames": [
@@ -395,7 +427,12 @@
         "secondTableName": "employees",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 1596,
+            "y": 1343.3695722465036
+          }
+        ]
       },
       {
         "firstFieldNames": [
@@ -455,7 +492,16 @@
         "secondTableName": "employees",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 2111.0000466688953,
+            "y": 1976
+          },
+          {
+            "x": 2111.0000466688953,
+            "y": 192
+          }
+        ]
       },
       {
         "firstFieldNames": [
@@ -560,7 +606,16 @@
         "secondTableName": "users",
         "secondSchemaName": "public",
         "secondRelation": "1",
-        "checkPoints": []
+        "checkPoints": [
+          {
+            "x": 1254.6933510271228,
+            "y": 2200
+          },
+          {
+            "x": 1254.6933510271228,
+            "y": 1904
+          }
+        ]
       }
     ]
   },
