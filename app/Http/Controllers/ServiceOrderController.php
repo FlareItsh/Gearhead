@@ -292,6 +292,7 @@ class ServiceOrderController extends Controller
                     'phone_number' => $guestInfo['phone'],
                     'password' => Hash::make('gearhead2024'),
                     'role' => 'customer',
+                    'email_verified_at' => now(),
                     'permissions' => [],
                 ]);
             }
