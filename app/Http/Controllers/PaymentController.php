@@ -97,29 +97,52 @@ class PaymentController extends Controller
     // Method to get payments for current logged-in user
     public function indexForCurrentUser(Request $request)
     {
-        $userId = Auth::id();
-        $perPage = (int) $request->query('per_page', 10);
-        $export = $request->query('export') === 'true';
+        try {
+            $userId = Auth::id();
 
-        if ($export) {
-            $payments = $this->repo->getPaymentsForUser($userId);
+            if (! $userId) {
+                return response()->json([
+                    'paginated' => [
+                        'data' => [],
+                    ],
+                    'summary' => [
+                        'total_spent' => 0,
+                        'total_count' => 0,
+                    ],
+                ]);
+            }
 
-            return response()->json($payments);
+            $perPage = (int) $request->query('per_page', 10);
+            $export = $request->query('export') === 'true';
+
+            if ($export) {
+                $payments = $this->repo->getPaymentsForUser($userId);
+
+                return response()->json($payments);
+            }
+
+            $payments = $this->repo->getPaginatedPaymentsForUser($userId, $perPage);
+            $totalSpent = $this->repo->totalSpent($userId);
+            $totalCount = $this->repo->countByUserId($userId);
+
+            return response()->json([
+                'paginated' => $payments,
+                'summary' => [
+                    'total_spent' => $totalSpent,
+                    'total_count' => $totalCount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching payments for user: '.$e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to fetch payments data.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
-
-        $payments = $this->repo->getPaginatedPaymentsForUser($userId, $perPage);
-
-        // Add summary stats
-        $totalSpent = $this->repo->totalSpent($userId);
-        $totalCount = $this->repo->countByUserId($userId);
-
-        return response()->json([
-            'paginated' => $payments,
-            'summary' => [
-                'total_spent' => $totalSpent,
-                'total_count' => $totalCount,
-            ],
-        ]);
     }
 
     /**

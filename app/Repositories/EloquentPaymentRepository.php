@@ -89,14 +89,14 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
     {
         return DB::table('payments as p')
             ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
-            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
-            ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->leftJoin('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->leftJoin('services as s', 'sv.service_id', '=', 's.service_id')
             ->where('so.user_id', $userId)
             ->select(
                 'p.payment_id',
                 'so.order_date as date',
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", "), "Unknown Service") as services'),
                 'p.amount',
                 'p.payment_method',
                 'p.gcash_reference',
