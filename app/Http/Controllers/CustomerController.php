@@ -192,6 +192,7 @@ class CustomerController extends Controller
             'address' => $validated['address'],
             'password' => $validated['password'],
             'role' => 'customer',
+            'email_verified_at' => now(),
         ]);
 
         return response()->json([
