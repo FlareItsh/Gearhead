@@ -10,40 +10,33 @@ class ServiceOrderDetailsSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-        $variantIds = DB::table('service_variants')->pluck('service_variant')->toArray();
-
-        // If no variants, skip
-        if (empty($variantIds)) {
-            return;
-        }
-
         $details = [];
-        for ($orderId = 1; $orderId <= 15; $orderId++) {
-            $numDetails = rand(1, min(3, count($variantIds))); // Reduced for realistic data, capped by total variants
-            $selectedVariants = [];
-            // Pick unique random keys
-            $randomKeys = array_rand($variantIds, $numDetails);
-            if (! is_array($randomKeys)) {
-                $randomKeys = [$randomKeys];
-            }
+
+        // Define date range for purchase_date (April to June 2026)
+        $start = strtotime('2026-04-01 00:00:00');
+        $end = strtotime('2026-06-30 23:59:59');
+
+        $orderIds = DB::table('service_orders')->pluck('service_order_id')->toArray();
+
+        foreach ($orderIds as $orderId) {
+            $numDetails = rand(1, 3); // Multiple details per order
 
             for ($j = 0; $j < $numDetails; $j++) {
-                $detailId = (($orderId - 1) * 3) + $j + 1;
-                $serviceVariant = $variantIds[$randomKeys[$j]];
+                $serviceVariant = rand(1, 20); // Assume variants 1-20 exist
+
+                // Random purchase_date in April-June 2026
+                $orderDate = date('Y-m-d H:i:s', rand($start, $end));
+
                 $details[] = [
-                    'service_order_detail_id' => $detailId,
                     'service_order_id' => $orderId,
                     'service_variant' => $serviceVariant,
-                    'quantity' => rand(1, 1), // Most services are quantity 1
+                    'quantity' => 1,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
             }
         }
-        foreach ($details as $d) {
-            if (! DB::table('service_order_details')->where('service_order_detail_id', $d['service_order_detail_id'])->exists()) {
-                DB::table('service_order_details')->insert($d);
-            }
-        }
+
+        DB::table('service_order_details')->insert($details);
     }
 }

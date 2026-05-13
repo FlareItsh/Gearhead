@@ -36,11 +36,9 @@ class PulloutServicesSeeder extends Seeder
             ];
         }
 
-        // Insert only if the pullout_service_id does not already exist
         foreach ($services as $s) {
-            if (! DB::table('pullout_services')->where('pullout_service_id', $s['pullout_service_id'])->exists()) {
-                DB::table('pullout_services')->insert($s);
-            }
+            unset($s['pullout_service_id']);
+            DB::table('pullout_services')->insert($s);
         }
 
         $this->command->info(count($services).' pullout services seeded.');

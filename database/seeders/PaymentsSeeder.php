@@ -33,9 +33,7 @@ class PaymentsSeeder extends Seeder
 
             $employeeId = $order->employee_id ?? rand(1, 10);
 
-            DB::table('payments')->updateOrInsert(
-                ['payment_id' => $index + 1],
-                [
+            DB::table('payments')->insert([
                     'service_order_id' => $orderId,
                     'employee_id' => $employeeId,
                     'amount' => $amount,
@@ -44,8 +42,7 @@ class PaymentsSeeder extends Seeder
                     'gcash_reference' => $gcash_reference,
                     'created_at' => $created,
                     'updated_at' => $updated,
-                ]
-            );
+            ]);
         }
     }
 }

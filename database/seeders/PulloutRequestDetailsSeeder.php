@@ -21,11 +21,10 @@ class PulloutRequestDetailsSeeder extends Seeder
         ];
 
         foreach ($details as $d) {
-            if (! DB::table('pullout_request_details')->where('pullout_request_details_id', $d['pullout_request_details_id'])->exists()) {
-                $d['created_at'] = $now;
-                $d['updated_at'] = $now;
-                DB::table('pullout_request_details')->insert($d);
-            }
+            unset($d['pullout_request_details_id']);
+            $d['created_at'] = $now;
+            $d['updated_at'] = $now;
+            DB::table('pullout_request_details')->insert($d);
         }
     }
 }

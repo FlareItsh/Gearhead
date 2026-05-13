@@ -18,11 +18,10 @@ class PulloutRequestsSeeder extends Seeder
         ];
 
         foreach ($requests as $r) {
-            if (! DB::table('pullout_requests')->where('pullout_request_id', $r['pullout_request_id'])->exists()) {
-                $r['created_at'] = $now;
-                $r['updated_at'] = $now;
-                DB::table('pullout_requests')->insert($r);
-            }
+            unset($r['pullout_request_id']);
+            $r['created_at'] = $now;
+            $r['updated_at'] = $now;
+            DB::table('pullout_requests')->insert($r);
         }
     }
 }

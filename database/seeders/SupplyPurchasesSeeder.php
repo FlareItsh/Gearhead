@@ -41,10 +41,8 @@ class SupplyPurchasesSeeder extends Seeder
             ];
         }
         foreach ($purchases as $p) {
-            DB::table('supply_purchases')->updateOrInsert(
-                ['supply_purchase_id' => $p['supply_purchase_id']],
-                $p
-            );
+            unset($p['supply_purchase_id']);
+            DB::table('supply_purchases')->insert($p);
         }
     }
 }

@@ -43,7 +43,6 @@ class ServiceOrdersSeeder extends Seeder
                 $bayId = 6;
             }
             $orders[] = [
-                'service_order_id' => $i,
                 'user_id' => $userId,
                 'employee_id' => $employeeId,
                 'bay_id' => $bayId,
@@ -54,11 +53,7 @@ class ServiceOrdersSeeder extends Seeder
                 'updated_at' => $updated,
             ];
         }
-        foreach ($orders as $o) {
-            DB::table('service_orders')->updateOrInsert(
-                ['service_order_id' => $o['service_order_id']],
-                $o
-            );
-        }
+
+        DB::table('service_orders')->insert($orders);
     }
 }
