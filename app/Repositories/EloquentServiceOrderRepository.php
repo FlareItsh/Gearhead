@@ -324,7 +324,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'ql.created_at as queue_created_at',
                 'ql.queue_line_id',
                 DB::raw('(SELECT COUNT(*) + 1 FROM queue_lines ql2 WHERE ql2.status = \'waiting\' AND ql2.created_at < ql.created_at) as queue_number'),
-                DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
+                DB::raw("CONCAT(u.first_name, ' ', u.last_name) as customer_name"),
                 DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(s.service_name, \', \')' : 'GROUP_CONCAT(s.service_name SEPARATOR \', \')').' as services'),
                 DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(CAST(s.service_id as TEXT), \',\')' : 'GROUP_CONCAT(s.service_id)').' as service_ids'),
                 DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(CAST(sv.service_variant as TEXT), \',\')' : 'GROUP_CONCAT(sv.service_variant)').' as variant_ids'),

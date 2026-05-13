@@ -55,16 +55,16 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
         // Get revenue per day (aligned with service order date)
         $revenueData = DB::table('payments as p')
             ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
-            ->selectRaw('DATE(so.order_date) as date, SUM(p.amount) as revenue')
+            ->selectRaw((DB::getDriverName() === 'pgsql' ? 'CAST(so.order_date AS DATE)' : 'DATE(so.order_date)').' as date, SUM(p.amount) as revenue')
             ->whereBetween('so.order_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->groupByRaw('DATE(so.order_date)')
+            ->groupByRaw(DB::getDriverName() === 'pgsql' ? 'CAST(so.order_date AS DATE)' : 'DATE(so.order_date)')
             ->pluck('revenue', 'date'); // ['2025-11-01' => 1000, ...]
 
         // Get expenses per day
         $expensesData = DB::table('supply_purchase_details')
-            ->selectRaw('DATE(purchase_date) as date, SUM(quantity * unit_price) as expenses')
+            ->selectRaw((DB::getDriverName() === 'pgsql' ? 'CAST(purchase_date AS DATE)' : 'DATE(purchase_date)').' as date, SUM(quantity * unit_price) as expenses')
             ->whereBetween('purchase_date', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->groupByRaw('DATE(purchase_date)')
+            ->groupByRaw(DB::getDriverName() === 'pgsql' ? 'CAST(purchase_date AS DATE)' : 'DATE(purchase_date)')
             ->pluck('expenses', 'date');
 
         // Merge into final dataset
