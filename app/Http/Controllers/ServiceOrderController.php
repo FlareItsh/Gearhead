@@ -10,7 +10,6 @@ use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class ServiceOrderController extends Controller
 {
@@ -291,7 +290,7 @@ class ServiceOrderController extends Controller
                     'last_name' => $lastName,
                     'email' => $guestInfo['email'],
                     'phone_number' => $guestInfo['phone'],
-                    'password' => Hash::make(Str::random(16)),
+                    'password' => Hash::make('gearhead2024'),
                     'role' => 'customer',
                     'permissions' => [],
                 ]);

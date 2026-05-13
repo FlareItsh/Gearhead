@@ -321,8 +321,7 @@ class PaymentController extends Controller
             if ($request->hasFile('gcash_screenshot')) {
                 $file = $request->file('gcash_screenshot');
                 $filename = 'receipt_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                $file->move(public_path('receipts'), $filename);
-                $screenshotPath = 'receipts/'.$filename;
+                $screenshotPath = $file->storeAs('receipts', $filename, 'public');
             }
 
             // Calculate total and apply discount if not loyalty

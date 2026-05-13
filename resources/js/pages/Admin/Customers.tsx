@@ -541,6 +541,7 @@ export default function Customers() {
                       </Label>
                       <Input
                         id="phone"
+                        autoComplete="tel"
                         value={editForm.phone_number}
                         onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
                         className="h-10 border-border/60 bg-muted/5 focus:ring-highlight"
@@ -580,6 +581,7 @@ export default function Customers() {
                     <Input
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       placeholder="Leave blank to keep current password"
                       value={editForm.password}
                       onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
@@ -643,6 +645,7 @@ export default function Customers() {
               <Input
                 id="admin-pass"
                 type="password"
+                autoComplete="current-password"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="Enter your password"

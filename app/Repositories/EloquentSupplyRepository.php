@@ -37,7 +37,7 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
 
     public function create(array $data)
     {
-        return DB::table('supplies')->insertGetId($data);
+        return DB::table('supplies')->insertGetId($data, 'supply_id');
     }
 
     public function update(int $id, array $data)
@@ -90,6 +90,10 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
             $forwarded_balance = ($total_purchases + $total_returns) - $total_pullouts;
         }
 
+        $isPgsql = DB::getDriverName() === 'pgsql';
+        $nullStr = $isPgsql ? 'CAST(NULL AS VARCHAR)' : 'NULL';
+        $toStr = $isPgsql ? 'CAST(%s AS VARCHAR)' : '%s';
+
         $purchases = DB::table('supply_purchase_details')
             ->join('supply_purchases', 'supply_purchase_details.supply_purchase_id', '=', 'supply_purchases.supply_purchase_id')
             ->join('suppliers', 'supply_purchases.supplier_id', '=', 'suppliers.supplier_id')
@@ -104,10 +108,10 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
                 'supply_purchases.created_at as date',
                 DB::raw("'Purchase' as type"),
                 DB::raw("CONCAT(suppliers.first_name, ' ', suppliers.last_name) as supplier_name"),
-                DB::raw('NULL as employee_name'),
+                DB::raw($nullStr.' as employee_name'),
                 'supply_purchase_details.quantity as qty_in',
                 DB::raw('0 as qty_out'),
-                'supply_purchases.purchase_reference as reference_no',
+                DB::raw(sprintf($toStr, 'supply_purchases.purchase_reference').' as reference_no'),
             ]);
 
         $pullouts = DB::table('pullout_request_details')
@@ -124,11 +128,11 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
             ->select([
                 'pullout_requests.created_at as date',
                 DB::raw("'Pullout' as type"),
-                DB::raw('NULL as supplier_name'),
+                DB::raw($nullStr.' as supplier_name'),
                 DB::raw("CONCAT(employees.first_name, ' ', employees.last_name) as employee_name"),
                 DB::raw('0 as qty_in'),
                 'pullout_request_details.quantity as qty_out',
-                'pullout_requests.pullout_request_id as reference_no',
+                DB::raw(sprintf($toStr, 'pullout_requests.pullout_request_id').' as reference_no'),
             ]);
 
         $returns = DB::table('pullout_request_details')
@@ -145,11 +149,11 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
             ->select([
                 'pullout_request_details.returned_at as date',
                 DB::raw("'Return' as type"),
-                DB::raw('NULL as supplier_name'),
+                DB::raw($nullStr.' as supplier_name'),
                 DB::raw("CONCAT(employees.first_name, ' ', employees.last_name) as employee_name"),
                 'pullout_request_details.quantity as qty_in',
                 DB::raw('0 as qty_out'),
-                'pullout_requests.pullout_request_id as reference_no',
+                DB::raw(sprintf($toStr, 'pullout_requests.pullout_request_id').' as reference_no'),
             ]);
 
         $entries = $purchases

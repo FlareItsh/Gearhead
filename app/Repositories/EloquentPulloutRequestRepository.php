@@ -101,18 +101,17 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                 ->first();
 
             // Create pullout service record
-            $pulloutService = DB::table('pullout_services')->insertGetId([
+            $pulloutService = PulloutService::create([
                 'service_order_detail_id' => $requestData['service_order_detail_id'],
                 'bay_number' => $serviceOrderDetail->bay_number ?? 'N/A',
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
+            $pulloutServiceId = $pulloutService->pullout_service_id;
 
             // Create pullout request details
             foreach ($details as $detail) {
                 PulloutRequestDetail::create([
                     'pullout_request_id' => $request->pullout_request_id,
-                    'pullout_service_id' => $pulloutService,
+                    'pullout_service_id' => $pulloutServiceId,
                     'supply_id' => $detail['supply_id'],
                     'quantity' => $detail['quantity'],
                 ]);
