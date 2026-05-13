@@ -85,17 +85,19 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
 
     public function getDetailedPurchases(?string $startDate = null, ?string $endDate = null)
     {
+        $groupConcat = DB::getDriverName() === 'pgsql' ? "STRING_AGG(sup.supply_name, ', ')" : "GROUP_CONCAT(sup.supply_name SEPARATOR ', ')";
+
         $query = DB::table('supply_purchases as sp')
             ->leftJoin('suppliers as s', 'sp.supplier_id', '=', 's.supplier_id')
             ->leftJoin('supply_purchase_details as spd', 'sp.supply_purchase_id', '=', 'spd.supply_purchase_id')
             ->leftJoin('supplies as sup', 'spd.supply_id', '=', 'sup.supply_id')
             ->selectRaw(
-                'sp.supply_purchase_id,
+                "sp.supply_purchase_id,
                 sp.purchase_date,
-                COALESCE(sp.purchase_reference, "") as purchase_reference,
-                CONCAT(COALESCE(s.first_name, ""), " ", COALESCE(s.last_name, "")) as supplier_name,
-                DB::raw((DB::getDriverName() === \'pgsql\' ? \'STRING_AGG(sup.supply_name, \\\', \\\')\' : \'GROUP_CONCAT(sup.supply_name SEPARATOR \\\', \\\')\').\' as supplies\'),
-                SUM(spd.quantity * spd.unit_price) as total_amount'
+                COALESCE(sp.purchase_reference, '') as purchase_reference,
+                CONCAT(COALESCE(s.first_name, ''), ' ', COALESCE(s.last_name, '')) as supplier_name,
+                $groupConcat as supplies,
+                SUM(spd.quantity * spd.unit_price) as total_amount"
             )
             ->groupBy('sp.supply_purchase_id', 'sp.purchase_date', 'sp.supplier_id', 'sp.purchase_reference', 's.first_name', 's.last_name')
             ->orderBy('sp.purchase_date', 'desc');
@@ -119,17 +121,19 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
 
     public function paginateDetailedPurchases(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null)
     {
+        $groupConcat = DB::getDriverName() === 'pgsql' ? "STRING_AGG(sup.supply_name, ', ')" : "GROUP_CONCAT(sup.supply_name SEPARATOR ', ')";
+
         $query = DB::table('supply_purchases as sp')
             ->leftJoin('suppliers as s', 'sp.supplier_id', '=', 's.supplier_id')
             ->leftJoin('supply_purchase_details as spd', 'sp.supply_purchase_id', '=', 'spd.supply_purchase_id')
             ->leftJoin('supplies as sup', 'spd.supply_id', '=', 'sup.supply_id')
             ->selectRaw(
-                'sp.supply_purchase_id,
+                "sp.supply_purchase_id,
                 sp.purchase_date,
-                COALESCE(sp.purchase_reference, "") as purchase_reference,
-                CONCAT(COALESCE(s.first_name, ""), " ", COALESCE(s.last_name, "")) as supplier_name,
-                DB::raw((DB::getDriverName() === \'pgsql\' ? \'STRING_AGG(sup.supply_name, \\\', \\\')\' : \'GROUP_CONCAT(sup.supply_name SEPARATOR \\\', \\\')\').\' as supplies\'),
-                SUM(spd.quantity * spd.unit_price) as total_amount'
+                COALESCE(sp.purchase_reference, '') as purchase_reference,
+                CONCAT(COALESCE(s.first_name, ''), ' ', COALESCE(s.last_name, '')) as supplier_name,
+                $groupConcat as supplies,
+                SUM(spd.quantity * spd.unit_price) as total_amount"
             )
             ->groupBy('sp.supply_purchase_id', 'sp.purchase_date', 'sp.supplier_id', 'sp.purchase_reference', 's.first_name', 's.last_name')
             ->orderBy('sp.purchase_date', 'desc');
