@@ -12,21 +12,22 @@ class ServiceOrderDetailsSeeder extends Seeder
         $now = now();
         $details = [];
 
-        // Define date range for purchase_date (April to June 2026)
-        $start = strtotime('2026-04-01 00:00:00');
-        $end = strtotime('2026-06-30 23:59:59');
+        $variantIds = DB::table('service_variants')->pluck('service_variant')->toArray();
+        if (empty($variantIds)) {
+            return;
+        }
 
         $orderIds = DB::table('service_orders')->pluck('service_order_id')->toArray();
 
         foreach ($orderIds as $orderId) {
-            $numDetails = rand(1, 3); // Multiple details per order
+            $numDetails = rand(1, min(3, count($variantIds))); // Multiple details per order
+            
+            // Randomly select unique variants for this order
+            $shuffledVariants = $variantIds;
+            shuffle($shuffledVariants);
+            $selectedVariants = array_slice($shuffledVariants, 0, $numDetails);
 
-            for ($j = 0; $j < $numDetails; $j++) {
-                $serviceVariant = rand(1, 20); // Assume variants 1-20 exist
-
-                // Random purchase_date in April-June 2026
-                $orderDate = date('Y-m-d H:i:s', rand($start, $end));
-
+            foreach ($selectedVariants as $serviceVariant) {
                 $details[] = [
                     'service_order_id' => $orderId,
                     'service_variant' => $serviceVariant,
