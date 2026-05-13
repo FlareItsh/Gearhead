@@ -28,5 +28,7 @@ class DatabaseSeeder extends Seeder
             SupplyPurchasesSeeder::class,
             SupplyPurchaseDetailsSeeder::class,
         ]);
+
+        $this->command->call('db:sync-sequences');
     }
 }
