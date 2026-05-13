@@ -55,8 +55,20 @@ class HandleInertiaRequests extends Middleware
                     'has_password' => $request->user()->password !== null,
                 ] : null,
             ],
-            'loyaltyThreshold' => (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9),
-            'activeDiscounts' => Discount::active()->with('services')->get(),
+            'loyaltyThreshold' => (function () {
+                try {
+                    return (int) (AppSetting::where('key', 'loyalty_free_wash_threshold')->value('value') ?? 9);
+                } catch (\Exception) {
+                    return 9;
+                }
+            })(),
+            'activeDiscounts' => (function () {
+                try {
+                    return Discount::active()->with('services')->get();
+                } catch (\Exception) {
+                    return collect();
+                }
+            })(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

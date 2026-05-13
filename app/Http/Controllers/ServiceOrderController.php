@@ -161,12 +161,23 @@ class ServiceOrderController extends Controller
 
     public function upcoming(Request $request)
     {
-        $userId = $request->user()->user_id;
+        try {
+            $userId = $request->user()->user_id;
 
-        $bookings = $this->repo->upcomingBookings($userId);
+            $bookings = $this->repo->upcomingBookings($userId);
 
-        return response()->json($bookings);
+            return response()->json($bookings);
+        } catch (\Exception $e) {
+            Log::error('Error fetching upcoming bookings: '.$e->getMessage(), [
+                'user_id' => $request->user() ? $request->user()->user_id : null,
+                'trace' => $e->getTraceAsString(),
+            ]);
 
+            return response()->json([
+                'message' => 'Failed to fetch upcoming bookings.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 
     public function pending()

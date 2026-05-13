@@ -68,9 +68,9 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
     public function upcomingBookings(int $userId)
     {
         return DB::table('service_orders as so')
-            ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
-            ->join('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
-            ->join('services as s', 'sv.service_id', '=', 's.service_id')
+            ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
+            ->leftJoin('service_variants as sv', 'sod.service_variant', '=', 'sv.service_variant')
+            ->leftJoin('services as s', 'sv.service_id', '=', 's.service_id')
             ->where('so.user_id', $userId)
             ->whereIn('so.status', ['pending', 'in_progress'])
             ->select(
@@ -78,7 +78,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'so.order_date',
                 'so.order_type',
                 'so.status',
-                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as service_names'),
+                DB::raw('COALESCE(GROUP_CONCAT(s.service_name SEPARATOR ", "), "No services listed") as service_names'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_amount')
             )
             ->groupBy(
