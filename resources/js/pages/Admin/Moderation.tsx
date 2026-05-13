@@ -116,7 +116,7 @@ export default function Moderation({
   }
 
   // GCash Form
-  const [preview, setPreview] = useState<string | null>(gcashSettings.qr_code_url)
+  const [preview, setPreview] = useState<string | null>(gcashSettings?.qr_code_url || null)
   const gcashForm = useForm({
     account_name: gcashSettings.account_name,
     account_number: gcashSettings.account_number,

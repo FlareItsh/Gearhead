@@ -19,6 +19,6 @@ class GcashSetting extends Model
 
     public function getQrCodeUrlAttribute(): ?string
     {
-        return $this->qr_code_path ? asset('storage/'.$this->qr_code_path) : null;
+        return $this->qr_code_path ? '/storage/'.$this->qr_code_path : null;
     }
 }

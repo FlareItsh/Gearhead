@@ -615,7 +615,7 @@ export default function RegistryPayment({ bayId, gcashSettings }: Props) {
                             <p className="font-medium text-highlight">{gcashSettings.account_number}</p>
                           </div>
                           
-                          {gcashSettings.qr_code_url ? (
+                          {gcashSettings?.qr_code_url ? (
                             <div className="relative group p-3 bg-white rounded-2xl shadow-xl transition-all duration-300 hover:scale-105">
                               <img 
                                 src={gcashSettings.qr_code_url} 

@@ -26,7 +26,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Gcash({ settings }: { settings: GcashSettings }) {
-    const [preview, setPreview] = useState<string | null>(settings.qr_code_url);
+    const [preview, setPreview] = useState<string | null>(settings?.qr_code_url || null);
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         account_name: settings.account_name,
         account_number: settings.account_number,
