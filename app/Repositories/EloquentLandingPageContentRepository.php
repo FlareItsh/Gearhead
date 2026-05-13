@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
-
 use App\Models\LandingPageContent;
+use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class EloquentLandingPageContentRepository implements LandingPageContentRepositoryInterface

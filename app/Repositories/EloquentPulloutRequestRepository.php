@@ -56,7 +56,7 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                 's.service_name',
                 'sv.size',
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
-                DB::raw("GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ') as supplies")
+                DB::raw((DB::getDriverName() === 'pgsql' ? "STRING_AGG(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')'), ', ')" : "GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ')").' as supplies')
             )
             ->groupBy(
                 'pr.pullout_request_id',
@@ -221,7 +221,7 @@ class EloquentPulloutRequestRepository implements PulloutRequestRepositoryInterf
                 's.service_name',
                 'sv.size',
                 DB::raw("CONCAT(e.first_name, ' ', e.last_name) as employee_name"),
-                DB::raw("GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ') as supplies")
+                DB::raw((DB::getDriverName() === 'pgsql' ? "STRING_AGG(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')'), ', ')" : "GROUP_CONCAT(CONCAT(sup.supply_name, ' (', prd.quantity, ' ', sup.unit, ')') SEPARATOR ', ')").' as supplies')
             )
             ->groupBy(
                 'pr.pullout_request_id',

@@ -2,10 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\ServiceRepositoryInterface;
-
 use App\Models\Service;
-use App\Models\ServiceVariant;
+use App\Repositories\Contracts\ServiceRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +16,7 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
     {
         return Service::where('status', 'active')
             ->with(['variants' => function ($query) {
-                // You might want to filter variants too if they have a status, 
+                // You might want to filter variants too if they have a status,
                 // but currently only services have status in the schema
             }])
             ->get();
@@ -83,14 +81,14 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
 
             if (isset($data['variants']) && is_array($data['variants'])) {
                 \Log::info('Processing variants', ['variants' => $data['variants']]);
-                
+
                 $existingVariants = $service->variants->keyBy('size');
                 $updatedSizes = [];
 
                 foreach ($data['variants'] as $variantData) {
                     $size = $variantData['size'];
                     $updatedSizes[] = $size;
-                    
+
                     \Log::info('Processing variant', [
                         'size' => $size,
                         'enabled' => $variantData['enabled'],
@@ -125,10 +123,10 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
 
             return true;
         });
-        
+
         // Refresh the service model to reload the variants relationship
         $service->refresh();
-        
+
         return $result;
     }
 

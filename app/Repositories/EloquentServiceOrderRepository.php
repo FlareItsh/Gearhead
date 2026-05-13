@@ -78,7 +78,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'so.order_date',
                 'so.order_type',
                 'so.status',
-                DB::raw('COALESCE(GROUP_CONCAT(s.service_name SEPARATOR ", "), "No services listed") as service_names'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'COALESCE(STRING_AGG(s.service_name, \', \'), \'No services listed\')' : 'COALESCE(GROUP_CONCAT(s.service_name SEPARATOR \', \'), \'No services listed\')').' as service_names'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_amount')
             )
             ->groupBy(
@@ -87,7 +87,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'so.order_type',
                 'so.status'
             )
-            ->orderByRaw("FIELD(so.status, 'in_progress', 'pending')")
+            ->orderByRaw(DB::getDriverName() === 'pgsql' ? "CASE WHEN so.status = 'in_progress' THEN 1 WHEN so.status = 'pending' THEN 2 ELSE 3 END" : "FIELD(so.status, 'in_progress', 'pending')")
             ->orderByDesc('so.order_date')
             ->get();
     }
@@ -114,7 +114,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'p.amount as payment_amount',
                 'p.payment_method',
                 'p.gcash_reference',
-                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services')
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(s.service_name, \', \')' : 'GROUP_CONCAT(s.service_name SEPARATOR \', \')').' as services')
             )
             ->groupBy('so.service_order_id', 'so.status', 'so.order_date', 'so.order_type', 'so.user_id', 'p.amount', 'p.payment_method', 'p.gcash_reference')
             ->orderByDesc('so.order_date');
@@ -145,7 +145,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_name'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')').' as service_name'),
                 'so.order_date',
                 'so.status'
             )
@@ -167,7 +167,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')').' as service_names'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_price'),
                 'so.order_date',
                 'so.status',
@@ -182,7 +182,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             $query->whereDate('so.order_date', '<=', $endDate);
         }
 
-        return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
+        return $query->orderByRaw(DB::getDriverName() === 'pgsql' ? "CASE WHEN so.status = 'pending' THEN 1 WHEN so.status = 'in_progress' THEN 2 WHEN so.status = 'completed' THEN 3 WHEN so.status = 'cancelled' THEN 4 ELSE 5 END" : "FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
             ->orderBy($sortBy === 'customer_name' ? 'u.last_name' : $sortBy, $sortOrder)
             ->get();
     }
@@ -197,7 +197,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             ->select(
                 'so.service_order_id',
                 DB::raw("CONCAT_WS(' ', u.first_name, NULLIF(u.middle_name, ''), u.last_name) as customer_name"),
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as service_names'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')').' as service_names'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total_price'),
                 'so.order_date',
                 'so.status',
@@ -222,7 +222,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
             $query->where('so.status', $status);
         }
 
-        return $query->orderByRaw("FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
+        return $query->orderByRaw(DB::getDriverName() === 'pgsql' ? "CASE WHEN so.status = 'pending' THEN 1 WHEN so.status = 'in_progress' THEN 2 WHEN so.status = 'completed' THEN 3 WHEN so.status = 'cancelled' THEN 4 ELSE 5 END" : "FIELD(so.status, 'pending', 'in_progress', 'completed', 'cancelled')")
             ->orderBy($sortBy === 'customer_name' ? 'u.last_name' : $sortBy, $sortOrder)
             ->paginate($perPage);
     }
@@ -323,11 +323,11 @@ class EloquentServiceOrderRepository implements ServiceOrderRepositoryInterface
                 'u.phone_number as phone',
                 'ql.created_at as queue_created_at',
                 'ql.queue_line_id',
-                DB::raw('(SELECT COUNT(*) + 1 FROM queue_lines ql2 WHERE ql2.status = "waiting" AND ql2.created_at < ql.created_at) as queue_number'),
+                DB::raw('(SELECT COUNT(*) + 1 FROM queue_lines ql2 WHERE ql2.status = \'waiting\' AND ql2.created_at < ql.created_at) as queue_number'),
                 DB::raw('CONCAT(u.first_name, " ", u.last_name) as customer_name'),
-                DB::raw('GROUP_CONCAT(s.service_name SEPARATOR ", ") as services'),
-                DB::raw('GROUP_CONCAT(s.service_id) as service_ids'),
-                DB::raw('GROUP_CONCAT(sv.service_variant) as variant_ids'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(s.service_name, \', \')' : 'GROUP_CONCAT(s.service_name SEPARATOR \', \')').' as services'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(CAST(s.service_id as TEXT), \',\')' : 'GROUP_CONCAT(s.service_id)').' as service_ids'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(CAST(sv.service_variant as TEXT), \',\')' : 'GROUP_CONCAT(sv.service_variant)').' as variant_ids'),
                 DB::raw('COALESCE(SUM(sv.price * sod.quantity), 0) as total')
             )
             ->groupBy('so.service_order_id', 'so.user_id', 'so.order_date', 'u.first_name', 'u.last_name', 'u.phone_number', 'ql.created_at', 'ql.queue_line_id')

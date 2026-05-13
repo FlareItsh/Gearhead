@@ -3,6 +3,20 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\BayRepositoryInterface;
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
+use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+use App\Repositories\Contracts\PulloutRequestDetailRepositoryInterface;
+use App\Repositories\Contracts\PulloutRequestRepositoryInterface;
+use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderDetailRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+use App\Repositories\Contracts\ServiceRepositoryInterface;
+use App\Repositories\Contracts\SupplierRepositoryInterface;
+use App\Repositories\Contracts\SupplyPurchaseDetailRepositoryInterface;
+use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
+use App\Repositories\Contracts\SupplyRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\EloquentBayRepository;
 use App\Repositories\EloquentEmployeeRepository;
 use App\Repositories\EloquentLandingPageContentRepository;
@@ -18,20 +32,6 @@ use App\Repositories\EloquentSupplyPurchaseDetailRepository;
 use App\Repositories\EloquentSupplyPurchaseRepository;
 use App\Repositories\EloquentSupplyRepository;
 use App\Repositories\EloquentUserRepository;
-use App\Repositories\Contracts\EmployeeRepositoryInterface;
-use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
-use App\Repositories\Contracts\PaymentRepositoryInterface;
-use App\Repositories\Contracts\PulloutRequestDetailRepositoryInterface;
-use App\Repositories\Contracts\PulloutRequestRepositoryInterface;
-use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
-use App\Repositories\Contracts\ServiceOrderDetailRepositoryInterface;
-use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
-use App\Repositories\Contracts\ServiceRepositoryInterface;
-use App\Repositories\Contracts\SupplierRepositoryInterface;
-use App\Repositories\Contracts\SupplyPurchaseDetailRepositoryInterface;
-use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
-use App\Repositories\Contracts\SupplyRepositoryInterface;
-use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

@@ -53,6 +53,9 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
      */
     public function getPaymentsForUser(int $userId)
     {
+        $isPgsql = DB::getDriverName() === 'pgsql';
+        $groupConcat = $isPgsql ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')';
+
         return DB::table('payments as p')
             ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
             ->join('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
@@ -62,7 +65,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->select(
                 'p.payment_id',
                 'so.order_date as date',
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw($groupConcat.' as services'),
                 'p.amount',
                 'p.payment_method',
                 'p.gcash_reference',
@@ -87,6 +90,10 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
      */
     public function getPaginatedPaymentsForUser(int $userId, int $perPage)
     {
+        $isPgsql = DB::getDriverName() === 'pgsql';
+        $groupConcat = $isPgsql ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')';
+        $coalesceGroupConcat = $isPgsql ? "COALESCE($groupConcat, 'Unknown Service')" : "COALESCE($groupConcat, 'Unknown Service')";
+
         return DB::table('payments as p')
             ->join('service_orders as so', 'p.service_order_id', '=', 'so.service_order_id')
             ->leftJoin('service_order_details as sod', 'so.service_order_id', '=', 'sod.service_order_id')
@@ -96,7 +103,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->select(
                 'p.payment_id',
                 'so.order_date as date',
-                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", "), "Unknown Service") as services'),
+                DB::raw($coalesceGroupConcat.' as services'),
                 'p.amount',
                 'p.payment_method',
                 'p.gcash_reference',
@@ -128,8 +135,8 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->selectRaw('
                 COALESCE(SUM(p.amount), 0) as total_amount, 
                 COUNT(p.payment_id) as total_payments,
-                SUM(CASE WHEN p.payment_method = "cash" THEN 1 ELSE 0 END) as cash_transactions,
-                SUM(CASE WHEN p.payment_method = "gcash" THEN 1 ELSE 0 END) as gcash_transactions
+                SUM(CASE WHEN p.payment_method = \'cash\' THEN 1 ELSE 0 END) as cash_transactions,
+                SUM(CASE WHEN p.payment_method = \'gcash\' THEN 1 ELSE 0 END) as gcash_transactions
             ')
             ->first();
 
@@ -167,11 +174,14 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             'July', 'August', 'September', 'October', 'November', 'December',
         ];
 
+        $isPgsql = DB::getDriverName() === 'pgsql';
+        $monthFunc = $isPgsql ? 'EXTRACT(MONTH FROM created_at)' : 'MONTH(created_at)';
+
         $data = DB::table('payments')
-            ->selectRaw('MONTH(created_at) as month, COALESCE(SUM(amount), 0) as revenue')
+            ->selectRaw($monthFunc.' as month, COALESCE(SUM(amount), 0) as revenue')
             ->whereYear('created_at', $year)
-            ->groupByRaw('MONTH(created_at)')
-            ->orderByRaw('MONTH(created_at)')
+            ->groupByRaw($monthFunc)
+            ->orderByRaw($monthFunc)
             ->pluck('revenue', 'month');
 
         $result = [];
@@ -296,7 +306,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'so.status',
                 'u.first_name',
                 'u.last_name',
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')').' as services'),
                 DB::raw("CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, '')) as employee_name")
             )
             ->groupBy(
@@ -355,7 +365,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'so.status',
                 'u.first_name',
                 'u.last_name',
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')').' as services'),
                 DB::raw("CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, '')) as employee_name")
             )
             ->groupBy(
@@ -414,7 +424,7 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
                 'so.status',
                 'u.first_name',
                 'u.last_name',
-                DB::raw('GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ", ") as services'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(DISTINCT s.service_name, \', \')' : 'GROUP_CONCAT(DISTINCT s.service_name SEPARATOR \', \')').' as services'),
                 DB::raw("CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, '')) as employee_name")
             )
             ->groupBy(

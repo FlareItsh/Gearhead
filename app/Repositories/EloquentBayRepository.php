@@ -3,8 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\Bay;
-use Illuminate\Support\Collection;
 use App\Repositories\Contracts\BayRepositoryInterface;
+use Illuminate\Support\Collection;
 
 class EloquentBayRepository implements BayRepositoryInterface
 {
@@ -54,6 +54,7 @@ class EloquentBayRepository implements BayRepositoryInterface
     public function updateStatus(int $id, string $status): bool
     {
         $bay = Bay::findOrFail($id);
+
         return $bay->update(['status' => $status]);
     }
 }

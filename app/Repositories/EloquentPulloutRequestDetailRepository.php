@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\PulloutRequestDetailRepositoryInterface;
-
 use App\Models\PulloutRequestDetail;
+use App\Repositories\Contracts\PulloutRequestDetailRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class EloquentPulloutRequestDetailRepository implements PulloutRequestDetailRepositoryInterface

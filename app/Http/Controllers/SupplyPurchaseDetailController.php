@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\SupplyPurchaseDetailRepositoryInterface;
-
 use Illuminate\Http\Request;
-
 
 class SupplyPurchaseDetailController extends Controller
 {
@@ -24,12 +22,14 @@ class SupplyPurchaseDetailController extends Controller
     public function show(int $id)
     {
         $item = $this->repo->findById($id);
+
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
 
     public function store(Request $request)
     {
         $created = $this->repo->create($request->all());
+
         return response()->json($created, 201);
     }
 
@@ -41,6 +41,7 @@ class SupplyPurchaseDetailController extends Controller
         }
 
         $this->repo->update($item, $request->all());
+
         return response()->json($item);
     }
 
@@ -52,6 +53,7 @@ class SupplyPurchaseDetailController extends Controller
         }
 
         $this->repo->delete($item);
+
         return response()->json(null, 204);
     }
 }

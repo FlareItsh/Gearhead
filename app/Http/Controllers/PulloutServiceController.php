@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\PulloutServiceRepositoryInterface;
-
 use Illuminate\Http\Request;
-
 
 class PulloutServiceController extends Controller
 {
@@ -19,18 +17,21 @@ class PulloutServiceController extends Controller
     public function index()
     {
         $pulloutServices = $this->pulloutServiceRepository->getAllWithDetails();
+
         return response()->json($pulloutServices);
     }
 
     public function show(int $id)
     {
         $item = $this->pulloutServiceRepository->findById($id);
+
         return $item ? response()->json($item) : response()->json(['message' => 'Not found'], 404);
     }
 
     public function store(Request $request)
     {
         $created = $this->pulloutServiceRepository->create($request->all());
+
         return response()->json($created, 201);
     }
 
@@ -42,6 +43,7 @@ class PulloutServiceController extends Controller
         }
 
         $this->pulloutServiceRepository->update($item, $request->all());
+
         return response()->json($item);
     }
 
@@ -53,6 +55,7 @@ class PulloutServiceController extends Controller
         }
 
         $this->pulloutServiceRepository->delete($item);
+
         return response()->json(null, 204);
     }
 }

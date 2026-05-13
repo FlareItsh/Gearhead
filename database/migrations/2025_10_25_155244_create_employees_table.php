@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('assigned_status', ['available', 'assigned', 'on_leave'])->default('available');
             $table->date('date_hired')->useCurrent();
             $table->timestamp('employment_ended_at')->nullable();
-            
+
             // Constraint to prevent duplicates
             $table->unique(['first_name', 'last_name', 'phone_number'], 'emp_unique');
             $table->timestamps();

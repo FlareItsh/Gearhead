@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\ServiceOrderDetailRepositoryInterface;
-
 use App\Models\ServiceOrderDetail;
+use App\Repositories\Contracts\ServiceOrderDetailRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class EloquentServiceOrderDetailRepository implements ServiceOrderDetailRepositoryInterface

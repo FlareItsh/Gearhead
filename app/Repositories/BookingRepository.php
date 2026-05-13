@@ -23,7 +23,7 @@ class BookingRepository
                 'service_orders.order_date',
                 'service_orders.order_type',
                 'service_orders.created_at',
-                DB::raw('GROUP_CONCAT(services.service_name SEPARATOR ", ") as services'),
+                DB::raw((DB::getDriverName() === 'pgsql' ? 'STRING_AGG(services.service_name, \', \')' : 'GROUP_CONCAT(services.service_name SEPARATOR \', \')').' as services'),
                 DB::raw('SUM(service_order_details.quantity * service_variants.price) as total_amount'),
                 DB::raw('MAX(payments.payment_method) as payment_method')
             )
@@ -40,7 +40,7 @@ class BookingRepository
         }
 
         // Order by status (pending first, in_progress second) then by most recent date
-        return $query->orderByRaw("FIELD(service_orders.status, 'pending', 'in_progress', 'completed', 'cancelled') ASC")
+        return $query->orderByRaw(DB::getDriverName() === 'pgsql' ? "CASE WHEN service_orders.status = 'pending' THEN 1 WHEN service_orders.status = 'in_progress' THEN 2 WHEN service_orders.status = 'completed' THEN 3 WHEN service_orders.status = 'cancelled' THEN 4 ELSE 5 END ASC" : "FIELD(service_orders.status, 'pending', 'in_progress', 'completed', 'cancelled') ASC")
             ->orderByDesc('service_orders.order_date')
             ->paginate($perPage);
     }

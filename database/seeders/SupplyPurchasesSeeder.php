@@ -29,8 +29,8 @@ class SupplyPurchasesSeeder extends Seeder
         $totalPurchases = count($monthTimeline);
         for ($i = 1; $i <= $totalPurchases; $i++) {
             $purchaseDate = $monthTimeline[$i - 1];
-            $created = date('Y-m-d H:i:s', strtotime($purchaseDate . ' -' . rand(1, 24) . ' hours'));
-            $updated = date('Y-m-d H:i:s', strtotime($created . ' +' . rand(1, 12) . ' hours'));
+            $created = date('Y-m-d H:i:s', strtotime($purchaseDate.' -'.rand(1, 24).' hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created.' +'.rand(1, 12).' hours'));
             $supplierId = $supplierIds[array_rand($supplierIds)];
             $purchases[] = [
                 'supply_purchase_id' => $i,

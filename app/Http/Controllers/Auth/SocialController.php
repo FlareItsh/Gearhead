@@ -12,9 +12,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SocialController extends Controller
 {
-    public function __construct(protected UserRepositoryInterface $users)
-    {
-    }
+    public function __construct(protected UserRepositoryInterface $users) {}
 
     /**
      * Redirect to the Google authentication page.

@@ -58,7 +58,7 @@ it('can filter employees by status', function () {
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.first_name', 'Active');
-        
+
     // Filter for inactive
     $response = $this->actingAs($this->admin)
         ->getJson('/api/employees/list?status=inactive');

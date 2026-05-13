@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
-
 use App\Models\SupplyPurchase;
+use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -95,7 +94,7 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
                 sp.purchase_date,
                 COALESCE(sp.purchase_reference, "") as purchase_reference,
                 CONCAT(COALESCE(s.first_name, ""), " ", COALESCE(s.last_name, "")) as supplier_name,
-                GROUP_CONCAT(sup.supply_name SEPARATOR ", ") as supplies,
+                DB::raw((DB::getDriverName() === \'pgsql\' ? \'STRING_AGG(sup.supply_name, \\\', \\\')\' : \'GROUP_CONCAT(sup.supply_name SEPARATOR \\\', \\\')\').\' as supplies\'),
                 SUM(spd.quantity * spd.unit_price) as total_amount'
             )
             ->groupBy('sp.supply_purchase_id', 'sp.purchase_date', 'sp.supplier_id', 'sp.purchase_reference', 's.first_name', 's.last_name')
@@ -118,7 +117,6 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
         })->toArray();
     }
 
-
     public function paginateDetailedPurchases(int $perPage, ?string $search = null, ?string $startDate = null, ?string $endDate = null)
     {
         $query = DB::table('supply_purchases as sp')
@@ -130,7 +128,7 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
                 sp.purchase_date,
                 COALESCE(sp.purchase_reference, "") as purchase_reference,
                 CONCAT(COALESCE(s.first_name, ""), " ", COALESCE(s.last_name, "")) as supplier_name,
-                GROUP_CONCAT(sup.supply_name SEPARATOR ", ") as supplies,
+                DB::raw((DB::getDriverName() === \'pgsql\' ? \'STRING_AGG(sup.supply_name, \\\', \\\')\' : \'GROUP_CONCAT(sup.supply_name SEPARATOR \\\', \\\')\').\' as supplies\'),
                 SUM(spd.quantity * spd.unit_price) as total_amount'
             )
             ->groupBy('sp.supply_purchase_id', 'sp.purchase_date', 'sp.supplier_id', 'sp.purchase_reference', 's.first_name', 's.last_name')
@@ -141,7 +139,7 @@ class EloquentSupplyPurchaseRepository implements SupplyPurchaseRepositoryInterf
         }
 
         if ($search) {
-             $query->havingRaw('supplier_name LIKE ? OR purchase_reference LIKE ?', ["%{$search}%", "%{$search}%"]);
+            $query->havingRaw('supplier_name LIKE ? OR purchase_reference LIKE ?', ["%{$search}%", "%{$search}%"]);
         }
 
         return $query->paginate($perPage)->through(function ($item) {

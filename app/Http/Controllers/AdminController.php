@@ -2,24 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Repositories\Contracts\ServiceRepositoryInterface;
-use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\BayRepositoryInterface;
-use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
-
-
+use App\Repositories\Contracts\PaymentRepositoryInterface;
+use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+use App\Repositories\Contracts\ServiceRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AdminController extends Controller
 {
     private UserRepositoryInterface $users;
+
     private ServiceRepositoryInterface $services;
+
     private PaymentRepositoryInterface $payments;
+
     private BayRepositoryInterface $bays;
+
     private ServiceOrderRepositoryInterface $serviceOrders;
+
     private EmployeeRepositoryInterface $employees;
 
     public function __construct(
@@ -136,6 +139,7 @@ class AdminController extends Controller
             'users' => $this->users->all(),
         ]);
     }
+
     public function dashboard(Request $request, CustomerController $customer)
     {
         $user = $request->user();
@@ -148,7 +152,7 @@ class AdminController extends Controller
         $lowStockSupplies = \App\Models\Supply::query()
             ->whereColumn('quantity_stock', '<=', 'reorder_point')
             ->orWhere(function ($query) {
-                 $query->whereNull('reorder_point')->where('quantity_stock', '<=', 10);
+                $query->whereNull('reorder_point')->where('quantity_stock', '<=', 10);
             })
             ->orderBy('quantity_stock', 'asc')
             ->take(5)

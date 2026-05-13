@@ -13,7 +13,7 @@ class PaymentsSeeder extends Seeder
         $payments = [];
         foreach ($orderIds as $index => $orderId) {
             $order = DB::table('service_orders')->where('service_order_id', $orderId)->first();
-            if (!$order) {
+            if (! $order) {
                 continue;
             }
 
@@ -29,7 +29,7 @@ class PaymentsSeeder extends Seeder
             $gcash_reference = $payment_method === 'gcash' ? (string) rand(1000000000000, 9999999999999) : null;
 
             $created = $order->order_date;
-            $updated = date('Y-m-d H:i:s', strtotime($created . ' +2 hours'));
+            $updated = date('Y-m-d H:i:s', strtotime($created.' +2 hours'));
 
             $employeeId = $order->employee_id ?? rand(1, 10);
 

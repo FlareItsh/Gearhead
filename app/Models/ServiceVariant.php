@@ -34,7 +34,6 @@ class ServiceVariant extends Model
         'status',
     ];
 
-
     public function getServiceNameAttribute(): string
     {
         return $this->service?->service_name ?? '';
@@ -65,4 +64,3 @@ class ServiceVariant extends Model
         return $this->hasMany(ServiceOrderDetail::class, 'service_variant', 'service_variant');
     }
 }
-

@@ -23,10 +23,10 @@ class ServiceOrderDetailsSeeder extends Seeder
             $selectedVariants = [];
             // Pick unique random keys
             $randomKeys = array_rand($variantIds, $numDetails);
-            if (!is_array($randomKeys)) {
+            if (! is_array($randomKeys)) {
                 $randomKeys = [$randomKeys];
             }
-            
+
             for ($j = 0; $j < $numDetails; $j++) {
                 $detailId = (($orderId - 1) * 3) + $j + 1;
                 $serviceVariant = $variantIds[$randomKeys[$j]];

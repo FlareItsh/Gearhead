@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\Discount;
-use App\Models\User;
-use App\Models\ServiceOrder;
 use App\Models\Bay;
+use App\Models\Discount;
 use App\Models\Employee;
+use App\Models\ServiceOrder;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -61,7 +61,7 @@ it('ensures payment process results in non-negative total', function () {
     $customer = User::factory()->create(['role' => 'customer']);
     $bay = Bay::factory()->create(['status' => 'occupied']);
     $employee = Employee::factory()->create(['status' => 'active', 'assigned_status' => 'assigned']);
-    
+
     $order = ServiceOrder::create([
         'user_id' => $customer->user_id,
         'bay_id' => $bay->bay_id,
@@ -90,6 +90,6 @@ it('ensures payment process results in non-negative total', function () {
 
     $response->assertStatus(201);
     $data = $response->json();
-    
-    expect((float)$data['payment']['amount'])->toBe(0.0);
+
+    expect((float) $data['payment']['amount'])->toBe(0.0);
 });

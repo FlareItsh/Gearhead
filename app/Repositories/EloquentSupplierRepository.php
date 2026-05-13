@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\SupplierRepositoryInterface;
-
 use App\Models\Supplier;
+use App\Repositories\Contracts\SupplierRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class EloquentSupplierRepository implements SupplierRepositoryInterface

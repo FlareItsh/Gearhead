@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\QueueLine;
 use App\Models\ServiceOrder;
 use App\Models\ServiceVariant;
 use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+use Illuminate\Http\Request;
 
 class QueueLineController extends Controller
 {
@@ -23,7 +23,7 @@ class QueueLineController extends Controller
             ->where('status', 'waiting')
             ->orderBy('created_at', 'asc')
             ->get();
-            
+
         return response()->json($queues);
     }
 
@@ -41,12 +41,13 @@ class QueueLineController extends Controller
                 $existingOrder = ServiceOrder::where('idempotency_key', $request->input('idempotency_key'))->first();
                 if ($existingOrder) {
                     $queue = QueueLine::where('service_order_id', $existingOrder->service_order_id)->first();
-                    if (!$queue) {
+                    if (! $queue) {
                         $queue = QueueLine::create([
                             'service_order_id' => $existingOrder->service_order_id,
-                            'status' => 'waiting'
+                            'status' => 'waiting',
                         ]);
                     }
+
                     return response()->json([
                         'message' => 'Queue already created',
                         'queue' => $queue->load('serviceOrder.user', 'serviceOrder.details.serviceVariant.service'),
@@ -80,7 +81,7 @@ class QueueLineController extends Controller
 
             $queue = QueueLine::create([
                 'service_order_id' => $order->service_order_id,
-                'status' => 'waiting'
+                'status' => 'waiting',
             ]);
 
             return response()->json([
@@ -112,7 +113,7 @@ class QueueLineController extends Controller
 
             $queue = QueueLine::create([
                 'service_order_id' => $validated['service_order_id'],
-                'status' => 'waiting'
+                'status' => 'waiting',
             ]);
 
             return response()->json([

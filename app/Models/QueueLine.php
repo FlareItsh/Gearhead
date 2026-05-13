@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class QueueLine extends Model
 {
     protected $table = 'queue_lines';
+
     protected $primaryKey = 'queue_line_id';
 
     protected $fillable = [

@@ -10,7 +10,7 @@ class ServicesSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-        
+
         $serviceGroups = [
             [
                 'name' => 'Basic',
@@ -22,7 +22,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Large', 'duration' => 50, 'price' => 200],
                     ['size' => 'X-Large', 'duration' => 50, 'price' => 300],
                     ['size' => 'XX-Large', 'duration' => 50, 'price' => 350],
-                ]
+                ],
             ],
             [
                 'name' => 'Underwash',
@@ -33,7 +33,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 60, 'price' => 340],
                     ['size' => 'Large', 'duration' => 60, 'price' => 390],
                     ['size' => 'X-Large', 'duration' => 60, 'price' => 500],
-                ]
+                ],
             ],
             [
                 'name' => 'Enginewash',
@@ -45,7 +45,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Large', 'duration' => 60, 'price' => 350],
                     ['size' => 'X-Large', 'duration' => 60, 'price' => 480],
                     ['size' => 'XX-Large', 'duration' => 60, 'price' => 520],
-                ]
+                ],
             ],
             [
                 'name' => 'Hand Wax',
@@ -56,7 +56,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 50, 'price' => 200],
                     ['size' => 'Large', 'duration' => 50, 'price' => 260],
                     ['size' => 'X-Large', 'duration' => 50, 'price' => 350],
-                ]
+                ],
             ],
             [
                 'name' => 'Armor All/All Purpose Dressing',
@@ -67,7 +67,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 40, 'price' => 60],
                     ['size' => 'Large', 'duration' => 40, 'price' => 70],
                     ['size' => 'X-Large', 'duration' => 40, 'price' => 90],
-                ]
+                ],
             ],
             [
                 'name' => 'Watermarks Removal/Glass Detailing',
@@ -78,7 +78,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 80, 'price' => 1200],
                     ['size' => 'Large', 'duration' => 80, 'price' => 1400],
                     ['size' => 'X-Large', 'duration' => 80, 'price' => 1700],
-                ]
+                ],
             ],
             [
                 'name' => 'Hard Shell',
@@ -89,7 +89,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 50, 'price' => 430],
                     ['size' => 'Large', 'duration' => 50, 'price' => 520],
                     ['size' => 'X-Large', 'duration' => 50, 'price' => 700],
-                ]
+                ],
             ],
             [
                 'name' => 'Waterproof',
@@ -100,7 +100,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 50, 'price' => 520],
                     ['size' => 'Large', 'duration' => 50, 'price' => 660],
                     ['size' => 'X-Large', 'duration' => 50, 'price' => 800],
-                ]
+                ],
             ],
             [
                 'name' => 'High Gloss',
@@ -111,7 +111,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 50, 'price' => 580],
                     ['size' => 'Large', 'duration' => 50, 'price' => 720],
                     ['size' => 'X-Large', 'duration' => 50, 'price' => 900],
-                ]
+                ],
             ],
             [
                 'name' => 'Complete Package (Hard Shell)',
@@ -122,7 +122,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 120, 'price' => 740],
                     ['size' => 'Large', 'duration' => 120, 'price' => 930],
                     ['size' => 'X-Large', 'duration' => 120, 'price' => 1100],
-                ]
+                ],
             ],
             [
                 'name' => 'Complete Package (Waterproof)',
@@ -133,7 +133,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 120, 'price' => 790],
                     ['size' => 'Large', 'duration' => 120, 'price' => 1070],
                     ['size' => 'X-Large', 'duration' => 120, 'price' => 1250],
-                ]
+                ],
             ],
             [
                 'name' => 'Complete Package (High Gloss)',
@@ -144,7 +144,7 @@ class ServicesSeeder extends Seeder
                     ['size' => 'Medium', 'duration' => 120, 'price' => 890],
                     ['size' => 'Large', 'duration' => 120, 'price' => 1130],
                     ['size' => 'X-Large', 'duration' => 120, 'price' => 1350],
-                ]
+                ],
             ],
         ];
 
