@@ -28,6 +28,11 @@ class DatabaseSeeder extends Seeder
             SupplyPurchasesSeeder::class,
             SupplyPurchaseDetailsSeeder::class,
             ReviewsSeeder::class,
+        ]);
+
+        $this->command->call('db:sync-sequences');
+
+        $this->call([
             SupplyLedgerDemoSeeder::class,
         ]);
 
