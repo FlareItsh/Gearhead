@@ -19,6 +19,23 @@ class GcashSetting extends Model
 
     public function getQrCodeUrlAttribute(): ?string
     {
-        return $this->qr_code_path ? '/storage/'.$this->qr_code_path : null;
+        if (! $this->qr_code_path) {
+            return null;
+        }
+
+        try {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->qr_code_path)) {
+                $file = \Illuminate\Support\Facades\Storage::disk('public')->get($this->qr_code_path);
+                $type = \Illuminate\Support\Facades\Storage::disk('public')->mimeType($this->qr_code_path);
+                $base64 = base64_encode($file);
+
+                return 'data:'.$type.';base64,'.$base64;
+            }
+        } catch (\Exception $e) {
+            // Fallback to relative URL if something goes wrong
+            return '/storage/'.$this->qr_code_path;
+        }
+
+        return '/storage/'.$this->qr_code_path;
     }
 }
