@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
 
+    'api_ninjas' => [
+        'key' => env('API_NINJAS_KEY'),
+    ],
+
 ];

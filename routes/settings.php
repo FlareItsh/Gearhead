@@ -13,6 +13,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::post('settings/cars', [\App\Http\Controllers\CarController::class, 'store'])->name('cars.store');
+    Route::delete('settings/cars/{id}', [\App\Http\Controllers\CarController::class, 'destroy'])->name('cars.destroy');
+    Route::get('api/cars/suggest', [\App\Http\Controllers\CarController::class, 'suggest'])->name('cars.suggest');
+
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
 
     Route::put('settings/password', [PasswordController::class, 'update'])

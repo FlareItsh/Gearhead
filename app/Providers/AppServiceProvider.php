@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\BayRepositoryInterface;
+use App\Repositories\Contracts\CarRepositoryInterface;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use App\Repositories\Contracts\LandingPageContentRepositoryInterface;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -18,6 +19,7 @@ use App\Repositories\Contracts\SupplyPurchaseRepositoryInterface;
 use App\Repositories\Contracts\SupplyRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\EloquentBayRepository;
+use App\Repositories\EloquentCarRepository;
 use App\Repositories\EloquentEmployeeRepository;
 use App\Repositories\EloquentLandingPageContentRepository;
 use App\Repositories\EloquentPaymentRepository;
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
+        $this->app->bind(CarRepositoryInterface::class, EloquentCarRepository::class);
         // Employee repository
         $this->app->bind(EmployeeRepositoryInterface::class, EloquentEmployeeRepository::class);
 

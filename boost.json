@@ -2,7 +2,8 @@
     "agents": [
         "copilot",
         "cursor",
-        "gemini"
+        "gemini",
+        "codex"
     ],
     "guidelines": true,
     "herd_mcp": false,

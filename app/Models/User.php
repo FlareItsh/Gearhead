@@ -85,4 +85,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(ServiceOrder::class, 'user_id', 'user_id');
     }
+
+    /**
+     * Get the cars for the user.
+     */
+    public function cars(): HasMany
+    {
+        return $this->hasMany(Car::class, 'user_id', 'user_id');
+    }
 }
