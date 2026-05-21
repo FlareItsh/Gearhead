@@ -12,9 +12,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/app-layout'
 import SettingsLayout from '@/layouts/settings/layout'
-import { destroy, store, suggest } from '@/routes/cars'
+import {
+  resolveVehicleSize,
+  suggestVehicleMakes,
+  suggestVehicleModels,
+  type VehicleSize,
+  type VehicleSuggestion,
+} from '@/lib/vehicle-size-resolver'
+import { destroy, store } from '@/routes/cars'
 import { edit } from '@/routes/profile'
-import { Car as CarIcon, LoaderCircle, Plus, Trash2 } from 'lucide-react'
+import { AlertCircle, Car as CarIcon, LoaderCircle, Plus, Trash2 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,15 +38,9 @@ interface Car {
   year: number | null
   plate_number: string | null
   color: string | null
+  size: VehicleSize | null
   fuel_type: string | null
   transmission: string | null
-}
-
-interface CarSuggestion {
-  make: string
-  model: string
-  year: number | null
-  class: string | null
 }
 
 export default function Profile({
@@ -55,9 +56,11 @@ export default function Profile({
 
   const [suggestionQuery, setSuggestionQuery] = useState('')
   const [suggestionField, setSuggestionField] = useState<'make' | 'model' | null>(null)
-  const [suggestions, setSuggestions] = useState<CarSuggestion[]>([])
+  const [suggestions, setSuggestions] = useState<VehicleSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [isSearching, setIsSearching] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [isDeleteModalClosing, setIsDeleteModalClosing] = useState(false)
+  const [carToDelete, setCarToDelete] = useState<Car | null>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
   const { data, setData, post, processing, reset, errors } = useForm({
@@ -66,42 +69,29 @@ export default function Profile({
     year: '',
     plate_number: '',
     color: '',
+    size: 'Medium' as VehicleSize,
   })
 
   useEffect(() => {
     if (suggestionQuery.trim().length < 2 || !suggestionField) {
       setSuggestions([])
-      setIsSearching(false)
       return
     }
 
-    setIsSearching(true)
-    const delayDebounce = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          suggest.url({
-            query: {
-              field: suggestionField,
-              query: suggestionQuery,
-              ...(suggestionField === 'model' && data.make.trim().length >= 2
-                ? { make: data.make }
-                : {}),
-            },
-          }),
-        )
-        if (response.ok) {
-          const resData = await response.json()
-          setSuggestions(resData)
-        }
-      } catch (error) {
-        console.error('Error fetching suggestions:', error)
-      } finally {
-        setIsSearching(false)
-      }
-    }, 300)
-
-    return () => clearTimeout(delayDebounce)
+    setSuggestions(
+      suggestionField === 'make'
+        ? suggestVehicleMakes(suggestionQuery)
+        : suggestVehicleModels(data.make, suggestionQuery),
+    )
   }, [data.make, suggestionField, suggestionQuery])
+
+  useEffect(() => {
+    const nextSize = resolveVehicleSize(data.make, data.model)
+
+    if (data.size !== nextSize) {
+      setData('size', nextSize)
+    }
+  }, [data.make, data.model, data.size, setData])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -113,16 +103,20 @@ export default function Profile({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const selectSuggestion = (suggestion: CarSuggestion) => {
+  const selectSuggestion = (suggestion: VehicleSuggestion) => {
     if (suggestionField === 'make') {
-      setData('make', suggestion.make)
+      setData({
+        ...data,
+        make: suggestion.make,
+        size: suggestion.size,
+      })
       setSuggestionQuery(suggestion.make)
     } else {
       setData({
         ...data,
         make: suggestion.make,
         model: suggestion.model,
-        year: suggestion.year ? String(suggestion.year) : data.year,
+        size: suggestion.size,
       })
       setSuggestionQuery(suggestion.model)
     }
@@ -143,12 +137,30 @@ export default function Profile({
     })
   }
 
-  const handleDeleteCar = (id: number) => {
-    if (confirm('Are you sure you want to remove this vehicle?')) {
-      router.delete(destroy.url(id), {
-        preserveScroll: true,
-      })
+  const openDeleteModal = (car: Car) => {
+    setCarToDelete(car)
+    setDeleteModalOpen(true)
+    setIsDeleteModalClosing(false)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalClosing(true)
+    setTimeout(() => {
+      setCarToDelete(null)
+      setDeleteModalOpen(false)
+      setIsDeleteModalClosing(false)
+    }, 300)
+  }
+
+  const confirmDeleteCar = () => {
+    if (!carToDelete) {
+      return
     }
+
+    router.delete(destroy.url(carToDelete.car_id), {
+      preserveScroll: true,
+      onSuccess: closeDeleteModal,
+    })
   }
 
   return (
@@ -346,7 +358,7 @@ export default function Profile({
                             )}
                           </div>
                           <button
-                            onClick={() => handleDeleteCar(car.car_id)}
+                            onClick={() => openDeleteModal(car)}
                             className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-red-500 dark:hover:bg-neutral-800"
                             title="Delete vehicle"
                           >
@@ -358,6 +370,11 @@ export default function Profile({
                           {car.color && (
                             <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-neutral-600 uppercase dark:bg-neutral-800 dark:text-neutral-400">
                               {car.color}
+                            </span>
+                          )}
+                          {car.size && (
+                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-neutral-600 uppercase dark:bg-neutral-800 dark:text-neutral-400">
+                              {car.size}
                             </span>
                           )}
                         </div>
@@ -405,11 +422,6 @@ export default function Profile({
                         className="w-full pr-10"
                         required
                       />
-                      {isSearching && suggestionField === 'make' && (
-                        <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                          <LoaderCircle className="h-4 w-4 animate-spin text-neutral-400" />
-                        </div>
-                      )}
                     </div>
                     {errors.make && (
                       <InputError
@@ -462,11 +474,6 @@ export default function Profile({
                         className="w-full pr-10"
                         required
                       />
-                      {isSearching && suggestionField === 'model' && (
-                        <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                          <LoaderCircle className="h-4 w-4 animate-spin text-neutral-400" />
-                        </div>
-                      )}
                     </div>
                     {errors.model && (
                       <InputError
@@ -489,12 +496,9 @@ export default function Profile({
                               <span className="font-semibold text-neutral-800 group-hover:text-black dark:text-neutral-200 dark:group-hover:text-white">
                                 {suggestion.make} {suggestion.model}
                               </span>
-                              <span className="ml-2 text-neutral-400 dark:text-neutral-500">
-                                {suggestion.year ? `(${suggestion.year})` : ''}
-                              </span>
                             </div>
-                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-400 capitalize group-hover:bg-neutral-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700">
-                              {suggestion.class || 'Car'}
+                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500 group-hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:group-hover:bg-neutral-700">
+                              {suggestion.size}
                             </span>
                           </button>
                         ))}
@@ -564,7 +568,10 @@ export default function Profile({
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-2">
+                <div className="flex items-center justify-between gap-4 pt-2">
+                  <span className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold tracking-wider text-neutral-600 uppercase dark:bg-neutral-800 dark:text-neutral-400">
+                    {data.size}
+                  </span>
                   <Button
                     type="submit"
                     disabled={processing}
@@ -583,6 +590,57 @@ export default function Profile({
             </div>
           </div>
         </div>
+
+        {deleteModalOpen && carToDelete && (
+          <div
+            className={`fixed inset-0 z-[2000] flex h-screen w-full items-center justify-center p-4 transition-all duration-300 ${isDeleteModalClosing ? 'opacity-0' : 'bg-black/10 backdrop-blur-xl'}`}
+          >
+            <button
+              type="button"
+              aria-label="Close delete vehicle confirmation"
+              className="fixed inset-0 cursor-default"
+              onClick={closeDeleteModal}
+            />
+            <div
+              className={`relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-background p-8 text-center shadow-2xl transition-all duration-300 ${isDeleteModalClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
+            >
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-rose-500/10 text-rose-500">
+                <AlertCircle className="h-10 w-10" />
+              </div>
+
+              <h3 className="mb-2 text-center text-2xl font-black text-foreground">
+                Delete Vehicle?
+              </h3>
+              <p className="mb-8 text-center text-muted-foreground">
+                This will remove{' '}
+                <span className="font-bold text-foreground">
+                  {carToDelete.year ? `${carToDelete.year} ` : ''}
+                  {carToDelete.make} {carToDelete.model}
+                </span>{' '}
+                from your profile. This action cannot be undone.
+              </p>
+
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeDeleteModal}
+                  className="h-14 flex-1 rounded-2xl font-black transition-transform active:scale-95"
+                >
+                  No, Keep it
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={confirmDeleteCar}
+                  className="h-14 flex-1 rounded-2xl font-black shadow-lg shadow-rose-500/20 transition-transform hover:bg-rose-600 active:scale-95"
+                >
+                  Yes, Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <DeleteUser />
       </SettingsLayout>

@@ -23,6 +23,7 @@ class CarFactory extends Factory
             'year' => $this->faker->numberBetween(2000, 2026),
             'plate_number' => strtoupper($this->faker->bothify('???-####')),
             'color' => $this->faker->safeColorName(),
+            'size' => $this->faker->randomElement(['Small', 'Medium', 'Large', 'X-Large', 'XX-Large']),
             'fuel_type' => $this->faker->randomElement(['Gas', 'Diesel', 'Electric', 'Hybrid']),
             'transmission' => $this->faker->randomElement(['Automatic', 'Manual']),
         ];

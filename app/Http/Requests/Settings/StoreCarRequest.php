@@ -27,6 +27,7 @@ class StoreCarRequest extends FormRequest
             'year' => ['nullable', 'integer', 'min:1900', 'max:'.(date('Y') + 1)],
             'plate_number' => ['nullable', 'string', 'max:20'],
             'color' => ['nullable', 'string', 'max:50'],
+            'size' => ['nullable', 'in:Small,Medium,Large,X-Large,XX-Large'],
             'fuel_type' => ['nullable', 'string', 'max:50'],
             'transmission' => ['nullable', 'string', 'max:50'],
         ];

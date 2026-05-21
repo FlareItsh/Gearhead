@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('year')->nullable();
             $table->string('plate_number')->nullable();
             $table->string('color')->nullable();
+            $table->string('size')->default('Medium');
             $table->string('fuel_type')->nullable();
             $table->string('transmission')->nullable();
             $table->timestamps();

@@ -2,7 +2,6 @@
 
 use App\Models\Car;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
 
 test('profile page displays user\'s cars', function () {
     $user = User::factory()->create();
@@ -49,6 +48,7 @@ test('a user can add a car to their profile', function () {
         'year' => 2022,
         'plate_number' => 'XYZ-9876',
         'color' => 'Red',
+        'size' => 'X-Large',
         'fuel_type' => 'Gas',
         'transmission' => 'Manual',
     ]);
@@ -100,31 +100,8 @@ test('a user cannot delete someone else\'s car', function () {
     ]);
 });
 
-test('a user can get suggestions for car models', function () {
-    config(['services.api_ninjas.key' => 'test-key']);
-
+test('a user can get suggestions for car models from the local vehicle index', function () {
     $user = User::factory()->create();
-
-    Http::fake([
-        'https://api.api-ninjas.com/*' => Http::response([
-            [
-                'make' => 'Toyota',
-                'model' => 'Camry',
-                'year' => 2020,
-                'fuel_type' => 'gas',
-                'transmission' => 'a',
-                'class' => 'midsize car',
-            ],
-            [
-                'make' => 'Toyota',
-                'model' => 'Camry Solara',
-                'year' => 2008,
-                'fuel_type' => 'gas',
-                'transmission' => 'm',
-                'class' => 'subcompact car',
-            ],
-        ], 200),
-    ]);
 
     $response = $this
         ->actingAs($user)
@@ -132,50 +109,17 @@ test('a user can get suggestions for car models', function () {
 
     $response
         ->assertOk()
-        ->assertJsonCount(2)
         ->assertJsonFragment([
             'make' => 'Toyota',
             'model' => 'Camry',
-            'year' => 2020,
-            'fuel_type' => 'Gas',
-            'transmission' => 'Automatic',
-            'class' => 'midsize car',
-        ])
-        ->assertJsonFragment([
-            'make' => 'Toyota',
-            'model' => 'Camry Solara',
-            'year' => 2008,
-            'fuel_type' => 'Gas',
-            'transmission' => 'Manual',
-            'class' => 'subcompact car',
+            'size' => 'Large',
+            'year' => null,
+            'class' => null,
         ]);
 });
 
 test('car model suggestions prefer the selected make and typed model prefix', function () {
-    config(['services.api_ninjas.key' => 'test-key']);
-
     $user = User::factory()->create();
-
-    Http::fake([
-        'https://api.api-ninjas.com/*' => Http::response([
-            [
-                'make' => 'Suzuki',
-                'model' => 'Swift',
-                'year' => 1994,
-                'fuel_type' => 'gas',
-                'transmission' => 'a',
-                'class' => 'subcompact car',
-            ],
-            [
-                'make' => 'Toyota',
-                'model' => 'Wigo',
-                'year' => 2023,
-                'fuel_type' => 'gas',
-                'transmission' => 'a',
-                'class' => 'subcompact car',
-            ],
-        ], 200),
-    ]);
 
     $response = $this
         ->actingAs($user)
@@ -184,5 +128,6 @@ test('car model suggestions prefer the selected make and typed model prefix', fu
     $response
         ->assertOk()
         ->assertJsonPath('0.make', 'Toyota')
-        ->assertJsonPath('0.model', 'Wigo');
+        ->assertJsonPath('0.model', 'Wigo')
+        ->assertJsonPath('0.size', 'Small');
 });

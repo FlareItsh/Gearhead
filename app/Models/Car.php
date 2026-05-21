@@ -36,6 +36,7 @@ class Car extends Model
         'year',
         'plate_number',
         'color',
+        'size',
         'fuel_type',
         'transmission',
     ];
