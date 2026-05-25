@@ -21,13 +21,14 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
+import ServiceRetailDrawer from '@/components/ServiceRetailDrawer'
+import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head, useForm } from '@inertiajs/react'
 import axios from 'axios'
-import { Clock, Pencil, Plus, Search } from 'lucide-react'
+import { Clock, Pencil, Plus, Search, Settings } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { usePermissions } from '@/hooks/use-permissions'
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }]
 
@@ -61,6 +62,8 @@ export default function AdminServices({ services = [], categories = [] }: Servic
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showRetailDrawer, setShowRetailDrawer] = useState(false)
+  const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null)
   const { hasPermission } = usePermissions()
 
   const { data, setData, processing, reset } = useForm({
@@ -254,7 +257,7 @@ export default function AdminServices({ services = [], categories = [] }: Servic
             </div>
 
             <div className="relative w-full">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"/>
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 type="text"
                 placeholder="Search..."
@@ -341,29 +344,44 @@ export default function AdminServices({ services = [], categories = [] }: Servic
                       {s.variants.map((v) => (
                         <div
                           key={v.service_variant}
-                          className="flex items-center justify-between text-sm"
+                          className="flex items-center justify-between gap-3 text-sm"
                         >
                           <span className="font-medium">{v.size}:</span>
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center justify-end gap-3">
                             <span className="flex items-center gap-1 text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               {v.estimated_duration} mins
                             </span>
                             <span className="font-bold">₱{v.price.toLocaleString()}</span>
+                            {hasPermission('edit_service') && (
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedVariant(v)
+                                  setShowRetailDrawer(true)
+                                }}
+                              >
+                                <Settings className="h-3 w-3" />
+                                Retail
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
 
                     {hasPermission('edit_service') && (
-                      <Button
-                        variant="highlight"
-                        className="mt-2 w-full"
-                        onClick={() => handleEdit(s)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </Button>
+                      <div className="mt-2 flex w-full gap-2">
+                        <Button
+                          variant="highlight"
+                          onClick={() => handleEdit(s)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -373,6 +391,15 @@ export default function AdminServices({ services = [], categories = [] }: Servic
             )}
           </div>
         </div>
+
+        {selectedVariant && (
+          <ServiceRetailDrawer
+            open={showRetailDrawer}
+            onClose={() => setShowRetailDrawer(false)}
+            variantId={selectedVariant.service_variant}
+            variantSize={selectedVariant.size}
+          />
+        )}
 
         {/* Modal */}
         <Dialog
@@ -384,11 +411,11 @@ export default function AdminServices({ services = [], categories = [] }: Servic
               <DialogTitle>
                 {editingService ? (
                   <>
-                    Edit <span className="text-yellow-500 black:text-highlight">Service</span>
+                    Edit <span className="black:text-highlight text-yellow-500">Service</span>
                   </>
                 ) : (
                   <>
-                    Add <span className="text-yellow-500 black:text-highlight">Service</span>
+                    Add <span className="black:text-highlight text-yellow-500">Service</span>
                   </>
                 )}
               </DialogTitle>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\Contracts\ServiceRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ServiceController extends Controller
 {
@@ -135,7 +136,60 @@ class ServiceController extends Controller
         return response()->json($services);
     }
 
-    /**
-     * Get most popular service for the Popular Service card
-     */
+    public function getRetails(int $variantId): \Illuminate\Http\JsonResponse
+    {
+        $retails = DB::table('service_retails')
+            ->join('supplies', 'service_retails.supply_id', '=', 'supplies.supply_id')
+            ->where('service_variant_id', $variantId)
+            ->select([
+                'service_retails.id',
+                'service_retails.service_variant_id',
+                'service_retails.supply_id',
+                'service_retails.quantity_needed',
+                'supplies.supply_name',
+                'supplies.base_unit',
+            ])
+            ->get();
+
+        return response()->json($retails);
+    }
+
+    public function updateRetails(Request $request, int $variantId): \Illuminate\Http\JsonResponse
+    {
+        if (! $request->user() || ! $request->user()->hasPermission('edit_service')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (! DB::table('service_variants')->where('service_variant', $variantId)->exists()) {
+            return response()->json(['message' => 'Service variant not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'retails' => 'present|array',
+            'retails.*.supply_id' => 'required|integer|distinct|exists:supplies,supply_id',
+            'retails.*.quantity_needed' => 'required|numeric|min:0',
+        ], [
+            'retails.*.supply_id.distinct' => 'Each supply can only be added once per service variant.',
+        ]);
+
+        $retails = collect($validated['retails'])
+            ->filter(fn (array $retail): bool => (float) $retail['quantity_needed'] > 0)
+            ->values();
+
+        DB::transaction(function () use ($variantId, $retails) {
+            DB::table('service_retails')->where('service_variant_id', $variantId)->delete();
+
+            foreach ($retails as $retail) {
+                DB::table('service_retails')->insert([
+                    'service_variant_id' => $variantId,
+                    'supply_id' => $retail['supply_id'],
+                    'quantity_needed' => $retail['quantity_needed'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        });
+
+        return response()->json(['message' => 'Service retails updated successfully']);
+    }
 }

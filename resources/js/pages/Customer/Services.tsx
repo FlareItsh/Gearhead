@@ -11,12 +11,21 @@ import { toast } from 'sonner'
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }]
 
+const getLocalDateString = (): string => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
 interface ServiceVariant {
   service_variant: number
   size: string
   price: number
   estimated_duration: number
-  enabled: boolean
+  enabled?: boolean
 }
 
 interface Service {
@@ -39,24 +48,35 @@ interface User {
   role: string
 }
 
+interface Car {
+  car_id: number
+  make: string
+  model: string
+  size: string
+  year?: number | null
+  plate_number?: string | null
+}
+
 export default function Services() {
   const pageProps = usePage().props as unknown as {
     services?: Service[]
     categories?: string[]
     selectedCategory?: string
     auth?: { user: User | null }
+    cars?: Car[]
   }
 
   const auth = pageProps.auth ?? { user: null }
   const services = pageProps.services ?? []
   const categories = pageProps.categories ?? []
+  const cars = pageProps.cars ?? []
 
   // State
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isClosingCheckout, setIsClosingCheckout] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString())
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [isBooking, setIsBooking] = useState(false)
   const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false)
@@ -79,6 +99,10 @@ export default function Services() {
   // Variant Selection Modal State
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false)
   const [selectedServiceForModal, setSelectedServiceForModal] = useState<Service | null>(null)
+  const [isCarModalOpen, setIsCarModalOpen] = useState(false)
+  const [selectedServiceForCarModal, setSelectedServiceForCarModal] = useState<Service | null>(null)
+  const [selectedCarId, setSelectedCarId] = useState<number | null>(null)
+  const [selectedBookingCar, setSelectedBookingCar] = useState<Car | null>(null)
 
   // Load/save cart
   useEffect(() => {
@@ -157,15 +181,21 @@ export default function Services() {
   }
 
   const removeService = (item: SelectedService) => {
-    setSelectedServices((prev) =>
-      prev.filter(
+    setSelectedServices((prev) => {
+      const next = prev.filter(
         (s) =>
           !(
             s.service_id === item.service_id &&
             s.selectedVariant.service_variant === item.selectedVariant.service_variant
           ),
-      ),
-    )
+      )
+
+      if (next.length === 0) {
+        setSelectedBookingCar(null)
+      }
+
+      return next
+    })
   }
 
   const totalPrice = selectedServices.reduce((sum, s) => sum + Number(s.selectedVariant.price), 0)
@@ -206,7 +236,7 @@ export default function Services() {
   // ─────────────────────────────────────────────
   const availableTimeSlots = useMemo(() => {
     const now = new Date()
-    const isToday = selectedDate === now.toISOString().split('T')[0]
+    const isToday = selectedDate === getLocalDateString()
 
     const slots: string[] = []
     let hour = 6
@@ -243,6 +273,129 @@ export default function Services() {
     return slots
   }, [selectedDate])
 
+  const normalizeSize = (value: string): string => {
+    const cleaned = value.trim().toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '')
+
+    const aliases: Record<string, string> = {
+      small: 'Small',
+      s: 'Small',
+      mini: 'Small',
+      medium: 'Medium',
+      m: 'Medium',
+      large: 'Large',
+      l: 'Large',
+      'x-large': 'X-Large',
+      xlarge: 'X-Large',
+      xl: 'X-Large',
+      'xx-large': 'XX-Large',
+      xxlarge: 'XX-Large',
+      xxl: 'XX-Large',
+    }
+
+    return aliases[cleaned] ?? value
+  }
+
+  const sizeRank: Record<string, number> = {
+    Small: 1,
+    Medium: 2,
+    Large: 3,
+    'X-Large': 4,
+    'XX-Large': 5,
+  }
+
+  const findVariantForCarSize = (service: Service, car: Car): ServiceVariant | null => {
+    const selectableVariants = service.variants.filter((variant) => variant.enabled !== false)
+    if (selectableVariants.length === 0) {
+      return null
+    }
+
+    const normalizedCarSize = normalizeSize(car.size)
+
+    const exactMatch = selectableVariants.find(
+      (variant) => normalizeSize(variant.size) === normalizedCarSize,
+    )
+
+    if (exactMatch) {
+      return exactMatch
+    }
+
+    const carRank = sizeRank[normalizedCarSize] ?? sizeRank.Medium
+
+    const closestBySize = [...selectableVariants].sort((a, b) => {
+      const aRank = sizeRank[normalizeSize(a.size)] ?? sizeRank.Medium
+      const bRank = sizeRank[normalizeSize(b.size)] ?? sizeRank.Medium
+
+      return Math.abs(aRank - carRank) - Math.abs(bRank - carRank)
+    })[0]
+
+    return closestBySize ?? selectableVariants[0]
+  }
+
+  const selectServiceForCar = (service: Service, car: Car) => {
+    const variant = findVariantForCarSize(service, car)
+
+    if (!variant) {
+      setModalType('warning')
+      setModalMessage(`No available options for ${service.service_name} right now.`)
+      setShowModal(true)
+      return
+    }
+
+    setSelectedBookingCar(car)
+    toggleService(service, variant)
+  }
+
+  const handleSelectService = (service: Service) => {
+    if (!auth.user) {
+      setSelectedServiceForModal(service)
+      setIsVariantModalOpen(true)
+      return
+    }
+
+    if (cars.length === 0) {
+      setModalType('warning')
+      setModalMessage('Please add a vehicle in Profile first before selecting a service.')
+      setShowModal(true)
+      return
+    }
+
+    if (selectedBookingCar) {
+      selectServiceForCar(service, selectedBookingCar)
+      return
+    }
+
+    if (cars.length === 1) {
+      const defaultCar = cars[0]
+      setSelectedCarId(defaultCar.car_id)
+      selectServiceForCar(service, defaultCar)
+      return
+    }
+
+    setSelectedServiceForCarModal(service)
+    setSelectedCarId(cars[0]?.car_id ?? null)
+    setIsCarModalOpen(true)
+  }
+
+  const handleConfirmCarSelection = () => {
+    const selectedCar = cars.find((car) => car.car_id === selectedCarId)
+
+    if (!selectedCar) {
+      setModalType('warning')
+      setModalMessage('Please select a vehicle.')
+      setShowModal(true)
+      return
+    }
+
+    setSelectedBookingCar(selectedCar)
+
+    if (selectedServiceForCarModal) {
+      selectServiceForCar(selectedServiceForCarModal, selectedCar)
+    }
+
+    setIsCarModalOpen(false)
+    setSelectedServiceForCarModal(null)
+  }
+
   const handleBook = async () => {
     if (!selectedTime || selectedServices.length === 0) {
       setModalType('warning')
@@ -254,6 +407,13 @@ export default function Services() {
     // Redirect to registration if not logged in
     if (!auth.user) {
       handleGuestBooking()
+      return
+    }
+
+    if (!selectedBookingCar) {
+      setModalType('warning')
+      setModalMessage('Please select a vehicle first.')
+      setShowModal(true)
       return
     }
 
@@ -303,6 +463,13 @@ export default function Services() {
       const bookingData: Record<string, unknown> = {
         order_date: orderDate,
         variant_ids: variantIds,
+      }
+
+      if (auth.user && selectedBookingCar) {
+        bookingData.car_id = selectedBookingCar.car_id
+        bookingData.vehicle_make = selectedBookingCar.make
+        bookingData.vehicle_model = selectedBookingCar.model
+        bookingData.vehicle_size = selectedBookingCar.size
       }
 
       const response = await axios.post('/api/bookings/book', bookingData)
@@ -479,12 +646,9 @@ export default function Services() {
                     <Button
                       variant="highlight"
                       className="h-10 w-full rounded-xl text-xs font-black tracking-widest uppercase"
-                      onClick={() => {
-                        setSelectedServiceForModal(s)
-                        setIsVariantModalOpen(true)
-                      }}
+                      onClick={() => handleSelectService(s)}
                     >
-                      View Options
+                      Select
                     </Button>
                   </div>
                 </div>
@@ -586,6 +750,28 @@ export default function Services() {
               </div>
 
               <div className="space-y-5 border-t border-border/20 pt-4">
+                {auth.user && selectedBookingCar && (
+                  <div className="rounded-2xl border border-border/40 bg-muted/30 p-4">
+                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">Selected Vehicle</p>
+                    <p className="mt-1 text-sm font-black text-foreground">
+                      {selectedBookingCar.make} {selectedBookingCar.model}
+                      <span className="ml-2 text-xs text-muted-foreground">({selectedBookingCar.size})</span>
+                    </p>
+                    {cars.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCarId(selectedBookingCar.car_id)
+                          setSelectedServiceForCarModal(null)
+                          setIsCarModalOpen(true)
+                        }}
+                        className="mt-2 text-xs font-black tracking-widest text-highlight uppercase"
+                      >
+                        Change Vehicle
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
@@ -661,6 +847,68 @@ export default function Services() {
                   {isBooking ? 'Finalizing...' : 'Book Appointment'}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Vehicle Select Modal --- */}
+      {isCarModalOpen && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300">
+          <div
+            className="fixed inset-0"
+            onClick={() => setIsCarModalOpen(false)}
+          />
+          <div className="relative w-full max-w-md rounded-[2.5rem] border border-border/40 bg-white shadow-2xl dark:bg-card">
+            <div className="flex items-center justify-between border-b border-border/40 p-8">
+              <div>
+                <h3 className="text-2xl font-black text-foreground">Select Vehicle</h3>
+                <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                  Choose the car for this appointment
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCarModalOpen(false)}
+                className="rounded-full bg-secondary/80 p-3 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="custom-scrollbar max-h-[55vh] space-y-3 overflow-y-auto p-8">
+              {cars.map((car) => {
+                const active = selectedCarId === car.car_id
+
+                return (
+                  <button
+                    key={car.car_id}
+                    onClick={() => setSelectedCarId(car.car_id)}
+                    className={
+                      active
+                        ? 'w-full rounded-2xl border border-highlight bg-highlight/5 p-4 text-left ring-1 ring-highlight transition-all'
+                        : 'w-full rounded-2xl border border-border/40 bg-white p-4 text-left transition-all hover:border-highlight/20 dark:bg-muted/5'
+                    }
+                  >
+                    <p className="text-sm font-black text-foreground">
+                      {car.make} {car.model}
+                    </p>
+                    <p className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">
+                      {car.size}
+                      {car.plate_number ? ' • ' + car.plate_number : ''}
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="p-8 pt-0">
+              <Button
+                variant="highlight"
+                className="h-14 w-full rounded-2xl text-xs font-black tracking-widest uppercase"
+                onClick={handleConfirmCarSelection}
+              >
+                Confirm Vehicle
+              </Button>
             </div>
           </div>
         </div>

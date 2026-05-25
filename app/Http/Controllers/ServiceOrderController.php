@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\QueueLine;
+use App\Models\ServiceOrder;
 use App\Models\ServiceVariant;
 use App\Models\User;
 use App\Repositories\Contracts\BayRepositoryInterface;
 use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -140,7 +143,7 @@ class ServiceOrderController extends Controller
 
         // Remove from queue if assigned to a bay
         if (array_key_exists('bay_id', $data) && $data['bay_id']) {
-            \App\Models\QueueLine::where('service_order_id', $id)->delete();
+            QueueLine::where('service_order_id', $id)->delete();
         }
 
         return response()->json($item);
@@ -252,7 +255,7 @@ class ServiceOrderController extends Controller
                 'required',
                 'date_format:Y-m-d H:i',
                 function ($attribute, $value, $fail) {
-                    $date = \Carbon\Carbon::parse($value);
+                    $date = Carbon::parse($value);
                     $time = $date->format('H:i');
                     // Opening: 06:30, Closing: 22:00
                     if ($time < '06:30' || $time > '22:00') {
@@ -267,6 +270,10 @@ class ServiceOrderController extends Controller
             'guest_info.email' => 'required_with:guest_info|email',
             'guest_info.phone' => 'required_with:guest_info|string|min:10',
             'guest_info.vehicleModel' => 'nullable|string',
+            'car_id' => 'nullable|integer|exists:cars,car_id',
+            'vehicle_make' => 'nullable|string|max:100',
+            'vehicle_model' => 'nullable|string|max:100',
+            'vehicle_size' => 'nullable|string|in:Small,Medium,Large,X-Large,XX-Large',
         ]);
 
         $user = $request->user();
@@ -309,6 +316,10 @@ class ServiceOrderController extends Controller
             'status' => 'pending',
             'order_date' => $validated['order_date'],
             'order_type' => 'R', // Reservation
+            'car_id' => $validated['car_id'] ?? null,
+            'vehicle_make' => $validated['vehicle_make'] ?? null,
+            'vehicle_model' => $validated['vehicle_model'] ?? null,
+            'vehicle_size' => $validated['vehicle_size'] ?? null,
         ];
 
         // Retrieve variants to get their service_id
@@ -365,7 +376,7 @@ class ServiceOrderController extends Controller
         try {
             // Idempotency check
             if ($request->has('idempotency_key')) {
-                $existingOrder = \App\Models\ServiceOrder::where('idempotency_key', $request->input('idempotency_key'))->first();
+                $existingOrder = ServiceOrder::where('idempotency_key', $request->input('idempotency_key'))->first();
                 if ($existingOrder) {
                     return response()->json([
                         'message' => 'Service order already created',
@@ -385,7 +396,7 @@ class ServiceOrderController extends Controller
             ];
 
             // Retrieve variants to get their service_id
-            $variants = \App\Models\ServiceVariant::whereIn('service_variant', $validated['variant_ids'])->get()->keyBy('service_variant');
+            $variants = ServiceVariant::whereIn('service_variant', $validated['variant_ids'])->get()->keyBy('service_variant');
 
             // Map variant_ids to details format
             $details = [];

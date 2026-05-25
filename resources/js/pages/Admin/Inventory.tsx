@@ -55,6 +55,9 @@ interface Supply {
   supply_id: number
   supply_name: string
   unit: string
+  purchase_unit?: string | null
+  base_unit?: string | null
+  conversion_factor?: number | string | null
   quantity_stock: number
   reorder_point: number
   supply_type: 'consumables' | 'supply'
@@ -72,6 +75,7 @@ interface Supplier {
 interface PurchaseDetail {
   supply_id: number
   quantity: number
+  conversion_factor?: number
   unit_price: number
   purchase_date: string
 }
@@ -103,6 +107,9 @@ export default function InventoryPage() {
   const [newItem, setNewItem] = useState({
     supply_name: '',
     unit: '',
+    purchase_unit: '',
+    base_unit: '',
+    conversion_factor: 1,
     reorder_point: 0,
     quantity_stock: 0,
     supply_type: 'supply' as const,
@@ -122,6 +129,7 @@ export default function InventoryPage() {
   const [newDetail, setNewDetail] = useState<Omit<PurchaseDetail, 'purchase_date'>>({
     supply_id: 0,
     quantity: 0,
+    conversion_factor: 1,
     unit_price: 0,
   })
 
@@ -224,6 +232,7 @@ export default function InventoryPage() {
     setNewDetail({
       supply_id: 0,
       quantity: 0,
+      conversion_factor: 1,
       unit_price: 0,
     })
   }
@@ -257,15 +266,20 @@ export default function InventoryPage() {
       const purchaseId = purchaseRes.data.supply_purchase_id
 
       for (const detail of purchaseDetails) {
+        const factor = detail.conversion_factor || 1
+        const qtyBase = detail.quantity * factor
+
         await axios.post('/api/supply-purchase-details', {
           supply_purchase_id: purchaseId,
           supply_id: detail.supply_id,
           quantity: detail.quantity,
+          conversion_factor: factor,
+          quantity_base: qtyBase,
           unit_price: detail.unit_price,
           purchase_date: detail.purchase_date,
         })
 
-        // Use the new increment endpoint instead of updating the entire object
+        // Stock is tracked in purchase units; quantity_base is kept for base-unit reporting.
         await axios.post(`/api/supplies/${detail.supply_id}/increment-stock`, {
           quantity: detail.quantity,
         })
@@ -280,6 +294,7 @@ export default function InventoryPage() {
       setNewDetail({
         supply_id: 0,
         quantity: 0,
+        conversion_factor: 1,
         unit_price: 0,
       })
       setSuccessMessage('Purchase recorded successfully!')
@@ -316,6 +331,9 @@ export default function InventoryPage() {
         setNewItem({
           supply_name: '',
           unit: '',
+          purchase_unit: '',
+          base_unit: '',
+          conversion_factor: 1,
           reorder_point: 0,
           quantity_stock: 0,
           supply_type: 'supply',
@@ -594,20 +612,54 @@ export default function InventoryPage() {
                     )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Unit</label>
+                    <label className="text-sm font-medium">Purchase Unit</label>
                     <Input
-                      placeholder="e.g., Liter, Piece"
-                      value={newItem.unit}
-                      onChange={(e) =>
+                      placeholder="e.g., Gallon, Bottle"
+                      value={newItem.purchase_unit}
+                      onChange={(e) => {
+                        const val = e.target.value
                         setNewItem({
                           ...newItem,
-                          unit: e.target.value,
+                          purchase_unit: val,
+                          unit: val,
                         })
-                      }
+                      }}
                     />
                     {addItemErrors.unit && (
                       <p className="mt-1 text-sm text-red-500">{addItemErrors.unit}</p>
                     )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Base Unit (Stocking Unit)</label>
+                    <Input
+                      placeholder="e.g., Milliliter, Piece"
+                      value={newItem.base_unit}
+                      onChange={(e) =>
+                        setNewItem({
+                          ...newItem,
+                          base_unit: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Conversion Factor</label>
+                    <Input
+                      type="number"
+                      min="1"
+                      step="any"
+                      placeholder="1"
+                      value={newItem.conversion_factor}
+                      onChange={(e) =>
+                        setNewItem({
+                          ...newItem,
+                          conversion_factor: parseFloat(e.target.value) || 1,
+                        })
+                      }
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      How many Base Units are in one Purchase Unit?
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Reorder Level</label>
@@ -722,12 +774,17 @@ export default function InventoryPage() {
                             value={
                               newDetail.supply_id === 0 ? undefined : newDetail.supply_id.toString()
                             }
-                            onValueChange={(v) =>
+                            onValueChange={(v) => {
+                              const supply = allSupplies.find(
+                                (item) => item.supply_id === parseInt(v),
+                              )
+
                               setNewDetail({
                                 ...newDetail,
                                 supply_id: parseInt(v),
+                                conversion_factor: Number(supply?.conversion_factor) || 1,
                               })
-                            }
+                            }}
                           >
                             <SelectTrigger className="h-9 w-full">
                               <SelectValue placeholder="Select supply..." />
@@ -738,7 +795,8 @@ export default function InventoryPage() {
                                   key={s.supply_id}
                                   value={s.supply_id.toString()}
                                 >
-                                  {s.supply_name}
+                                  {s.supply_name} ({s.purchase_unit || s.unit} to{' '}
+                                  {s.base_unit || s.unit})
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1333,16 +1391,48 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Unit</label>
+                  <label className="text-sm font-medium">Purchase Unit</label>
                   <Input
-                    value={editItem.unit}
+                    value={editItem.purchase_unit || ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setEditItem({
+                        ...editItem,
+                        purchase_unit: val,
+                        unit: val,
+                      })
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Base Unit (Stocking Unit)</label>
+                  <Input
+                    value={editItem.base_unit || ''}
                     onChange={(e) =>
                       setEditItem({
                         ...editItem,
-                        unit: e.target.value,
+                        base_unit: e.target.value,
                       })
                     }
                   />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Conversion Factor</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={editItem.conversion_factor || 1}
+                    onChange={(e) =>
+                      setEditItem({
+                        ...editItem,
+                        conversion_factor: parseFloat(e.target.value) || 1,
+                      })
+                    }
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    How many Base Units are in one Purchase Unit?
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Current Stock</label>

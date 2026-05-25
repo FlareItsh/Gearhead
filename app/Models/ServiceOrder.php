@@ -21,6 +21,10 @@ class ServiceOrder extends Model
         'order_date',
         'order_type',
         'idempotency_key',
+        'car_id',
+        'vehicle_make',
+        'vehicle_model',
+        'vehicle_size',
     ];
 
     protected $casts = [
@@ -40,6 +44,11 @@ class ServiceOrder extends Model
     public function bay()
     {
         return $this->belongsTo(Bay::class, 'bay_id', 'bay_id');
+    }
+
+    public function car()
+    {
+        return $this->belongsTo(Car::class, 'car_id', 'car_id');
     }
 
     public function details()

@@ -63,4 +63,9 @@ class ServiceVariant extends Model
     {
         return $this->hasMany(ServiceOrderDetail::class, 'service_variant', 'service_variant');
     }
+
+    public function serviceRetails(): HasMany
+    {
+        return $this->hasMany(ServiceRetail::class, 'service_variant_id', 'service_variant');
+    }
 }

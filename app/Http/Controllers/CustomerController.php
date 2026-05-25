@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Discount;
 use App\Repositories\BookingRepository;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
@@ -80,7 +81,7 @@ class CustomerController extends Controller
         return Inertia::render('dashboard', [
             'paymentsCount' => $count,
             'totalSpent' => $total,
-            'discounts' => \App\Models\Discount::advertisable()->get(),
+            'discounts' => Discount::advertisable()->get(),
         ]);
     }
 
@@ -97,10 +98,15 @@ class CustomerController extends Controller
         // Get all unique categories (for category buttons)
         $categories = $this->services->all()->pluck('category')->unique()->values();
 
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
+        $cars = $user ? $user->cars()->orderByDesc('created_at')->get() : [];
+
         return Inertia::render('Customer/Services', [
             'services' => $services,
             'categories' => $categories,
             'selectedCategory' => $selectedCategory,
+            'cars' => $cars,
         ]);
     }
 

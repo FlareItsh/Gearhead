@@ -11,7 +11,9 @@ use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\ServiceOrderRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
@@ -348,44 +350,56 @@ class PaymentController extends Controller
                 $finalAmount = 0.00;
             }
 
-            // Create payment record
-            $payment = $this->repo->create([
-                'service_order_id' => $validated['service_order_id'],
-                'payment_method' => $isLoyaltyRedemption ? 'loyalty' : ($validated['payment_method'] ?? 'cash'),
-                'amount' => $finalAmount,
-                'gcash_reference' => $validated['gcash_reference'] ?? null,
-                'gcash_screenshot' => $screenshotPath,
-                'is_point_redeemed' => $isLoyaltyRedemption,
-                'employee_id' => $validated['employee_id'] ?? $serviceOrder->employee_id,
-            ]);
+            $payment = DB::transaction(function () use ($finalAmount, $isLoyaltyRedemption, $screenshotPath, $serviceOrder, $validated) {
+                if (DB::table('payments')->where('service_order_id', $validated['service_order_id'])->exists()) {
+                    throw ValidationException::withMessages([
+                        'service_order_id' => ['This service order has already been paid.'],
+                    ]);
+                }
 
-            // Update service order status to completed and update employee if changed
-            $updateData = ['status' => 'completed'];
-            $oldEmployeeId = $serviceOrder->employee_id;
+                $this->deductServiceInventory((int) $validated['service_order_id']);
 
-            if (isset($validated['employee_id'])) {
-                $updateData['employee_id'] = $validated['employee_id'];
-            }
+                // Create payment record
+                $payment = $this->repo->create([
+                    'service_order_id' => $validated['service_order_id'],
+                    'payment_method' => $isLoyaltyRedemption ? 'loyalty' : ($validated['payment_method'] ?? 'cash'),
+                    'amount' => $finalAmount,
+                    'gcash_reference' => $validated['gcash_reference'] ?? null,
+                    'gcash_screenshot' => $screenshotPath,
+                    'is_point_redeemed' => $isLoyaltyRedemption,
+                    'employee_id' => $validated['employee_id'] ?? $serviceOrder->employee_id,
+                ]);
 
-            $this->serviceOrders->update($serviceOrder, $updateData);
+                // Update service order status to completed and update employee if changed
+                $updateData = ['status' => 'completed'];
+                $oldEmployeeId = $serviceOrder->employee_id;
 
-            // Mark the new employee as available
-            if (isset($validated['employee_id'])) {
-                $this->employees->updateAssignedStatus($validated['employee_id'], 'available');
-            }
+                if (isset($validated['employee_id'])) {
+                    $updateData['employee_id'] = $validated['employee_id'];
+                }
 
-            // Mark the old employee as available if one was assigned
-            if ($oldEmployeeId) {
-                $this->employees->updateAssignedStatus($oldEmployeeId, 'available');
-            }
+                $this->serviceOrders->update($serviceOrder, $updateData);
 
-            // Update bay status back to available
-            $this->bays->updateStatus($validated['bay_id'], 'available');
+                // Mark the new employee as available
+                if (isset($validated['employee_id'])) {
+                    $this->employees->updateAssignedStatus($validated['employee_id'], 'available');
+                }
 
-            // Update queue line status if exists
-            QueueLine::where('service_order_id', $validated['service_order_id'])
-                ->where('status', 'waiting')
-                ->update(['status' => 'completed']);
+                // Mark the old employee as available if one was assigned
+                if ($oldEmployeeId) {
+                    $this->employees->updateAssignedStatus($oldEmployeeId, 'available');
+                }
+
+                // Update bay status back to available
+                $this->bays->updateStatus($validated['bay_id'], 'available');
+
+                // Update queue line status if exists
+                QueueLine::where('service_order_id', $validated['service_order_id'])
+                    ->where('status', 'waiting')
+                    ->update(['status' => 'completed']);
+
+                return $payment;
+            });
 
             return response()->json([
                 'message' => 'Payment processed successfully',
@@ -406,6 +420,83 @@ class PaymentController extends Controller
                 'message' => 'Failed to process payment',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    private function deductServiceInventory(int $serviceOrderId): void
+    {
+        $requirements = DB::table('service_order_details')
+            ->join('service_retails', 'service_order_details.service_variant', '=', 'service_retails.service_variant_id')
+            ->join('supplies', 'service_retails.supply_id', '=', 'supplies.supply_id')
+            ->where('service_order_id', $serviceOrderId)
+            ->select([
+                'service_retails.supply_id',
+                'supplies.supply_name',
+                'supplies.unit',
+                'supplies.base_unit',
+                'supplies.conversion_factor',
+                DB::raw('SUM(service_order_details.quantity * service_retails.quantity_needed) as required_base_quantity'),
+                DB::raw('SUM(service_order_details.quantity * service_retails.quantity_needed) / COALESCE(NULLIF(supplies.conversion_factor, 0), 1) as required_stock_quantity'),
+            ])
+            ->groupBy('service_retails.supply_id', 'supplies.supply_name', 'supplies.unit', 'supplies.base_unit', 'supplies.conversion_factor')
+            ->get();
+
+        if ($requirements->isEmpty()) {
+            return;
+        }
+
+        $requiredBySupply = $requirements->mapWithKeys(function ($requirement) {
+            return [
+                (int) $requirement->supply_id => [
+                    'base_quantity' => (float) $requirement->required_base_quantity,
+                    'stock_quantity' => (float) $requirement->required_stock_quantity,
+                    'supply_name' => $requirement->supply_name,
+                    'unit' => $requirement->unit,
+                    'base_unit' => $requirement->base_unit,
+                ],
+            ];
+        });
+
+        $supplies = DB::table('supplies')
+            ->whereIn('supply_id', $requiredBySupply->keys()->all())
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('supply_id');
+
+        $insufficient = [];
+
+        foreach ($requiredBySupply as $supplyId => $required) {
+            $supply = $supplies->get($supplyId);
+            $availableQuantity = (float) ($supply->quantity_stock ?? 0);
+            $requiredStockQuantity = $required['stock_quantity'];
+
+            if (! $supply || $availableQuantity < $requiredStockQuantity) {
+                $insufficient[] = [
+                    'supply_id' => $supplyId,
+                    'supply_name' => $required['supply_name'] ?? 'Unknown supply',
+                    'available' => round($availableQuantity, 2),
+                    'required_stock' => round($requiredStockQuantity, 2),
+                    'required_base' => round($required['base_quantity'], 2),
+                    'unit' => $required['unit'] ?? 'units',
+                    'base_unit' => $required['base_unit'] ?? 'base units',
+                ];
+            }
+        }
+
+        if ($insufficient !== []) {
+            $messages = collect($insufficient)
+                ->map(fn (array $item): string => "{$item['supply_name']} requires {$item['required_base']} {$item['base_unit']} ({$item['required_stock']} {$item['unit']}), but only {$item['available']} {$item['unit']} is available.")
+                ->all();
+
+            throw ValidationException::withMessages([
+                'inventory' => $messages,
+            ]);
+        }
+
+        foreach ($requiredBySupply as $supplyId => $required) {
+            DB::table('supplies')
+                ->where('supply_id', $supplyId)
+                ->decrement('quantity_stock', $required['stock_quantity']);
         }
     }
 

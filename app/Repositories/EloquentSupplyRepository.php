@@ -87,7 +87,16 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
                 ->whereDate('returned_at', '<', $start_date)
                 ->sum('quantity');
 
-            $forwarded_balance = ($total_purchases + $total_returns) - $total_pullouts;
+            $total_services = DB::table('service_order_details')
+                ->join('service_orders', 'service_order_details.service_order_id', '=', 'service_orders.service_order_id')
+                ->join('service_retails', 'service_order_details.service_variant', '=', 'service_retails.service_variant_id')
+                ->where('service_retails.supply_id', $supplyId)
+                ->where('service_orders.status', 'completed')
+                ->whereDate('service_orders.updated_at', '<', $start_date)
+                ->join('supplies', 'service_retails.supply_id', '=', 'supplies.supply_id')
+                ->sum(DB::raw('service_order_details.quantity * service_retails.quantity_needed / COALESCE(NULLIF(supplies.conversion_factor, 0), 1)'));
+
+            $forwarded_balance = ($total_purchases + $total_returns) - ($total_pullouts + $total_services);
         }
 
         $isPgsql = DB::getDriverName() === 'pgsql';
@@ -156,9 +165,34 @@ class EloquentSupplyRepository implements SupplyRepositoryInterface
                 DB::raw(sprintf($toStr, 'pullout_requests.pullout_request_id').' as reference_no'),
             ]);
 
+        $services = DB::table('service_order_details')
+            ->join('service_orders', 'service_order_details.service_order_id', '=', 'service_orders.service_order_id')
+            ->join('service_variants', 'service_order_details.service_variant', '=', 'service_variants.service_variant')
+            ->join('service_retails', 'service_variants.service_variant', '=', 'service_retails.service_variant_id')
+            ->join('supplies', 'service_retails.supply_id', '=', 'supplies.supply_id')
+            ->leftJoin('employees', 'service_orders.employee_id', '=', 'employees.employee_id')
+            ->where('service_retails.supply_id', $supplyId)
+            ->where('service_orders.status', 'completed')
+            ->when($start_date, function ($query, $start_date) {
+                return $query->whereDate('service_orders.updated_at', '>=', $start_date);
+            })
+            ->when($end_date, function ($query, $end_date) {
+                return $query->whereDate('service_orders.updated_at', '<=', $end_date);
+            })
+            ->select([
+                'service_orders.updated_at as date',
+                DB::raw("'Service' as type"),
+                DB::raw($nullStr.' as supplier_name'),
+                DB::raw("CONCAT(employees.first_name, ' ', employees.last_name) as employee_name"),
+                DB::raw('0 as qty_in'),
+                DB::raw('service_order_details.quantity * service_retails.quantity_needed / COALESCE(NULLIF(supplies.conversion_factor, 0), 1) as qty_out'),
+                DB::raw(sprintf($toStr, 'service_orders.service_order_id').' as reference_no'),
+            ]);
+
         $entries = $purchases
             ->unionAll($pullouts)
             ->unionAll($returns)
+            ->unionAll($services)
             ->orderBy('date', 'asc')
             ->get();
 

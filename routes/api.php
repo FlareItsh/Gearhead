@@ -84,6 +84,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/services/search', [ServiceController::class, 'search'])
         ->name('admin.services.search');
 
+    // ⭐ Added: Service Retail Recipe management routes
+    Route::get('/services/variants/{id}/retails', [ServiceController::class, 'getRetails'])
+        ->name('admin.services.variants.retails.get');
+    Route::post('/services/variants/{id}/retails', [ServiceController::class, 'updateRetails'])
+        ->name('admin.services.variants.retails.update');
+
     // * Staff route for Rendering and Managing Staffs
     Route::get('/staffs', [EmployeeController::class, 'index'])
         ->name('admin.staffs');

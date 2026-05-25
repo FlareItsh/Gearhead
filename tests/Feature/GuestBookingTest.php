@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Car;
 use App\Models\Service;
 use App\Models\ServiceVariant;
 use App\Models\User;
@@ -120,4 +121,36 @@ test('booking respects business hours', function () {
     ]);
 
     $response->assertStatus(422);
+});
+
+test('authenticated booking saves selected vehicle data', function () {
+    $user = User::factory()->create(['role' => 'customer']);
+    $car = Car::factory()->create([
+        'user_id' => $user->user_id,
+        'make' => 'Toyota',
+        'model' => 'Wigo',
+        'size' => 'Small',
+    ]);
+
+    $service = Service::factory()->create();
+    $variant = ServiceVariant::factory()->create([
+        'service_id' => $service->service_id,
+        'size' => 'Small',
+    ]);
+
+    $response = $this->actingAs($user)->postJson('/api/bookings/book', [
+        'order_date' => now()->addHours(2)->format('Y-m-d H:i'),
+        'variant_ids' => [$variant->service_variant],
+        'car_id' => $car->car_id,
+        'vehicle_make' => $car->make,
+        'vehicle_model' => $car->model,
+        'vehicle_size' => $car->size,
+    ]);
+
+    $response->assertStatus(201);
+
+    expect($response->json('car_id'))->toBe($car->car_id);
+    expect($response->json('vehicle_make'))->toBe('Toyota');
+    expect($response->json('vehicle_model'))->toBe('Wigo');
+    expect($response->json('vehicle_size'))->toBe('Small');
 });
