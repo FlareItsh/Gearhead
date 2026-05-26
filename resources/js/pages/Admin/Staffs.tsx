@@ -42,7 +42,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 import AppLayout from '@/layouts/app-layout'
 import { Head } from '@inertiajs/react'
 import axios from 'axios'
-import { ChevronDownIcon, HandCoins, Pencil, Plus, Search, Trash2, Wallet } from 'lucide-react'
+import { ChevronDownIcon, Landmark, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -94,6 +94,9 @@ export default function Staffs() {
 
   // Add / Edit Form state
   const [addForm, setAddForm] = useState({
+    firstName: '',
+    lastName: '',
+    middleName: '',
     phone: '',
     address: '',
     commissionPercentage: '',
@@ -113,38 +116,37 @@ export default function Staffs() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null)
 
-  // Commission modal state
-  const [showCommissionModal, setShowCommissionModal] = useState(false)
-  const [selectedStaffIdForCommission, setSelectedStaffIdForCommission] = useState<number | null>(
-    null,
-  )
-  const [commissionStartDate, setCommissionStartDate] = useState<string>('')
-  const [commissionEndDate, setCommissionEndDate] = useState<string>('')
-  const [commissionData, setCommissionData] = useState<{
+  // Financial ledger modal state
+  const [showLedgerModal, setShowLedgerModal] = useState(false)
+  const [selectedStaffIdForLedger, setSelectedStaffIdForLedger] = useState<number | null>(null)
+  const [ledgerStartDate, setLedgerStartDate] = useState<string>('')
+  const [ledgerEndDate, setLedgerEndDate] = useState<string>('')
+  const [ledgerData, setLedgerData] = useState<{
     employee: string
     commission_percentage: number
-    orders: any[]
-    total_commission: number
-  } | null>(null)
-  const [loadingCommissions, setLoadingCommissions] = useState(false)
-
-  // Wallet modal state
-  const [showWalletModal, setShowWalletModal] = useState(false)
-  const [selectedStaffIdForWallet, setSelectedStaffIdForWallet] = useState<number | null>(null)
-  const [walletData, setWalletData] = useState<{
-    employee: string
     total_earned: number
     total_paid: number
     balance: number
     payouts: any[]
+    orders: any[]
+    total_commission: number
   } | null>(null)
-  const [loadingWallet, setLoadingWallet] = useState(false)
+  const [loadingLedger, setLoadingLedger] = useState(false)
   const [payoutForm, setPayoutForm] = useState({
     amount: '',
     payout_date: new Date().toISOString().split('T')[0],
     remarks: '',
   })
   const [isSubmittingPayout, setIsSubmittingPayout] = useState(false)
+  const [selectedStaffIds, setSelectedStaffIds] = useState<number[]>([])
+  const [showBatchPayoutModal, setShowBatchPayoutModal] = useState(false)
+  const [batchRows, setBatchRows] = useState<
+    { employee_id: number; name: string; balance: number; amount: string }[]
+  >([])
+  const [batchPayoutDate, setBatchPayoutDate] = useState(new Date().toISOString().split('T')[0])
+  const [batchRemarks, setBatchRemarks] = useState('')
+  const [loadingBatchBalances, setLoadingBatchBalances] = useState(false)
+  const [isSubmittingBatchPayout, setIsSubmittingBatchPayout] = useState(false)
 
   // Helper to get current month range
   const getCurrentMonthRange = () => {
@@ -306,58 +308,41 @@ export default function Staffs() {
     }
   }
 
-  const loadCommissions = async () => {
-    if (!selectedStaffIdForCommission) return
+  const formatCurrency = (amount?: number) =>
+    `₱${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+
+  const getStaffName = (staff: Staff) => {
+    const middleInitial = staff.middleName?.trim() ? `${staff.middleName.trim()[0]}. ` : ''
+
+    return `${staff.firstName} ${middleInitial}${staff.lastName}`
+  }
+
+  const loadLedger = async () => {
+    if (!selectedStaffIdForLedger) return
 
     try {
-      setLoadingCommissions(true)
-      const res = await axios.get(`/api/staffs/${selectedStaffIdForCommission}/commissions`, {
+      setLoadingLedger(true)
+      const res = await axios.get(`/api/staffs/${selectedStaffIdForLedger}/financial-ledger`, {
         params: {
-          start_date: commissionStartDate,
-          end_date: commissionEndDate,
+          start_date: ledgerStartDate,
+          end_date: ledgerEndDate,
         },
       })
-      setCommissionData(res.data)
+      setLedgerData(res.data)
     } catch (error) {
       console.error(error)
-      toast.error('Failed to load commission data')
+      toast.error('Failed to load financial ledger')
     } finally {
-      setLoadingCommissions(false)
+      setLoadingLedger(false)
     }
   }
 
-  const openCommissions = async (id: number) => {
+  const openLedger = async (id: number) => {
     const { start, end } = getCurrentMonthRange()
-    setSelectedStaffIdForCommission(id)
-    setCommissionStartDate(start)
-    setCommissionEndDate(end)
-    setShowCommissionModal(true)
-    // loadCommissions will be triggered by useEffect
-  }
-
-  useEffect(() => {
-    if (showCommissionModal && selectedStaffIdForCommission) {
-      loadCommissions()
-    }
-  }, [showCommissionModal, selectedStaffIdForCommission, commissionStartDate, commissionEndDate])
-
-  const loadWallet = async () => {
-    if (!selectedStaffIdForWallet) return
-    try {
-      setLoadingWallet(true)
-      const res = await axios.get(`/api/staffs/${selectedStaffIdForWallet}/wallet`)
-      setWalletData(res.data)
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to load wallet data')
-    } finally {
-      setLoadingWallet(false)
-    }
-  }
-
-  const openWallet = (id: number) => {
-    setSelectedStaffIdForWallet(id)
-    setShowWalletModal(true)
+    setSelectedStaffIdForLedger(id)
+    setLedgerStartDate(start)
+    setLedgerEndDate(end)
+    setShowLedgerModal(true)
     setPayoutForm({
       amount: '',
       payout_date: new Date().toISOString().split('T')[0],
@@ -365,26 +350,117 @@ export default function Staffs() {
     })
   }
 
+  useEffect(() => {
+    if (showLedgerModal && selectedStaffIdForLedger) {
+      loadLedger()
+    }
+  }, [showLedgerModal, selectedStaffIdForLedger, ledgerStartDate, ledgerEndDate])
+
   const handleRecordPayout = async () => {
-    if (!selectedStaffIdForWallet || !payoutForm.amount) return
+    if (!selectedStaffIdForLedger || !payoutForm.amount) return
     try {
       setIsSubmittingPayout(true)
-      await axios.post(`/api/staffs/${selectedStaffIdForWallet}/payout`, payoutForm)
+      await axios.post(`/api/staffs/${selectedStaffIdForLedger}/payout`, payoutForm)
       toast.success('Payout recorded successfully')
-      loadWallet() // Refresh data
-    } catch (error) {
+      loadLedger()
+      loadStaffs()
+    } catch (error: any) {
       console.error(error)
-      toast.error('Failed to record payout')
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.amount?.[0] ||
+          'Failed to record payout',
+      )
     } finally {
       setIsSubmittingPayout(false)
     }
   }
 
-  useEffect(() => {
-    if (showWalletModal && selectedStaffIdForWallet) {
-      loadWallet()
+  const visibleStaffIds = staffData?.data.map((staff) => staff.id) || []
+  const selectedVisibleStaffIds = selectedStaffIds.filter((id) => visibleStaffIds.includes(id))
+  const allVisibleSelected =
+    visibleStaffIds.length > 0 && selectedVisibleStaffIds.length === visibleStaffIds.length
+
+  const toggleStaffSelection = (id: number) => {
+    setSelectedStaffIds((current) =>
+      current.includes(id) ? current.filter((staffId) => staffId !== id) : [...current, id],
+    )
+  }
+
+  const toggleAllVisibleStaff = () => {
+    setSelectedStaffIds((current) => {
+      if (allVisibleSelected) {
+        return current.filter((id) => !visibleStaffIds.includes(id))
+      }
+
+      return Array.from(new Set([...current, ...visibleStaffIds]))
+    })
+  }
+
+  const openBatchPayout = async () => {
+    const selectedStaff =
+      staffData?.data.filter((staff) => selectedStaffIds.includes(staff.id)) || []
+    setShowBatchPayoutModal(true)
+    setLoadingBatchBalances(true)
+
+    try {
+      const ledgers = await Promise.all(
+        selectedStaff.map(async (staff) => {
+          const response = await axios.get(`/api/staffs/${staff.id}/financial-ledger`)
+
+          return {
+            employee_id: staff.id,
+            name: getStaffName(staff),
+            balance: Number(response.data.balance || 0),
+            amount: Number(response.data.balance || 0).toFixed(2),
+          }
+        }),
+      )
+      setBatchRows(ledgers)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load selected staff balances')
+    } finally {
+      setLoadingBatchBalances(false)
     }
-  }, [showWalletModal, selectedStaffIdForWallet])
+  }
+
+  const updateBatchAmount = (employeeId: number, amount: string) => {
+    setBatchRows((current) =>
+      current.map((row) => (row.employee_id === employeeId ? { ...row, amount } : row)),
+    )
+  }
+
+  const totalBatchPayout = batchRows.reduce((total, row) => total + Number(row.amount || 0), 0)
+
+  const handleBatchPayout = async () => {
+    try {
+      setIsSubmittingBatchPayout(true)
+      await axios.post('/api/staffs/batch-payout', {
+        payout_date: batchPayoutDate,
+        remarks: batchRemarks,
+        payouts: batchRows.map((row) => ({
+          employee_id: row.employee_id,
+          amount: row.amount,
+        })),
+      })
+      toast.success('Batch payout recorded successfully')
+      setShowBatchPayoutModal(false)
+      setSelectedStaffIds([])
+      setBatchRows([])
+      setBatchRemarks('')
+      loadStaffs()
+    } catch (error: any) {
+      console.error(error)
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.payouts?.[0] ||
+          'Failed to record batch payout',
+      )
+    } finally {
+      setIsSubmittingBatchPayout(false)
+    }
+  }
 
   /* Removed filteredStaff memo */
 
@@ -589,6 +665,18 @@ export default function Staffs() {
                   (staffData?.total || 0) !== 1 ? 's' : ''
                 }`}
               />
+              {hasPermission('manage_payouts') && (
+                <Button
+                  variant="highlight"
+                  size="sm"
+                  onClick={openBatchPayout}
+                  disabled={selectedStaffIds.length === 0}
+                  className="gap-2 text-xs font-bold tracking-wider uppercase"
+                >
+                  <Landmark className="h-4 w-4" />
+                  Batch Payout
+                </Button>
+              )}
             </div>
 
             {loading ? (
@@ -607,6 +695,17 @@ export default function Staffs() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        {hasPermission('manage_payouts') && (
+                          <TableHead className="w-10">
+                            <input
+                              type="checkbox"
+                              checked={allVisibleSelected}
+                              onChange={toggleAllVisibleStaff}
+                              className="h-4 w-4 rounded border-border accent-highlight"
+                              aria-label="Select all visible staff"
+                            />
+                          </TableHead>
+                        )}
                         <TableHead>Name</TableHead>
                         <TableHead>Contact #</TableHead>
                         <TableHead>Status</TableHead>
@@ -623,6 +722,17 @@ export default function Staffs() {
                           : ''
                         return (
                           <TableRow key={staff.id}>
+                            {hasPermission('manage_payouts') && (
+                              <TableCell>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedStaffIds.includes(staff.id)}
+                                  onChange={() => toggleStaffSelection(staff.id)}
+                                  className="h-4 w-4 rounded border-border accent-highlight"
+                                  aria-label={`Select ${getStaffName(staff)}`}
+                                />
+                              </TableCell>
+                            )}
                             <TableCell className="font-medium">
                               {staff.firstName} {middleInitial ? `${middleInitial} ` : ''}
                               {staff.lastName}
@@ -817,39 +927,20 @@ export default function Staffs() {
                                   </Dialog>
                                 )}
 
-                                {/* Commissions Action */}
-                                {hasPermission('view_commissions') && (
+                                {(hasPermission('view_commissions') ||
+                                  hasPermission('view_wallet')) && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <button
-                                          onClick={() => openCommissions(staff.id)}
+                                          onClick={() => openLedger(staff.id)}
                                           className="text-highlight hover:text-highlight/80"
                                         >
-                                          <HandCoins className="h-4 w-4" />
+                                          <Landmark className="h-4 w-4" />
                                         </button>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>View Commissions</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-
-                                {/* Wallet Action */}
-                                {hasPermission('view_wallet') && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() => openWallet(staff.id)}
-                                          className="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                        >
-                                          <Wallet className="h-4 w-4" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>E-Wallet & Payouts</p>
+                                        <p>Financial Ledger</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -954,316 +1045,117 @@ export default function Staffs() {
               </DialogContent>
             </Dialog>
 
-            {/* Commission Modal */}
+            {/* Financial Ledger Modal */}
             <Dialog
-              open={showCommissionModal}
-              onOpenChange={setShowCommissionModal}
+              open={showLedgerModal}
+              onOpenChange={setShowLedgerModal}
             >
-              <DialogContent className="w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all sm:max-w-none">
+              <DialogContent className="max-h-[92vh] w-[96vw] overflow-y-auto border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all sm:max-w-6xl">
                 <div className="p-5">
                   <DialogHeader className="mb-4">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <DialogTitle className="text-xl">
-                          Staff <span className="text-highlight">Commissions</span>
+                          Financial <span className="text-highlight">Ledger</span>
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground/80">
-                          Earned commissions for{' '}
+                          Commissions, wallet balance, and payout history for{' '}
                           <span className="font-semibold text-foreground">
-                            {commissionData?.employee}
-                          </span>
-                        </DialogDescription>
-                      </div>
-
-                      {/* Date Filter */}
-                      <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 p-2">
-                        <Input
-                          type="date"
-                          value={commissionStartDate}
-                          onChange={(e) => setCommissionStartDate(e.target.value)}
-                          className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
-                        />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
-                          to
-                        </span>
-                        <Input
-                          type="date"
-                          value={commissionEndDate}
-                          onChange={(e) => setCommissionEndDate(e.target.value)}
-                          className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
-                        />
-                      </div>
-                    </div>
-                  </DialogHeader>
-
-                  <div className="mb-4 grid grid-cols-2 gap-3">
-                    <Card className="border-border/50 bg-gradient-to-br from-highlight/5 to-transparent shadow-none">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
-                              Rate
-                            </p>
-                            <p className="text-xl font-black text-highlight">
-                              {commissionData?.commission_percentage}%
-                            </p>
-                          </div>
-                          <div className="rounded-lg bg-highlight/10 p-2 text-highlight">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="m15 5 4 4" />
-                              <path d="M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13" />
-                              <path d="m8 6 2-2" />
-                              <path d="m2 22 7-7" />
-                              <path d="M11 20.3 20.3 11" />
-                              <path d="m11 11 9 9" />
-                            </svg>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-border/50 bg-gradient-to-br from-green-500/5 to-transparent shadow-none">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
-                              Total
-                            </p>
-                            <p className="text-xl font-black text-green-500">
-                              ₱
-                              {commissionData?.total_commission.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                              })}
-                            </p>
-                          </div>
-                          <div className="rounded-lg bg-green-500/10 p-2 text-green-500">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <line
-                                x1="12"
-                                y1="2"
-                                x2="12"
-                                y2="22"
-                              />
-                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                            </svg>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="mb-2">
-                    <HeadingSmall
-                      title="Completed Jobs"
-                      description="Historical record"
-                    />
-                  </div>
-
-                  <div className="overflow-hidden rounded-lg border border-border/50 bg-muted/10">
-                    <div className="max-h-[350px] overflow-y-auto">
-                      <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-background/95 shadow-sm backdrop-blur-sm">
-                          <TableRow className="border-border/30 hover:bg-transparent">
-                            <TableHead className="w-[150px] min-w-[150px] px-4 py-3 text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
-                              Date
-                            </TableHead>
-                            <TableHead className="w-[150px] min-w-[150px] px-4 py-3 text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
-                              Customer
-                            </TableHead>
-                            <TableHead className="w-auto px-4 py-3 text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
-                              Services
-                            </TableHead>
-                            <TableHead className="w-[120px] min-w-[120px] px-4 py-3 text-right text-[11px] font-bold tracking-tight whitespace-nowrap uppercase">
-                              Total
-                            </TableHead>
-                            <TableHead className="w-[120px] min-w-[120px] px-4 py-3 text-right text-[11px] font-bold tracking-tight whitespace-nowrap text-highlight uppercase">
-                              Comm.
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {loadingCommissions ? (
-                            <TableRow>
-                              <TableCell
-                                colSpan={5}
-                                className="py-12 text-center"
-                              >
-                                <div className="flex flex-col items-center gap-2">
-                                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-highlight border-t-transparent" />
-                                  <p className="text-xs text-muted-foreground">Loading...</p>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ) : !commissionData?.orders || commissionData.orders.length === 0 ? (
-                            <TableRow>
-                              <TableCell
-                                colSpan={5}
-                                className="py-12 text-center"
-                              >
-                                <p className="text-xs text-muted-foreground italic">
-                                  No completed orders found.
-                                </p>
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            commissionData.orders.map((order) => (
-                              <TableRow
-                                key={order.id}
-                                className="group border-border/10 transition-colors hover:bg-highlight/5"
-                              >
-                                <TableCell className="px-4 py-3 text-[11px] font-medium whitespace-nowrap text-muted-foreground tabular-nums">
-                                  {order.date}
-                                </TableCell>
-                                <TableCell className="px-4 py-3 text-sm font-bold whitespace-nowrap">
-                                  {order.customer}
-                                </TableCell>
-                                <TableCell className="px-4 py-3">
-                                  <div className="flex min-w-[200px] flex-wrap gap-1.5">
-                                    {order.services.split(',').map((s: string, idx: number) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-block rounded border border-border/20 bg-muted/30 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-muted-foreground/90"
-                                      >
-                                        {s.trim()}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap tabular-nums">
-                                  ₱{order.total_amount.toLocaleString()}
-                                </TableCell>
-                                <TableCell className="px-4 py-3 text-right text-sm font-black whitespace-nowrap text-highlight tabular-nums">
-                                  ₱
-                                  {order.commission_amount.toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                  })}
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                </div>
-
-                <DialogFooter className="border-t border-border/30 bg-muted/5 p-4">
-                  <DialogClose asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="min-w-[80px] border-border/50 text-xs font-semibold"
-                    >
-                      Close
-                    </Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Wallet Modal */}
-            <Dialog
-              open={showWalletModal}
-              onOpenChange={setShowWalletModal}
-            >
-              <DialogContent className="w-fit min-w-[850px] border-border/50 bg-background/95 p-0 backdrop-blur-xl transition-all sm:max-w-none">
-                <div className="p-5">
-                  <DialogHeader className="mb-4">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <DialogTitle className="text-xl">
-                          Staff <span className="text-highlight">E-Wallet</span>
-                        </DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground/80">
-                          Wallet balance and payout history for{' '}
-                          <span className="font-semibold text-foreground">
-                            {walletData?.employee}
+                            {ledgerData?.employee}
                           </span>
                         </DialogDescription>
                       </div>
                     </div>
                   </DialogHeader>
 
-                  <div className="mb-6 grid grid-cols-3 gap-3">
-                    <Card className="border-border/50 bg-gradient-to-br from-highlight/5 to-transparent shadow-none border-highlight/20">
+                  <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-4">
+                    <Card className="border-border/50 border-highlight/20 bg-gradient-to-br from-highlight/5 to-transparent shadow-none">
                       <CardContent className="p-3">
-                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">Lifetime Earned</p>
-                        <p className="text-xl font-black text-highlight">₱{walletData?.total_earned.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
+                          Lifetime Earned
+                        </p>
+                        <p className="text-xl font-black text-highlight">
+                          {formatCurrency(ledgerData?.total_earned)}
+                        </p>
                       </CardContent>
                     </Card>
-
-                    <Card className="border-border/50 bg-gradient-to-br from-red-500/5 to-transparent shadow-none border-red-500/20">
+                    <Card className="border-border/50 border-red-500/20 bg-gradient-to-br from-red-500/5 to-transparent shadow-none">
                       <CardContent className="p-3">
-                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">Total Paid Out</p>
-                        <p className="text-xl font-black text-red-500">₱{walletData?.total_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
+                          Total Paid Out
+                        </p>
+                        <p className="text-xl font-black text-red-500">
+                          {formatCurrency(ledgerData?.total_paid)}
+                        </p>
                       </CardContent>
                     </Card>
-
-                    <Card className="border-border/50 bg-gradient-to-br from-green-500/5 to-transparent shadow-none border-green-500/30">
+                    <Card className="border-border/50 border-green-500/30 bg-gradient-to-br from-green-500/5 to-transparent shadow-none">
                       <CardContent className="p-3">
-                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase text-green-600">Remaining Balance</p>
-                        <p className="text-2xl font-black text-green-600">₱{walletData?.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[10px] font-bold tracking-wider text-green-600 text-muted-foreground/70 uppercase">
+                          Remaining Balance
+                        </p>
+                        <p className="text-2xl font-black text-green-600">
+                          {formatCurrency(ledgerData?.balance)}
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border/50 bg-gradient-to-br from-muted/30 to-transparent shadow-none">
+                      <CardContent className="p-3">
+                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase">
+                          Commission Rate
+                        </p>
+                        <p className="text-2xl font-black text-foreground">
+                          {ledgerData?.commission_percentage || 0}%
+                        </p>
                       </CardContent>
                     </Card>
                   </div>
 
                   <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Record Payout Form */}
                     <div className="flex flex-col gap-4">
                       <div className="rounded-xl border border-border/50 bg-muted/5 p-4 shadow-sm">
-                        <HeadingSmall title="Record Payout" description="Distribute commission to staff" />
+                        <HeadingSmall
+                          title="Record Payout"
+                          description="Distribute commission to staff"
+                        />
                         <div className="mt-4 grid gap-4">
                           <div className="grid gap-2">
                             <Label className="text-xs font-semibold">Payout Amount (₱)</Label>
-                            <Input 
-                              type="number" 
+                            <Input
+                              type="number"
                               placeholder="0.00"
                               value={payoutForm.amount}
-                              onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
-                              className="bg-background/50 focus:bg-background h-10 transition-all font-medium"
+                              onChange={(e) =>
+                                setPayoutForm({ ...payoutForm, amount: e.target.value })
+                              }
+                              className="h-10 bg-background/50 font-medium transition-all focus:bg-background"
                             />
                           </div>
                           <div className="grid gap-2">
                             <Label className="text-xs font-semibold">Payout Date</Label>
-                            <Input 
+                            <Input
                               type="date"
                               value={payoutForm.payout_date}
-                              onChange={(e) => setPayoutForm({...payoutForm, payout_date: e.target.value})}
-                              className="bg-background/50 focus:bg-background h-10 transition-all"
+                              onChange={(e) =>
+                                setPayoutForm({ ...payoutForm, payout_date: e.target.value })
+                              }
+                              className="h-10 bg-background/50 transition-all focus:bg-background"
                             />
                           </div>
                           <div className="grid gap-2">
                             <Label className="text-xs font-semibold">Remarks/Notes</Label>
-                            <Input 
+                            <Input
                               placeholder="e.g. Weekly payout"
                               value={payoutForm.remarks}
-                              onChange={(e) => setPayoutForm({...payoutForm, remarks: e.target.value})}
-                              className="bg-background/50 focus:bg-background h-10 transition-all"
+                              onChange={(e) =>
+                                setPayoutForm({ ...payoutForm, remarks: e.target.value })
+                              }
+                              className="h-10 bg-background/50 transition-all focus:bg-background"
                             />
                           </div>
                           {hasPermission('manage_payouts') && (
-                            <Button 
-                              variant="highlight" 
+                            <Button
+                              variant="highlight"
                               size="lg"
                               className="mt-2 font-bold shadow-lg shadow-highlight/20"
                               onClick={handleRecordPayout}
@@ -1274,45 +1166,85 @@ export default function Staffs() {
                           )}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Payout History */}
-                    <div className="flex flex-col gap-4">
-                      <div className="flex-1 rounded-xl border border-border/50 bg-muted/10 p-4 shadow-inner overflow-hidden">
-                        <HeadingSmall title="Payout History" description="Record of previous payouts" />
-                        <div className="mt-4 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+                      <div className="flex-1 overflow-hidden rounded-xl border border-border/50 bg-muted/10 p-4 shadow-inner">
+                        <HeadingSmall
+                          title="Payout History"
+                          description="Record of previous payouts"
+                        />
+                        <div className="custom-scrollbar mt-4 max-h-[320px] overflow-y-auto pr-1">
                           <Table>
                             <TableHeader className="sticky top-0 z-10 bg-background/95 shadow-sm backdrop-blur-sm">
                               <TableRow className="border-border/30 hover:bg-transparent">
-                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Date</TableHead>
-                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Amount</TableHead>
-                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">Remarks</TableHead>
-                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase text-right">Processed By</TableHead>
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">
+                                  Date
+                                </TableHead>
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">
+                                  Amount
+                                </TableHead>
+                                <TableHead className="px-3 py-2 text-[10px] font-bold tracking-widest uppercase">
+                                  Remarks
+                                </TableHead>
+                                <TableHead className="px-3 py-2 text-right text-[10px] font-bold tracking-widest uppercase">
+                                  Processed By
+                                </TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {loadingWallet ? (
+                              {loadingLedger ? (
                                 <TableRow>
-                                  <TableCell colSpan={4} className="py-12 text-center">
+                                  <TableCell
+                                    colSpan={4}
+                                    className="py-12 text-center"
+                                  >
                                     <div className="flex flex-col items-center gap-2">
                                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-highlight border-t-transparent" />
-                                      <span className="loading-text text-xs">Fetching history...</span>
+                                      <span className="loading-text text-xs">
+                                        Fetching history...
+                                      </span>
                                     </div>
                                   </TableCell>
                                 </TableRow>
-                              ) : !walletData?.payouts || walletData.payouts.length === 0 ? (
-                                <TableRow><TableCell colSpan={4} className="py-12 text-center text-xs italic text-muted-foreground/60 bg-muted/5 rounded-lg">No payouts recorded yet.</TableCell></TableRow>
+                              ) : !ledgerData?.payouts || ledgerData.payouts.length === 0 ? (
+                                <TableRow>
+                                  <TableCell
+                                    colSpan={4}
+                                    className="rounded-lg bg-muted/5 py-12 text-center text-xs text-muted-foreground/60 italic"
+                                  >
+                                    No payouts recorded yet.
+                                  </TableCell>
+                                </TableRow>
                               ) : (
-                                walletData.payouts.map((p) => (
-                                  <TableRow key={p.payout_id} className="text-[11px] group transition-all hover:bg-highlight/5 border-border/10">
-                                    <TableCell className="px-3 py-3 font-semibold tabular-nums text-muted-foreground">{new Date(p.payout_date).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })}</TableCell>
-                                    <TableCell className="px-3 py-3 font-black text-red-500 tabular-nums">₱{parseFloat(p.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
-                                    <TableCell className="px-3 py-3 text-muted-foreground/80 font-medium">
-                                      <div className="max-w-[140px] truncate" title={p.remarks}>{p.remarks || '-'}</div>
+                                ledgerData.payouts.map((p) => (
+                                  <TableRow
+                                    key={p.payout_id}
+                                    className="group border-border/10 text-[11px] transition-all hover:bg-highlight/5"
+                                  >
+                                    <TableCell className="px-3 py-3 font-semibold text-muted-foreground tabular-nums">
+                                      {new Date(p.payout_date).toLocaleDateString(undefined, {
+                                        month: 'short',
+                                        day: '2-digit',
+                                        year: 'numeric',
+                                      })}
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 font-black text-red-500 tabular-nums">
+                                      ₱
+                                      {parseFloat(p.amount).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                      })}
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 font-medium text-muted-foreground/80">
+                                      <div
+                                        className="max-w-[140px] truncate"
+                                        title={p.remarks}
+                                      >
+                                        {p.remarks || '-'}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="px-3 py-3 text-right">
                                       <span className="rounded-md bg-highlight/10 px-2 py-1 text-[10px] font-bold text-highlight uppercase">
-                                        {p.processor ? `${p.processor.first_name} ${p.processor.last_name}` : 'System'}
+                                        {p.processor
+                                          ? `${p.processor.first_name} ${p.processor.last_name}`
+                                          : 'System'}
                                       </span>
                                     </TableCell>
                                   </TableRow>
@@ -1323,13 +1255,232 @@ export default function Staffs() {
                         </div>
                       </div>
                     </div>
+
+                    <div className="rounded-xl border border-border/50 bg-muted/10 p-4 shadow-inner">
+                      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <HeadingSmall
+                          title="Commissions"
+                          description="Completed orders in the selected date range"
+                        />
+                        <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-background/60 p-2">
+                          <Input
+                            type="date"
+                            value={ledgerStartDate}
+                            onChange={(e) => setLedgerStartDate(e.target.value)}
+                            className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
+                          />
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                            to
+                          </span>
+                          <Input
+                            type="date"
+                            value={ledgerEndDate}
+                            onChange={(e) => setLedgerEndDate(e.target.value)}
+                            className="h-8 w-[130px] border-none bg-transparent text-[11px] focus-visible:ring-0"
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-[500px] overflow-y-auto rounded-lg border border-border/50 bg-background/40">
+                        <Table>
+                          <TableHeader className="sticky top-0 z-10 bg-background/95 shadow-sm backdrop-blur-sm">
+                            <TableRow>
+                              <TableHead className="text-[10px] uppercase">Date</TableHead>
+                              <TableHead className="text-[10px] uppercase">Customer</TableHead>
+                              <TableHead className="text-[10px] uppercase">Services</TableHead>
+                              <TableHead className="text-right text-[10px] uppercase">
+                                Total
+                              </TableHead>
+                              <TableHead className="text-right text-[10px] text-highlight uppercase">
+                                Comm.
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {loadingLedger ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={5}
+                                  className="py-12 text-center text-xs text-muted-foreground"
+                                >
+                                  Loading ledger...
+                                </TableCell>
+                              </TableRow>
+                            ) : !ledgerData?.orders || ledgerData.orders.length === 0 ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={5}
+                                  className="py-12 text-center text-xs text-muted-foreground italic"
+                                >
+                                  No completed orders found.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              ledgerData.orders.map((order) => (
+                                <TableRow
+                                  key={order.id}
+                                  className="border-border/10 hover:bg-highlight/5"
+                                >
+                                  <TableCell className="text-[11px] whitespace-nowrap text-muted-foreground">
+                                    {order.date}
+                                  </TableCell>
+                                  <TableCell className="text-xs font-semibold whitespace-nowrap">
+                                    {order.customer}
+                                  </TableCell>
+                                  <TableCell className="min-w-[180px] text-[11px] text-muted-foreground">
+                                    {order.services}
+                                  </TableCell>
+                                  <TableCell className="text-right text-xs font-semibold tabular-nums">
+                                    {formatCurrency(order.total_amount)}
+                                  </TableCell>
+                                  <TableCell className="text-right text-xs font-black text-highlight tabular-nums">
+                                    {formatCurrency(order.commission_amount)}
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <DialogFooter className="border-t border-border/30 bg-muted/5 p-4">
                   <DialogClose asChild>
-                    <Button variant="outline" size="sm" className="min-w-[100px] text-xs font-bold uppercase tracking-wider transition-all hover:bg-muted">Close Wallet</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-w-[100px] text-xs font-bold tracking-wider uppercase transition-all hover:bg-muted"
+                    >
+                      Close Ledger
+                    </Button>
                   </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog
+              open={showBatchPayoutModal}
+              onOpenChange={setShowBatchPayoutModal}
+            >
+              <DialogContent className="max-h-[90vh] w-[94vw] overflow-y-auto border-border/50 bg-background/95 p-0 backdrop-blur-xl sm:max-w-4xl">
+                <div className="p-5">
+                  <DialogHeader className="mb-5">
+                    <DialogTitle className="text-xl">
+                      Batch <span className="text-highlight">Payout</span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground/80">
+                      Record payouts for selected employees in a single transaction.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="mb-4 grid gap-3 rounded-xl border border-border/50 bg-muted/10 p-4 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label className="text-xs font-semibold">Payout Date</Label>
+                      <Input
+                        type="date"
+                        value={batchPayoutDate}
+                        onChange={(e) => setBatchPayoutDate(e.target.value)}
+                        className="bg-background/60"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label className="text-xs font-semibold">Remarks</Label>
+                      <Input
+                        placeholder="Optional batch note"
+                        value={batchRemarks}
+                        onChange={(e) => setBatchRemarks(e.target.value)}
+                        className="bg-background/60"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-xl border border-border/50 bg-muted/10">
+                    <Table>
+                      <TableHeader className="bg-background/80">
+                        <TableRow>
+                          <TableHead>Staff Name</TableHead>
+                          <TableHead className="text-right">Current Remaining Balance</TableHead>
+                          <TableHead className="w-[190px] text-right">Payout Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {loadingBatchBalances ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={3}
+                              className="py-12 text-center text-xs text-muted-foreground"
+                            >
+                              Loading selected balances...
+                            </TableCell>
+                          </TableRow>
+                        ) : batchRows.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={3}
+                              className="py-12 text-center text-xs text-muted-foreground italic"
+                            >
+                              No staff selected.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          batchRows.map((row) => (
+                            <TableRow
+                              key={row.employee_id}
+                              className="border-border/10"
+                            >
+                              <TableCell className="font-semibold">{row.name}</TableCell>
+                              <TableCell className="text-right font-bold text-green-600 tabular-nums">
+                                {formatCurrency(row.balance)}
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  min="0.01"
+                                  step="0.01"
+                                  value={row.amount}
+                                  onChange={(e) =>
+                                    updateBatchAmount(row.employee_id, e.target.value)
+                                  }
+                                  className="text-right font-semibold tabular-nums"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between rounded-xl border border-highlight/20 bg-highlight/5 p-4">
+                    <span className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                      Total Batch Payout Amount
+                    </span>
+                    <span className="text-2xl font-black text-highlight">
+                      {formatCurrency(totalBatchPayout)}
+                    </span>
+                  </div>
+                </div>
+
+                <DialogFooter className="border-t border-border/30 bg-muted/5 p-4">
+                  <DialogClose asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button
+                    variant="highlight"
+                    size="sm"
+                    onClick={handleBatchPayout}
+                    disabled={
+                      isSubmittingBatchPayout || loadingBatchBalances || batchRows.length === 0
+                    }
+                  >
+                    {isSubmittingBatchPayout ? 'Processing...' : 'Confirm Batch Payout'}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

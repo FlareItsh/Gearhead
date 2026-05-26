@@ -10,7 +10,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
+    $this->admin = User::factory()->create([
+        'role' => 'admin',
+        'permissions' => ['manage_payouts'],
+    ]);
 });
 
 it('can store an employee with commission percentage', function () {
@@ -99,7 +102,20 @@ it('calculates commissions correctly for completed orders', function () {
 });
 
 it('can record a payout and identifies the processor', function () {
-    $employee = Employee::factory()->create();
+    $employee = Employee::factory()->create([
+        'commission_percentage' => 50.0,
+    ]);
+    $variant = ServiceVariant::factory()->create(['price' => 1000]);
+    $order = ServiceOrder::factory()->create([
+        'employee_id' => $employee->employee_id,
+        'status' => 'completed',
+    ]);
+
+    ServiceOrderDetail::create([
+        'service_order_id' => $order->service_order_id,
+        'service_variant' => $variant->service_variant,
+        'quantity' => 1,
+    ]);
 
     $data = [
         'amount' => 500.00,
@@ -146,5 +162,127 @@ it('includes processor details in the wallet response', function () {
     $response->assertJsonFragment([
         'first_name' => $this->admin->first_name,
         'last_name' => $this->admin->last_name,
+    ]);
+});
+
+it('returns a unified financial ledger response', function () {
+    $employee = Employee::factory()->create([
+        'commission_percentage' => 10.0,
+    ]);
+    $customer = User::factory()->create(['role' => 'customer']);
+    $variant = ServiceVariant::factory()->create(['price' => 1000]);
+    $order = ServiceOrder::factory()->create([
+        'employee_id' => $employee->employee_id,
+        'user_id' => $customer->user_id,
+        'status' => 'completed',
+    ]);
+
+    ServiceOrderDetail::create([
+        'service_order_id' => $order->service_order_id,
+        'service_variant' => $variant->service_variant,
+        'quantity' => 2,
+    ]);
+
+    \App\Models\StaffPayout::create([
+        'employee_id' => $employee->employee_id,
+        'amount' => 50,
+        'payout_date' => now(),
+        'processed_by' => $this->admin->user_id,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->getJson("/api/staffs/{$employee->employee_id}/financial-ledger");
+
+    $response->assertSuccessful()
+        ->assertJsonPath('total_earned', 200)
+        ->assertJsonPath('total_paid', 50)
+        ->assertJsonPath('balance', 150)
+        ->assertJsonPath('total_commission', 200)
+        ->assertJsonStructure([
+            'orders' => [
+                '*' => ['id', 'date', 'customer', 'services', 'total_amount', 'commission_amount'],
+            ],
+            'payouts' => [
+                '*' => ['payout_id', 'processor'],
+            ],
+        ]);
+});
+
+it('records batch payouts atomically', function () {
+    $firstEmployee = Employee::factory()->create(['commission_percentage' => 10.0]);
+    $secondEmployee = Employee::factory()->create(['commission_percentage' => 20.0]);
+    $variant = ServiceVariant::factory()->create(['price' => 1000]);
+
+    foreach ([$firstEmployee, $secondEmployee] as $employee) {
+        $order = ServiceOrder::factory()->create([
+            'employee_id' => $employee->employee_id,
+            'status' => 'completed',
+        ]);
+
+        ServiceOrderDetail::create([
+            'service_order_id' => $order->service_order_id,
+            'service_variant' => $variant->service_variant,
+            'quantity' => 1,
+        ]);
+    }
+
+    $response = $this->actingAs($this->admin)
+        ->postJson('/api/staffs/batch-payout', [
+            'payout_date' => now()->format('Y-m-d'),
+            'remarks' => 'Weekly settlement',
+            'payouts' => [
+                ['employee_id' => $firstEmployee->employee_id, 'amount' => 100],
+                ['employee_id' => $secondEmployee->employee_id, 'amount' => 200],
+            ],
+        ]);
+
+    $response->assertSuccessful();
+
+    $this->assertDatabaseHas('staff_payouts', [
+        'employee_id' => $firstEmployee->employee_id,
+        'amount' => 100,
+        'remarks' => 'Weekly settlement',
+        'processed_by' => $this->admin->user_id,
+    ]);
+    $this->assertDatabaseHas('staff_payouts', [
+        'employee_id' => $secondEmployee->employee_id,
+        'amount' => 200,
+        'remarks' => 'Weekly settlement',
+        'processed_by' => $this->admin->user_id,
+    ]);
+});
+
+it('rolls back a batch payout when one payout exceeds balance', function () {
+    $firstEmployee = Employee::factory()->create(['commission_percentage' => 10.0]);
+    $secondEmployee = Employee::factory()->create(['commission_percentage' => 10.0]);
+    $variant = ServiceVariant::factory()->create(['price' => 1000]);
+
+    foreach ([$firstEmployee, $secondEmployee] as $employee) {
+        $order = ServiceOrder::factory()->create([
+            'employee_id' => $employee->employee_id,
+            'status' => 'completed',
+        ]);
+
+        ServiceOrderDetail::create([
+            'service_order_id' => $order->service_order_id,
+            'service_variant' => $variant->service_variant,
+            'quantity' => 1,
+        ]);
+    }
+
+    $response = $this->actingAs($this->admin)
+        ->postJson('/api/staffs/batch-payout', [
+            'payout_date' => now()->format('Y-m-d'),
+            'payouts' => [
+                ['employee_id' => $firstEmployee->employee_id, 'amount' => 50],
+                ['employee_id' => $secondEmployee->employee_id, 'amount' => 150],
+            ],
+        ]);
+
+    $response->assertUnprocessable();
+
+    $this->assertDatabaseMissing('staff_payouts', [
+        'employee_id' => $firstEmployee->employee_id,
+        'amount' => 50,
     ]);
 });

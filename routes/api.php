@@ -107,6 +107,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/employees/list', [EmployeeController::class, 'getEmployees'])
         ->name('admin.employees.list');
 
+    Route::post('/staffs/batch-payout', [EmployeeController::class, 'batchPayout'])
+        ->name('admin.staffs.batch-payout');
+
+    Route::get('/staffs/{id}/financial-ledger', [EmployeeController::class, 'financialLedger'])
+        ->name('admin.staffs.financial-ledger');
+
     Route::get('/staffs/{id}/commissions', [EmployeeController::class, 'commissions'])
         ->name('admin.staffs.commissions');
 
