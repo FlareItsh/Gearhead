@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Settings;
 
+use App\Support\VehicleSizeResolver;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreCarRequest extends FormRequest
 {
@@ -31,6 +33,25 @@ class StoreCarRequest extends FormRequest
             'fuel_type' => ['nullable', 'string', 'max:50'],
             'transmission' => ['nullable', 'string', 'max:50'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $make = (string) $this->input('make', '');
+            $model = (string) $this->input('model', '');
+
+            if ($make === '' || $model === '') {
+                return;
+            }
+
+            if (! app(VehicleSizeResolver::class)->hasExactVehicle($make, $model)) {
+                $validator->errors()->add(
+                    'model',
+                    'Please choose an existing car model from the suggestions.'
+                );
+            }
+        });
     }
 
     /**

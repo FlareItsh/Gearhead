@@ -2,11 +2,31 @@ import { Button } from '@/components/ui/button'
 import AppLayout from '@/layouts/app-layout'
 import GuestLayout from '@/layouts/guest-layout'
 import { savePendingBooking, type PendingBooking } from '@/lib/pendingBooking'
+import {
+  isKnownVehicle,
+  resolveVehicleSize,
+  suggestVehicleMakes,
+  suggestVehicleModels,
+  type VehicleSize,
+  type VehicleSuggestion,
+} from '@/lib/vehicle-size-resolver'
 import { register } from '@/routes'
+import { store as storeCar } from '@/routes/cars'
 import { Head, router, usePage } from '@inertiajs/react'
 import axios from 'axios'
-import { AlertCircle, CheckCircle2, ChevronDown, Circle, Clock, Star, X, Calendar as CalendarIcon } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  AlertCircle,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  List,
+  LoaderCircle,
+  Plus,
+  Star,
+  X,
+} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 
 const breadcrumbs = [{ title: 'Services', href: '/services' }]
@@ -99,10 +119,33 @@ export default function Services() {
   // Variant Selection Modal State
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false)
   const [selectedServiceForModal, setSelectedServiceForModal] = useState<Service | null>(null)
+  const [selectedServiceForPriceModal, setSelectedServiceForPriceModal] = useState<Service | null>(
+    null,
+  )
   const [isCarModalOpen, setIsCarModalOpen] = useState(false)
   const [selectedServiceForCarModal, setSelectedServiceForCarModal] = useState<Service | null>(null)
   const [selectedCarId, setSelectedCarId] = useState<number | null>(null)
   const [selectedBookingCar, setSelectedBookingCar] = useState<Car | null>(null)
+  const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false)
+  const [selectedServiceAfterVehicleAdd, setSelectedServiceAfterVehicleAdd] =
+    useState<Service | null>(null)
+  const [vehicleForm, setVehicleForm] = useState({
+    make: '',
+    model: '',
+    year: '',
+    plate_number: '',
+    color: '',
+    size: 'Medium' as VehicleSize,
+  })
+  const [vehicleErrors, setVehicleErrors] = useState<Record<string, string>>({})
+  const [isSavingVehicle, setIsSavingVehicle] = useState(false)
+  const [vehicleSuggestionQuery, setVehicleSuggestionQuery] = useState('')
+  const [vehicleSuggestionField, setVehicleSuggestionField] = useState<'make' | 'model' | null>(
+    null,
+  )
+  const [vehicleSuggestions, setVehicleSuggestions] = useState<VehicleSuggestion[]>([])
+  const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false)
+  const vehicleSuggestionsRef = useRef<HTMLDivElement>(null)
 
   // Load/save cart
   useEffect(() => {
@@ -160,6 +203,115 @@ export default function Services() {
     }
   }, [selectedServices])
 
+  useEffect(() => {
+    if (vehicleSuggestionQuery.trim().length < 2 || !vehicleSuggestionField) {
+      setVehicleSuggestions([])
+      return
+    }
+
+    setVehicleSuggestions(
+      vehicleSuggestionField === 'make'
+        ? suggestVehicleMakes(vehicleSuggestionQuery)
+        : suggestVehicleModels(vehicleForm.make, vehicleSuggestionQuery),
+    )
+  }, [vehicleForm.make, vehicleSuggestionField, vehicleSuggestionQuery])
+
+  useEffect(() => {
+    const nextSize = resolveVehicleSize(vehicleForm.make, vehicleForm.model)
+
+    if (vehicleForm.size !== nextSize) {
+      setVehicleForm((current) => ({ ...current, size: nextSize }))
+    }
+  }, [vehicleForm.make, vehicleForm.model, vehicleForm.size])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        vehicleSuggestionsRef.current &&
+        !vehicleSuggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowVehicleSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const openAddVehicleModal = (service?: Service | null) => {
+    setSelectedServiceAfterVehicleAdd(service ?? null)
+    setVehicleErrors({})
+    setIsAddVehicleModalOpen(true)
+  }
+
+  const closeAddVehicleModal = () => {
+    setIsAddVehicleModalOpen(false)
+    setSelectedServiceAfterVehicleAdd(null)
+    setShowVehicleSuggestions(false)
+  }
+
+  const selectVehicleSuggestion = (suggestion: VehicleSuggestion) => {
+    setVehicleForm((current) => ({
+      ...current,
+      make: suggestion.make,
+      model: vehicleSuggestionField === 'make' ? current.model : suggestion.model,
+      size: suggestion.size,
+    }))
+    setVehicleSuggestionQuery(
+      vehicleSuggestionField === 'make' ? suggestion.make : suggestion.model,
+    )
+    setVehicleErrors((current) => ({ ...current, make: '', model: '' }))
+    setShowVehicleSuggestions(false)
+  }
+
+  const resetVehicleForm = () => {
+    setVehicleForm({
+      make: '',
+      model: '',
+      year: '',
+      plate_number: '',
+      color: '',
+      size: 'Medium',
+    })
+    setVehicleSuggestionQuery('')
+    setVehicleSuggestionField(null)
+    setVehicleSuggestions([])
+  }
+
+  const handleAddVehicleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+
+    if (!isKnownVehicle(vehicleForm.make, vehicleForm.model)) {
+      setVehicleErrors({
+        model: 'Please choose an existing car model from the suggestions.',
+      })
+      return
+    }
+
+    setIsSavingVehicle(true)
+    router.post(storeCar.url(), vehicleForm, {
+      preserveScroll: true,
+      onSuccess: () => {
+        resetVehicleForm()
+        closeAddVehicleModal()
+        toast.success(
+          selectedServiceAfterVehicleAdd
+            ? 'Vehicle added. You can now select this service.'
+            : 'Vehicle added.',
+        )
+      },
+      onError: (errors) => {
+        setVehicleErrors(
+          Object.fromEntries(
+            Object.entries(errors).map(([field, message]) => [field, String(message)]),
+          ),
+        )
+      },
+      onFinish: () => setIsSavingVehicle(false),
+    })
+  }
+
   const toggleService = (service: Service, variant: ServiceVariant) => {
     setSelectedServices((prev) => {
       const exists = prev.some(
@@ -204,6 +356,31 @@ export default function Services() {
     selectedServices.some(
       (s) => s.service_id === serviceId && s.selectedVariant.service_variant === variantId,
     )
+
+  const serviceHasSelection = (serviceId: number) =>
+    selectedServices.some((service) => service.service_id === serviceId)
+
+  const selectableVariantsForService = (service: Service) =>
+    [...service.variants]
+      .filter((variant) => variant.enabled !== false)
+      .sort((a, b) => Number(a.price) - Number(b.price))
+
+  const priceRangeForService = (service: Service) => {
+    const variants = selectableVariantsForService(service)
+
+    if (variants.length === 0) {
+      return 'N/A'
+    }
+
+    const lowest = Number(variants[0].price)
+    const highest = Number(variants[variants.length - 1].price)
+
+    if (lowest === highest) {
+      return `₱${lowest.toLocaleString()}`
+    }
+
+    return `₱${lowest.toLocaleString()} - ₱${highest.toLocaleString()}`
+  }
 
   // Sort services by category and size
   const sortedServices = useMemo(() => {
@@ -274,7 +451,11 @@ export default function Services() {
   }, [selectedDate])
 
   const normalizeSize = (value: string): string => {
-    const cleaned = value.trim().toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '')
+    const cleaned = value
+      .trim()
+      .toLowerCase()
+      .replace(/[_\s]+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
 
     const aliases: Record<string, string> = {
       small: 'Small',
@@ -353,9 +534,7 @@ export default function Services() {
     }
 
     if (cars.length === 0) {
-      setModalType('warning')
-      setModalMessage('Please add a vehicle in Profile first before selecting a service.')
-      setShowModal(true)
+      openAddVehicleModal(service)
       return
     }
 
@@ -411,9 +590,13 @@ export default function Services() {
     }
 
     if (!selectedBookingCar) {
-      setModalType('warning')
-      setModalMessage('Please select a vehicle first.')
-      setShowModal(true)
+      if (cars.length === 0) {
+        openAddVehicleModal()
+      } else {
+        setModalType('warning')
+        setModalMessage('Please select a vehicle first.')
+        setShowModal(true)
+      }
       return
     }
 
@@ -602,57 +785,94 @@ export default function Services() {
           {/* --- Services Grid --- */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredServices.length > 0 ? (
-              filteredServices.map((s) => (
-                <div
-                  key={s.service_id}
-                  className="group flex flex-col justify-between rounded-3xl border border-border/40 bg-white p-6 transition-all hover:-translate-y-1 hover:border-highlight/40 hover:shadow-xl dark:bg-card"
-                >
-                  <div className="space-y-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-highlight/10 text-highlight">
-                      <Star className="h-5 w-5" />
+              filteredServices.map((s) => {
+                const variants = selectableVariantsForService(s)
+                const selected = serviceHasSelection(s.service_id)
+                const selectedVariantNames = selectedServices
+                  .filter((service) => service.service_id === s.service_id)
+                  .map((service) => service.selectedVariant.size)
+                  .join(', ')
+
+                return (
+                  <div
+                    key={s.service_id}
+                    className={`group relative flex flex-col justify-between rounded-3xl border bg-white p-6 transition-all hover:-translate-y-1 hover:border-highlight/40 hover:shadow-xl dark:bg-card ${
+                      selected
+                        ? 'border-highlight/80 shadow-xl ring-2 shadow-highlight/10 ring-highlight/30'
+                        : 'border-border/40'
+                    }`}
+                  >
+                    {selected && (
+                      <div className="absolute top-4 right-4 rounded-full bg-highlight px-3 py-1 text-[10px] font-black tracking-widest text-black uppercase shadow-lg shadow-highlight/20">
+                        Selected
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          selected ? 'bg-highlight text-black' : 'bg-highlight/10 text-highlight'
+                        }`}
+                      >
+                        <Star className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="pr-20 text-lg font-black tracking-tight text-foreground uppercase">
+                          {s.service_name}
+                        </h3>
+                        <p className="mt-2 line-clamp-2 text-xs font-medium text-muted-foreground/70">
+                          {s.description}
+                        </p>
+                        {selected && (
+                          <p className="mt-3 w-fit rounded-full border border-highlight/30 bg-highlight/10 px-3 py-1 text-[10px] font-black tracking-widest text-highlight uppercase">
+                            {selectedVariantNames}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-black tracking-tight text-foreground uppercase">
-                        {s.service_name}
-                      </h3>
-                      <p className="mt-2 line-clamp-2 text-xs font-medium text-muted-foreground/70">
-                        {s.description}
-                      </p>
+
+                    <div className="mt-6 space-y-4">
+                      <div className="flex items-center justify-between border-t border-border/10 pt-4">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground/60">
+                          <Clock className="h-3.5 w-3.5 text-highlight" />
+                          <span>
+                            {variants.length > 0
+                              ? `${Math.min(...variants.map((v) => v.estimated_duration))}m+`
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold tracking-wider text-muted-foreground/40 uppercase">
+                            Price Range
+                          </p>
+                          <p className="text-lg font-black tracking-tighter text-foreground">
+                            {priceRangeForService(s)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-10 rounded-xl border-border/50 text-xs font-black tracking-widest uppercase"
+                          onClick={() => setSelectedServiceForPriceModal(s)}
+                        >
+                          <List className="mr-2 h-4 w-4" />
+                          Prices
+                        </Button>
+                        <Button
+                          variant={selected ? 'secondary' : 'highlight'}
+                          className="h-10 w-full rounded-xl text-xs font-black tracking-widest uppercase"
+                          onClick={() => handleSelectService(s)}
+                        >
+                          {selected ? 'Selected' : 'Select'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center justify-between border-t border-border/10 pt-4">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground/60">
-                        <Clock className="h-3.5 w-3.5 text-highlight" />
-                        <span>
-                          {s.variants.length > 0
-                            ? `${Math.min(...s.variants.map((v) => v.estimated_duration))}m+`
-                            : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-bold tracking-wider text-muted-foreground/40 uppercase">
-                          From
-                        </p>
-                        <p className="text-lg font-black tracking-tighter text-foreground">
-                          {s.variants.length > 0
-                            ? `₱${Math.min(...s.variants.map((v) => Number(v.price))).toLocaleString()}`
-                            : 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="highlight"
-                      className="h-10 w-full rounded-xl text-xs font-black tracking-widest uppercase"
-                      onClick={() => handleSelectService(s)}
-                    >
-                      Select
-                    </Button>
-                  </div>
-                </div>
-              ))
+                )
+              })
             ) : (
               <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/40 bg-muted/5 py-20">
                 <AlertCircle className="mb-4 h-10 w-10 text-muted-foreground/20" />
@@ -662,6 +882,88 @@ export default function Services() {
           </div>
         </div>
       </div>
+
+      {/* --- Size Price Modal --- */}
+      {selectedServiceForPriceModal && (
+        <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300">
+          <div
+            className="fixed inset-0"
+            onClick={() => setSelectedServiceForPriceModal(null)}
+          />
+          <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-border/40 bg-white shadow-2xl dark:bg-card">
+            <div className="flex items-center justify-between border-b border-border/40 p-6">
+              <div>
+                <h3 className="text-xl font-black text-foreground uppercase">
+                  {selectedServiceForPriceModal.service_name}
+                </h3>
+                <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                  Prices from lowest to highest
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedServiceForPriceModal(null)}
+                className="rounded-full bg-secondary/80 p-2.5 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 p-6">
+              {selectableVariantsForService(selectedServiceForPriceModal).map((variant) => {
+                const selected = isSelected(
+                  selectedServiceForPriceModal.service_id,
+                  variant.service_variant,
+                )
+
+                return (
+                  <div
+                    key={variant.service_variant}
+                    className={`flex items-center justify-between rounded-2xl border p-4 ${
+                      selected
+                        ? 'border-highlight bg-highlight/10 ring-1 ring-highlight/30'
+                        : 'border-border/40 bg-muted/10'
+                    }`}
+                  >
+                    <div>
+                      <p className="text-sm font-black text-foreground uppercase">{variant.size}</p>
+                      <p className="mt-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                        {variant.estimated_duration} mins
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-foreground">
+                        ₱{Number(variant.price).toLocaleString()}
+                      </p>
+                      {selected && (
+                        <p className="text-[10px] font-black tracking-widest text-highlight uppercase">
+                          Selected
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {selectableVariantsForService(selectedServiceForPriceModal).length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border/40 p-8 text-center text-sm font-bold text-muted-foreground">
+                  No prices available.
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-border/40 p-6 pt-0">
+              <Button
+                variant="highlight"
+                className="h-12 w-full rounded-2xl text-xs font-black tracking-widest uppercase"
+                onClick={() => setSelectedServiceForPriceModal(null)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- Unified Floating Footer --- */}
       {selectedServices.length > 0 && (
@@ -752,10 +1054,14 @@ export default function Services() {
               <div className="space-y-5 border-t border-border/20 pt-4">
                 {auth.user && selectedBookingCar && (
                   <div className="rounded-2xl border border-border/40 bg-muted/30 p-4">
-                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">Selected Vehicle</p>
+                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                      Selected Vehicle
+                    </p>
                     <p className="mt-1 text-sm font-black text-foreground">
                       {selectedBookingCar.make} {selectedBookingCar.model}
-                      <span className="ml-2 text-xs text-muted-foreground">({selectedBookingCar.size})</span>
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({selectedBookingCar.size})
+                      </span>
                     </p>
                     {cars.length > 1 && (
                       <button
@@ -779,14 +1085,14 @@ export default function Services() {
                       Desired Date
                     </label>
                     <div className="group relative">
-                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-highlight transition-colors">
+                      <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted-foreground/40 transition-colors group-focus-within:text-highlight">
                         <CalendarIcon className="h-4 w-4" />
                       </div>
                       <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="w-full rounded-2xl border border-border/40 bg-white py-4 pl-12 pr-4 text-sm font-black text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
+                        className="w-full rounded-2xl border border-border/40 bg-white py-4 pr-4 pl-12 text-sm font-black text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
                       />
                     </div>
                   </div>
@@ -797,13 +1103,13 @@ export default function Services() {
                       Preferred Start Time
                     </label>
                     <div className="group relative">
-                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-highlight transition-colors">
+                      <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted-foreground/40 transition-colors group-focus-within:text-highlight">
                         <Clock className="h-4 w-4" />
                       </div>
                       <select
                         value={selectedTime}
                         onChange={(e) => setSelectedTime(e.target.value)}
-                        className="w-full appearance-none rounded-2xl border border-border/40 bg-white py-4 pl-12 pr-10 text-sm font-black text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
+                        className="w-full appearance-none rounded-2xl border border-border/40 bg-white py-4 pr-10 pl-12 text-sm font-black text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
                       >
                         <option value="">Select a time slot</option>
                         {availableTimeSlots.map((t) => (
@@ -815,7 +1121,7 @@ export default function Services() {
                           </option>
                         ))}
                       </select>
-                      <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-highlight">
+                      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-muted-foreground/40 group-focus-within:text-highlight">
                         <ChevronDown className="h-4 w-4" />
                       </div>
                     </div>
@@ -914,6 +1220,227 @@ export default function Services() {
         </div>
       )}
 
+      {/* --- Add Vehicle Modal --- */}
+      {isAddVehicleModalOpen && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md transition-all duration-300">
+          <div
+            className="fixed inset-0"
+            onClick={closeAddVehicleModal}
+          />
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] border border-border/40 bg-white shadow-2xl dark:bg-card">
+            <div className="flex items-center justify-between border-b border-border/40 p-6 md:p-8">
+              <div>
+                <h3 className="text-2xl font-black text-foreground">Add Vehicle</h3>
+                <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 uppercase">
+                  Choose a supported make and model
+                </p>
+              </div>
+              <button
+                onClick={closeAddVehicleModal}
+                className="rounded-full bg-secondary/80 p-3 text-muted-foreground transition-all hover:rotate-90 hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleAddVehicleSubmit}
+              className="custom-scrollbar max-h-[70vh] space-y-5 overflow-y-auto p-6 md:p-8"
+            >
+              {selectedServiceAfterVehicleAdd && (
+                <div className="rounded-2xl border border-highlight/20 bg-highlight/5 p-4">
+                  <p className="text-xs font-black text-foreground">
+                    {selectedServiceAfterVehicleAdd.service_name}
+                  </p>
+                  <p className="mt-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                    Add a vehicle first so we can match the correct service size.
+                  </p>
+                </div>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div
+                  className="relative"
+                  ref={vehicleSuggestionField === 'make' ? vehicleSuggestionsRef : undefined}
+                >
+                  <label className="text-[10px] font-black tracking-widest text-muted-foreground/70 uppercase">
+                    Make
+                  </label>
+                  <input
+                    type="text"
+                    value={vehicleForm.make}
+                    onChange={(event) => {
+                      setVehicleForm((current) => ({ ...current, make: event.target.value }))
+                      setVehicleSuggestionField('make')
+                      setVehicleSuggestionQuery(event.target.value)
+                      setShowVehicleSuggestions(true)
+                    }}
+                    onFocus={() => {
+                      setVehicleSuggestionField('make')
+                      setVehicleSuggestionQuery(vehicleForm.make)
+                      setShowVehicleSuggestions(true)
+                    }}
+                    className="mt-1 w-full rounded-2xl border border-border/40 bg-white px-4 py-3 text-sm font-bold text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
+                    placeholder="e.g. Toyota"
+                    required
+                  />
+                  {vehicleErrors.make && (
+                    <p className="mt-1 text-xs font-semibold text-destructive">
+                      {vehicleErrors.make}
+                    </p>
+                  )}
+
+                  {showVehicleSuggestions &&
+                    vehicleSuggestionField === 'make' &&
+                    vehicleSuggestions.length > 0 && (
+                      <div className="absolute right-0 left-0 z-50 mt-1 max-h-56 divide-y divide-border/30 overflow-y-auto rounded-2xl border border-border bg-white shadow-xl dark:bg-card">
+                        {vehicleSuggestions.map((suggestion, index) => (
+                          <button
+                            key={`${suggestion.make}-${suggestion.model}-${index}`}
+                            type="button"
+                            onClick={() => selectVehicleSuggestion(suggestion)}
+                            className="w-full px-4 py-3 text-left text-xs font-black text-foreground transition-colors hover:bg-muted"
+                          >
+                            {suggestion.make}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                </div>
+
+                <div
+                  className="relative"
+                  ref={vehicleSuggestionField === 'model' ? vehicleSuggestionsRef : undefined}
+                >
+                  <label className="text-[10px] font-black tracking-widest text-muted-foreground/70 uppercase">
+                    Model
+                  </label>
+                  <input
+                    type="text"
+                    value={vehicleForm.model}
+                    onChange={(event) => {
+                      setVehicleForm((current) => ({ ...current, model: event.target.value }))
+                      setVehicleSuggestionField('model')
+                      setVehicleSuggestionQuery(event.target.value)
+                      setShowVehicleSuggestions(true)
+                    }}
+                    onFocus={() => {
+                      setVehicleSuggestionField('model')
+                      setVehicleSuggestionQuery(vehicleForm.model)
+                      setShowVehicleSuggestions(true)
+                    }}
+                    className="mt-1 w-full rounded-2xl border border-border/40 bg-white px-4 py-3 text-sm font-bold text-foreground shadow-sm transition-all focus:border-highlight/40 focus:ring-4 focus:ring-highlight/10 dark:bg-card/50"
+                    placeholder="Type to search"
+                    required
+                  />
+                  {vehicleErrors.model && (
+                    <p className="mt-1 text-xs font-semibold text-destructive">
+                      {vehicleErrors.model}
+                    </p>
+                  )}
+
+                  {showVehicleSuggestions &&
+                    vehicleSuggestionField === 'model' &&
+                    vehicleSuggestions.length > 0 && (
+                      <div className="absolute right-0 left-0 z-50 mt-1 max-h-56 divide-y divide-border/30 overflow-y-auto rounded-2xl border border-border bg-white shadow-xl dark:bg-card">
+                        {vehicleSuggestions.map((suggestion) => (
+                          <button
+                            key={`${suggestion.make}-${suggestion.model}`}
+                            type="button"
+                            onClick={() => selectVehicleSuggestion(suggestion)}
+                            className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted"
+                          >
+                            <span className="text-xs font-black text-foreground">
+                              {suggestion.make} {suggestion.model}
+                            </span>
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-black text-muted-foreground">
+                              {suggestion.size}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="text-[10px] font-black tracking-widest text-muted-foreground/70 uppercase">
+                    Year
+                  </label>
+                  <input
+                    type="number"
+                    value={vehicleForm.year}
+                    onChange={(event) =>
+                      setVehicleForm((current) => ({ ...current, year: event.target.value }))
+                    }
+                    min="1900"
+                    max={new Date().getFullYear() + 1}
+                    className="mt-1 w-full rounded-2xl border border-border/40 bg-white px-4 py-3 text-sm font-bold text-foreground shadow-sm dark:bg-card/50"
+                    placeholder="2020"
+                  />
+                  {vehicleErrors.year && (
+                    <p className="mt-1 text-xs font-semibold text-destructive">
+                      {vehicleErrors.year}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-[10px] font-black tracking-widest text-muted-foreground/70 uppercase">
+                    Plate
+                  </label>
+                  <input
+                    type="text"
+                    value={vehicleForm.plate_number}
+                    onChange={(event) =>
+                      setVehicleForm((current) => ({
+                        ...current,
+                        plate_number: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-2xl border border-border/40 bg-white px-4 py-3 text-sm font-bold text-foreground shadow-sm dark:bg-card/50"
+                    placeholder="ABC 1234"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black tracking-widest text-muted-foreground/70 uppercase">
+                    Color
+                  </label>
+                  <input
+                    type="text"
+                    value={vehicleForm.color}
+                    onChange={(event) =>
+                      setVehicleForm((current) => ({ ...current, color: event.target.value }))
+                    }
+                    className="mt-1 w-full rounded-2xl border border-border/40 bg-white px-4 py-3 text-sm font-bold text-foreground shadow-sm dark:bg-card/50"
+                    placeholder="Black"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-border/30 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="w-fit rounded-full bg-muted px-3 py-1 text-[10px] font-black tracking-widest text-muted-foreground uppercase">
+                  {vehicleForm.size}
+                </span>
+                <Button
+                  type="submit"
+                  variant="highlight"
+                  disabled={isSavingVehicle}
+                  className="h-12 rounded-2xl text-xs font-black tracking-widest uppercase"
+                >
+                  {isSavingVehicle ? (
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="mr-2 h-4 w-4" />
+                  )}
+                  Add Vehicle
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* --- Normalized Variant Modal --- */}
       {isVariantModalOpen && selectedServiceForModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300">
@@ -956,15 +1483,19 @@ export default function Services() {
                     }`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${
-                        active 
-                          ? 'border-highlight bg-highlight shadow-[0_0_10px_rgba(234,179,8,0.3)]' 
-                          : 'border-border/60 bg-transparent'
-                      }`}>
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${
+                          active
+                            ? 'border-highlight bg-highlight shadow-[0_0_10px_rgba(234,179,8,0.3)]'
+                            : 'border-border/60 bg-transparent'
+                        }`}
+                      >
                         {active && <div className="h-2 w-2 rounded-full bg-black" />}
                       </div>
                       <div>
-                        <p className={`text-base leading-tight font-black uppercase transition-colors ${active ? 'text-highlight' : 'text-foreground'}`}>
+                        <p
+                          className={`text-base leading-tight font-black uppercase transition-colors ${active ? 'text-highlight' : 'text-foreground'}`}
+                        >
                           {variant.size}
                         </p>
                         <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
@@ -973,11 +1504,13 @@ export default function Services() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-black transition-colors ${active ? 'text-highlight' : 'text-foreground'}`}>
+                      <p
+                        className={`text-lg font-black transition-colors ${active ? 'text-highlight' : 'text-foreground'}`}
+                      >
                         ₱{Number(variant.price).toLocaleString()}
                       </p>
                       {active && (
-                        <div className="mt-1 flex items-center justify-end gap-1 animate-in fade-in zoom-in duration-300">
+                        <div className="mt-1 flex items-center justify-end gap-1 duration-300 animate-in fade-in zoom-in">
                           <CheckCircle2 className="h-3 w-3 text-highlight" />
                           <span className="text-[10px] font-black tracking-widest text-highlight uppercase">
                             Selected

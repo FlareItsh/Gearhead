@@ -114,6 +114,18 @@ export const resolveVehicleSize = (
   return 'Medium'
 }
 
+export const findKnownVehicle = (make = '', model = ''): VehicleKnowledgeEntry | undefined => {
+  const normalizedMake = compact(make)
+  const normalizedModel = compact(model)
+
+  return vehicles.find(
+    (entry) => compact(entry.make) === normalizedMake && compact(entry.model) === normalizedModel,
+  )
+}
+
+export const isKnownVehicle = (make = '', model = ''): boolean =>
+  findKnownVehicle(make, model) !== undefined
+
 export const suggestVehicleMakes = (query: string): VehicleSuggestion[] => {
   if (query.trim().length < 2) {
     return []

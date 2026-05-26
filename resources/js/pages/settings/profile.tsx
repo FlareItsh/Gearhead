@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/app-layout'
 import SettingsLayout from '@/layouts/settings/layout'
 import {
+  isKnownVehicle,
   resolveVehicleSize,
   suggestVehicleMakes,
   suggestVehicleModels,
@@ -63,7 +64,7 @@ export default function Profile({
   const [carToDelete, setCarToDelete] = useState<Car | null>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  const { data, setData, post, processing, reset, errors } = useForm({
+  const { data, setData, post, processing, reset, errors, setError, clearErrors } = useForm({
     make: '',
     model: '',
     year: '',
@@ -121,11 +122,18 @@ export default function Profile({
       setSuggestionQuery(suggestion.model)
     }
 
+    clearErrors('make', 'model')
     setShowSuggestions(false)
   }
 
   const handleAddCarSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isKnownVehicle(data.make, data.model)) {
+      setError('model', 'Please choose an existing car model from the suggestions.')
+      return
+    }
+
     post(store.url(), {
       preserveScroll: true,
       onSuccess: () => {
@@ -133,6 +141,7 @@ export default function Profile({
         setSuggestionQuery('')
         setSuggestionField(null)
         setSuggestions([])
+        clearErrors()
       },
     })
   }

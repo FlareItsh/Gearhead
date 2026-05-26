@@ -40,6 +40,20 @@ class VehicleSizeResolver
         return $this->sizeFromText(trim($make.' '.$model.' '.((string) $rawText)));
     }
 
+    public function hasExactVehicle(string $make, string $model): bool
+    {
+        $normalizedMake = $this->compact($make);
+        $normalizedModel = $this->compact($model);
+
+        foreach ($this->entries() as $entry) {
+            if ($this->compact($entry['make']) === $normalizedMake && $this->compact($entry['model']) === $normalizedModel) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @return Collection<int, array{make: string, model: string, size: string, class: null, year: null}>
      */

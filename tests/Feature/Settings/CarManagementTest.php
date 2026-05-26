@@ -68,6 +68,20 @@ test('a user cannot add a car with missing required fields', function () {
     $this->assertDatabaseCount('cars', 0);
 });
 
+test('a user cannot add a car with an unknown model', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->post('/settings/cars', [
+            'make' => 'Toyota',
+            'model' => 'Imaginary Runner',
+        ]);
+
+    $response->assertSessionHasErrors(['model']);
+    $this->assertDatabaseCount('cars', 0);
+});
+
 test('a user can delete their car', function () {
     $user = User::factory()->create();
     $car = Car::factory()->create(['user_id' => $user->user_id]);
