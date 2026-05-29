@@ -79,19 +79,25 @@ export default function Profile({
       return
     }
 
-    setSuggestions(
-      suggestionField === 'make'
-        ? suggestVehicleMakes(suggestionQuery)
-        : suggestVehicleModels(data.make, suggestionQuery),
-    )
+    const fetchSuggestions = async () => {
+      const results = suggestionField === 'make'
+        ? await suggestVehicleMakes(suggestionQuery)
+        : await suggestVehicleModels(data.make, suggestionQuery)
+      setSuggestions(results)
+    }
+
+    fetchSuggestions()
   }, [data.make, suggestionField, suggestionQuery])
 
   useEffect(() => {
-    const nextSize = resolveVehicleSize(data.make, data.model)
-
-    if (data.size !== nextSize) {
-      setData('size', nextSize)
+    const fetchSize = async () => {
+      const nextSize = await resolveVehicleSize(data.make, data.model)
+      if (data.size !== nextSize) {
+        setData('size', nextSize)
+      }
     }
+
+    fetchSize()
   }, [data.make, data.model, data.size, setData])
 
   useEffect(() => {
@@ -126,10 +132,11 @@ export default function Profile({
     setShowSuggestions(false)
   }
 
-  const handleAddCarSubmit = (e: React.FormEvent) => {
+  const handleAddCarSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!isKnownVehicle(data.make, data.model)) {
+    const isKnown = await isKnownVehicle(data.make, data.model)
+    if (!isKnown) {
       setError('model', 'Please choose an existing car model from the suggestions.')
       return
     }

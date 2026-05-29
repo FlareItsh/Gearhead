@@ -1,4 +1,4 @@
-import vehicleData from '../../data/philippine-vehicle-sizes.json'
+import axios from 'axios'
 
 export type VehicleSize = 'Small' | 'Medium' | 'Large' | 'X-Large' | 'XX-Large'
 
@@ -13,7 +13,20 @@ export interface VehicleSuggestion extends VehicleKnowledgeEntry {
   year: number | null
 }
 
-const vehicles = vehicleData as VehicleKnowledgeEntry[]
+let vehicles: VehicleKnowledgeEntry[] | null = null;
+
+const getVehicles = async (): Promise<VehicleKnowledgeEntry[]> => {
+  if (vehicles === null) {
+    try {
+      const response = await axios.get('/api/cars/library')
+      vehicles = response.data
+    } catch (error) {
+      console.error('Failed to load vehicle library', error)
+      vehicles = []
+    }
+  }
+  return vehicles
+}
 
 const apiClassSizeMap: Record<string, VehicleSize> = {
   'minicompact car': 'Small',
@@ -81,15 +94,16 @@ const ranked = (
   })
 }
 
-export const resolveVehicleSize = (
+export const resolveVehicleSize = async (
   make = '',
   model = '',
   apiClass = '',
   rawText = '',
-): VehicleSize => {
+): Promise<VehicleSize> => {
+  const vList = await getVehicles()
   const normalizedMake = compact(make)
   const normalizedModel = compact(model)
-  const exact = vehicles.find(
+  const exact = vList.find(
     (entry) => compact(entry.make) === normalizedMake && compact(entry.model) === normalizedModel,
   )
 
@@ -114,26 +128,30 @@ export const resolveVehicleSize = (
   return 'Medium'
 }
 
-export const findKnownVehicle = (make = '', model = ''): VehicleKnowledgeEntry | undefined => {
+export const findKnownVehicle = async (make = '', model = ''): Promise<VehicleKnowledgeEntry | undefined> => {
+  const vList = await getVehicles()
   const normalizedMake = compact(make)
   const normalizedModel = compact(model)
 
-  return vehicles.find(
+  return vList.find(
     (entry) => compact(entry.make) === normalizedMake && compact(entry.model) === normalizedModel,
   )
 }
 
-export const isKnownVehicle = (make = '', model = ''): boolean =>
-  findKnownVehicle(make, model) !== undefined
+export const isKnownVehicle = async (make = '', model = ''): Promise<boolean> => {
+  const found = await findKnownVehicle(make, model)
+  return found !== undefined
+}
 
-export const suggestVehicleMakes = (query: string): VehicleSuggestion[] => {
+export const suggestVehicleMakes = async (query: string): Promise<VehicleSuggestion[]> => {
   if (query.trim().length < 2) {
     return []
   }
 
+  const vList = await getVehicles()
   const seen = new Set<string>()
 
-  return ranked(vehicles, query, (entry) => entry.make)
+  return ranked(vList, query, (entry) => entry.make)
     .filter((entry) => normalize(entry.make).includes(normalize(query)))
     .filter((entry) => {
       const key = compact(entry.make)
@@ -148,16 +166,17 @@ export const suggestVehicleMakes = (query: string): VehicleSuggestion[] => {
     .map((entry) => ({ ...entry, class: null, year: null }))
 }
 
-export const suggestVehicleModels = (make: string, query: string): VehicleSuggestion[] => {
+export const suggestVehicleModels = async (make: string, query: string): Promise<VehicleSuggestion[]> => {
   if (query.trim().length < 2) {
     return []
   }
 
+  const vList = await getVehicles()
   const normalizedQuery = normalize(query)
   const normalizedMake = compact(make)
   const makeMatches = normalizedMake
-    ? vehicles.filter((entry) => compact(entry.make) === normalizedMake)
-    : vehicles
+    ? vList.filter((entry) => compact(entry.make) === normalizedMake)
+    : vList
 
   return ranked(makeMatches, query, (entry) => entry.model)
     .filter(

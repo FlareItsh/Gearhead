@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import axios from 'axios'
-import { Package, Plus, Trash2 } from 'lucide-react'
+import { Package, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -198,7 +197,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
       open={open}
       onOpenChange={setOpen}
     >
-      <DialogTrigger asChild>
+      {/*     <DialogTrigger asChild>
         <Button
           variant="highlight"
           className="gap-2"
@@ -206,6 +205,7 @@ export default function PulloutRequestModal({ supplies, onSuccess }: PulloutRequ
           <Plus className="h-4 w-4" /> Pullout Request
         </Button>
       </DialogTrigger>
+  */}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">

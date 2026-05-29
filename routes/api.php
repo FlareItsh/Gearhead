@@ -245,7 +245,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('reviews.list');
 });
 
-// * Guest-accessible booking endpoint (before auth middleware)
+// * Guest-accessible endpoints
+Route::get('/cars/library', function () {
+    return response()->json(\App\Models\CarLibrary::select('make', 'model', 'size')->get());
+})->name('api.cars.library');
+
 Route::post('/bookings/book', [ServiceOrderController::class, 'book'])
     ->name('bookings.book');
 

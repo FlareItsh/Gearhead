@@ -34,14 +34,14 @@ class PaymentsSeeder extends Seeder
             $employeeId = $order->employee_id ?? rand(1, 10);
 
             DB::table('payments')->insert([
-                    'service_order_id' => $orderId,
-                    'employee_id' => $employeeId,
-                    'amount' => $amount,
-                    'payment_method' => $payment_method,
-                    'is_point_redeemed' => $is_point_redeemed,
-                    'gcash_reference' => $gcash_reference,
-                    'created_at' => $created,
-                    'updated_at' => $updated,
+                'service_order_id' => $orderId,
+                'employee_id' => $employeeId,
+                'amount' => $amount,
+                'payment_method' => $payment_method,
+                'is_point_redeemed' => $is_point_redeemed,
+                'gcash_reference' => $gcash_reference,
+                'created_at' => $created,
+                'updated_at' => $updated,
             ]);
         }
     }

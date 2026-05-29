@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             SupplyPurchasesSeeder::class,
             SupplyPurchaseDetailsSeeder::class,
             ReviewsSeeder::class,
+            CarLibrarySeeder::class,
         ]);
 
         $this->command->call('db:sync-sequences');

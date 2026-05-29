@@ -1,11 +1,11 @@
 <?php
- 
+
 namespace Database\Seeders;
- 
+
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
- 
+
 class SupplyLedgerDemoSeeder extends Seeder
 {
     public function run(): void
@@ -29,12 +29,12 @@ class SupplyLedgerDemoSeeder extends Seeder
 
             // 1. HISTORICAL TRANSACTIONS (Established before 30 days ago)
             // These will form the "Forwarded Balance" if the user filters for the last 30 days.
-            
+
             // Initial Stock Purchase
             $histDate = $sixMonthsAgo->copy()->addDays(rand(1, 30));
             $purchaseId = DB::table('supply_purchases')->insertGetId([
                 'supplier_id' => rand(1, 2),
-                'purchase_reference' => 'HIST-IN-' . $supplyId,
+                'purchase_reference' => 'HIST-IN-'.$supplyId,
                 'purchase_date' => $histDate,
                 'created_at' => $histDate,
                 'updated_at' => $histDate,
@@ -65,10 +65,10 @@ class SupplyLedgerDemoSeeder extends Seeder
             ], 'pullout_request_id');
 
             $validDetailIds = DB::table('service_order_details')->pluck('service_order_detail_id')->toArray();
-            
+
             $serviceId = DB::table('pullout_services')->insertGetId([
-                'service_order_detail_id' => !empty($validDetailIds) ? $validDetailIds[array_rand($validDetailIds)] : null,
-                'bay_number' => 'Bay ' . rand(1, 6),
+                'service_order_detail_id' => ! empty($validDetailIds) ? $validDetailIds[array_rand($validDetailIds)] : null,
+                'bay_number' => 'Bay '.rand(1, 6),
                 'created_at' => $pullDate,
                 'updated_at' => $pullDate,
             ], 'pullout_service_id');
@@ -92,7 +92,7 @@ class SupplyLedgerDemoSeeder extends Seeder
             $recentDate = $now->copy()->subDays(rand(10, 20));
             $purchaseId2 = DB::table('supply_purchases')->insertGetId([
                 'supplier_id' => rand(1, 2),
-                'purchase_reference' => 'REC-IN-' . $supplyId,
+                'purchase_reference' => 'REC-IN-'.$supplyId,
                 'purchase_date' => $recentDate,
                 'created_at' => $recentDate,
                 'updated_at' => $recentDate,
@@ -123,8 +123,8 @@ class SupplyLedgerDemoSeeder extends Seeder
             ], 'pullout_request_id');
 
             $serviceId2 = DB::table('pullout_services')->insertGetId([
-                'service_order_detail_id' => !empty($validDetailIds) ? $validDetailIds[array_rand($validDetailIds)] : null,
-                'bay_number' => 'Bay ' . rand(1, 6),
+                'service_order_detail_id' => ! empty($validDetailIds) ? $validDetailIds[array_rand($validDetailIds)] : null,
+                'bay_number' => 'Bay '.rand(1, 6),
                 'created_at' => $recentPullDate,
                 'updated_at' => $recentPullDate,
             ], 'pullout_service_id');

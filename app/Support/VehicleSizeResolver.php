@@ -11,13 +11,13 @@ class VehicleSizeResolver
      */
     public function entries(): array
     {
-        $contents = file_get_contents(resource_path('data/philippine-vehicle-sizes.json'));
-
-        if ($contents === false) {
-            return [];
-        }
-
-        return json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+        return \App\Models\CarLibrary::all()
+            ->map(fn ($car): array => [
+                'make' => $car->make,
+                'model' => $car->model,
+                'size' => $car->size,
+            ])
+            ->toArray();
     }
 
     public function resolve(string $make = '', string $model = '', ?string $apiClass = null, ?string $rawText = null): string

@@ -21,7 +21,7 @@ class ServiceOrderDetailsSeeder extends Seeder
 
         foreach ($orderIds as $orderId) {
             $numDetails = rand(1, min(3, count($variantIds))); // Multiple details per order
-            
+
             // Randomly select unique variants for this order
             $shuffledVariants = $variantIds;
             shuffle($shuffledVariants);

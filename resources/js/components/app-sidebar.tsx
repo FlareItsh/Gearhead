@@ -18,17 +18,17 @@ import {
   BanknoteArrowUp,
   BookOpen,
   CalendarCog,
+  Car,
   ChartColumnBig,
   Computer,
   Folder,
   LayoutDashboard,
   Package,
-  PackageOpen,
+  Settings2,
   TableCellsMerge,
   UserCheck,
   UsersRound,
   Wrench,
-  Settings2,
 } from 'lucide-react'
 import AppLogo from './app-logo'
 
@@ -83,11 +83,11 @@ const adminNavGroups: { title: string; items: NavItem[] }[] = [
         href: '/inventory',
         icon: Package,
       },
-      {
-        title: 'Pullout Requests',
-        href: '/pullout-requests-page',
-        icon: PackageOpen,
-      },
+      // {
+      //   title: 'Pullout Requests',
+      //   href: '/pullout-requests-page',
+      //   icon: PackageOpen,
+      // },
     ],
   },
   {
@@ -127,6 +127,11 @@ const adminNavGroups: { title: string; items: NavItem[] }[] = [
         title: 'Moderation',
         href: '/moderation',
         icon: Settings2,
+      },
+      {
+        title: 'Car Library',
+        href: '/cars',
+        icon: Car,
       },
     ],
   },

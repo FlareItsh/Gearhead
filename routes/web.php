@@ -116,8 +116,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.bays')
         ->middleware('role:admin');
 
-    // Moderation
+    // Moderation & Car Library
     Route::group(['middleware' => 'role:admin'], function () {
+        Route::get('/cars', [\App\Http\Controllers\CarLibraryController::class, 'index'])->name('admin.cars');
+        Route::post('/cars', [\App\Http\Controllers\CarLibraryController::class, 'store'])->name('admin.cars.store');
+        Route::put('/cars/{car}', [\App\Http\Controllers\CarLibraryController::class, 'update'])->name('admin.cars.update');
+        Route::delete('/cars/{car}', [\App\Http\Controllers\CarLibraryController::class, 'destroy'])->name('admin.cars.destroy');
+
         Route::get('/moderation', [\App\Http\Controllers\ModerationController::class, 'index'])->name('admin.moderation');
         Route::post('/moderation/loyalty', [\App\Http\Controllers\ModerationController::class, 'updateLoyalty'])->name('admin.moderation.loyalty');
         Route::post('/moderation/gcash', [\App\Http\Controllers\ModerationController::class, 'updateGcash'])->name('admin.moderation.gcash');

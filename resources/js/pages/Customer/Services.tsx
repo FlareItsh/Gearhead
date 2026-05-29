@@ -209,19 +209,25 @@ export default function Services() {
       return
     }
 
-    setVehicleSuggestions(
-      vehicleSuggestionField === 'make'
-        ? suggestVehicleMakes(vehicleSuggestionQuery)
-        : suggestVehicleModels(vehicleForm.make, vehicleSuggestionQuery),
-    )
+    const fetchSuggestions = async () => {
+      const results = vehicleSuggestionField === 'make'
+        ? await suggestVehicleMakes(vehicleSuggestionQuery)
+        : await suggestVehicleModels(vehicleForm.make, vehicleSuggestionQuery)
+      setVehicleSuggestions(results)
+    }
+
+    fetchSuggestions()
   }, [vehicleForm.make, vehicleSuggestionField, vehicleSuggestionQuery])
 
   useEffect(() => {
-    const nextSize = resolveVehicleSize(vehicleForm.make, vehicleForm.model)
-
-    if (vehicleForm.size !== nextSize) {
-      setVehicleForm((current) => ({ ...current, size: nextSize }))
+    const fetchSize = async () => {
+      const nextSize = await resolveVehicleSize(vehicleForm.make, vehicleForm.model)
+      if (vehicleForm.size !== nextSize) {
+        setVehicleForm((current) => ({ ...current, size: nextSize }))
+      }
     }
+
+    fetchSize()
   }, [vehicleForm.make, vehicleForm.model, vehicleForm.size])
 
   useEffect(() => {
@@ -279,10 +285,11 @@ export default function Services() {
     setVehicleSuggestions([])
   }
 
-  const handleAddVehicleSubmit = (event: FormEvent) => {
+  const handleAddVehicleSubmit = async (event: FormEvent) => {
     event.preventDefault()
 
-    if (!isKnownVehicle(vehicleForm.make, vehicleForm.model)) {
+    const isKnown = await isKnownVehicle(vehicleForm.make, vehicleForm.model)
+    if (!isKnown) {
       setVehicleErrors({
         model: 'Please choose an existing car model from the suggestions.',
       })
