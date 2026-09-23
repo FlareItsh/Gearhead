@@ -88,23 +88,23 @@ class UsersSeeder extends Seeder
         ];
 
         // Generate 5 more customers (Total 6 including hardcoded)
-        for ($i = 10; $i < 15; $i++) {
-            $users[] = [
-                'user_id' => $i,
-                'first_name' => 'Customer'.$i,
-                'middle_name' => null,
-                'last_name' => 'Test',
-                'email' => 'customer'.$i.'@example.com',
-                'phone_number' => '9'.rand(100000000, 999999999),
-                'address' => 'Test Address '.$i,
-                'password' => Hash::make('password'),
-                'role' => 'customer',
-                'permissions' => null,
-                'email_verified_at' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
+        // for ($i = 10; $i < 15; $i++) {
+        //     $users[] = [
+        //         'user_id' => $i,
+        //         'first_name' => 'Customer'.$i,
+        //         'middle_name' => null,
+        //         'last_name' => 'Test',
+        //         'email' => 'customer'.$i.'@example.com',
+        //         'phone_number' => '9'.rand(100000000, 999999999),
+        //         'address' => 'Test Address '.$i,
+        //         'password' => Hash::make('password'),
+        //         'role' => 'customer',
+        //         'permissions' => null,
+        //         'email_verified_at' => $now,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ];
+        // }
 
         foreach ($users as $u) {
             if (! DB::table('users')->where('user_id', $u['user_id'])->exists()) {
